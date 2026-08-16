@@ -1,0 +1,16 @@
+NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
+ORG_NAME="lomi. Technology Africa"
+ORG_URL="https://lomi.africa"
+ORG_DESCRIPTION="Custodial USDC settlement on Stellar Testnet for UEMOA merchant payouts."
+DOCUMENTATION="https://github.com/lomiafrica/stellar/blob/main/docs/ARCHITECTURE.md"
+
+[[CURRENCIES]]
+code = "XOF"
+issuer = "REPLACE_WITH_OMNIBUS_PUBLIC_KEY"
+display_decimals = 0
+name = "CFA Franc BCEAO"
+desc = "XOF metadata for SEP-1 discovery on testnet. Last mile is Wave/MTN/SPI. Not an issued token."
+is_asset_anchored = true
+anchor_asset_type = "fiat"
+anchor_asset = "XOF"
+status = "test"

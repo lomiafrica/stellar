@@ -1,0 +1,72 @@
+{
+  "name": "@lomi./stellar",
+  "version": "0.1.0",
+  "description": "lomi. Stellar testnet lab for custodial USDC settlement",
+  "private": false,
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.11.1"
+  },
+  "scripts": {
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "start:prod": "node dist/main.js",
+    "bootstrap": "tsx scripts/bootstrap.ts",
+    "settle:10": "tsx scripts/settle-10.ts",
+    "proof": "tsx scripts/print-proof.ts",
+    "reconcile": "tsx scripts/reconcile.ts",
+    "lint": "eslint \"src/**/*.ts\" \"scripts/**/*.ts\" \"test/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" \"scripts/**/*.ts\" \"test/**/*.ts\" --fix",
+    "test": "tsx --test --test-concurrency=1 test/json.test.ts test/ledger.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "knip": "knip --no-config-hints"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.28",
+    "@nestjs/core": "^11.1.28",
+    "@nestjs/platform-express": "^11.1.28",
+    "@stellar/stellar-sdk": "^14.2.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@nestjs/cli": "^11.0.24",
+    "@nestjs/schematics": "^11.1.0",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.20.1",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^16.5.0",
+    "knip": "5.63.0",
+    "tsx": "^4.23.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.64.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lomiafrica/stellar.git"
+  },
+  "keywords": [
+    "lomi.",
+    "stellar",
+    "usdc",
+    "testnet",
+    "uemoa",
+    "settlement"
+  ],
+  "pnpm": {
+    "overrides": {
+      "fast-uri": "^3.1.5",
+      "brace-expansion@^1": "^1.1.18",
+      "brace-expansion@^2": "^2.1.4",
+      "brace-expansion@^5": "^5.0.9",
+      "@isaacs/brace-expansion": "^5.0.1",
+      "postcss": "^8.5.23",
+      "js-yaml": "^4.3.1"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+keys/
+data/stellar_settlements.json
+data/demo_idempotency.json
+data/settlements.json
+*.log
+
+# Internal working docs, local only
+.scf/
