@@ -1,11 +1,20 @@
+# Dependencies
 node_modules
+
+# Build
 dist
+
+# Environment
 .env
+
+# Data
 keys/
 data/stellar_settlements.json
 data/demo_idempotency.json
 data/settlements.json
+
+# Logs
 *.log
 
-# Internal working docs, local only
+# Local
 .scf/
