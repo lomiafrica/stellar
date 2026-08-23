@@ -17,14 +17,10 @@ export class TomlController {
     );
     const keys = readStoredKeys();
     const proof = readTestnetProof();
-    const issuer =
-      keys?.omnibus.publicKey ??
-      proof?.omnibusPublicKey ??
-      'REPLACE_WITH_OMNIBUS_PUBLIC_KEY';
-    let body = template.replace(
-      'REPLACE_WITH_OMNIBUS_PUBLIC_KEY',
-      issuer,
-    );
+    const issuer = keys?.omnibus.publicKey ?? proof?.omnibusPublicKey;
+    let body = issuer
+      ? template.replace(/issuer = "[^"]+"/, `issuer = "${issuer}"`)
+      : template;
     if (!body.includes('DOCUMENTATION')) {
       body += `\nDOCUMENTATION="https://github.com/lomiafrica/stellar/blob/main/docs/ARCHITECTURE.md"\n`;
     }

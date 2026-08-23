@@ -6,7 +6,7 @@ DOCUMENTATION="https://github.com/lomiafrica/stellar/blob/main/docs/ARCHITECTURE
 
 [[CURRENCIES]]
 code = "XOF"
-issuer = "REPLACE_WITH_OMNIBUS_PUBLIC_KEY"
+issuer = "GD6PH2FAK5DQFFFALZVAT337R7NDGSPWT4R6UBGA5GYLL7N5U4C4GI7I"
 display_decimals = 0
 name = "CFA Franc BCEAO"
 desc = "XOF metadata for SEP-1 discovery on testnet. Last mile is Wave/MTN/SPI. Not an issued token."

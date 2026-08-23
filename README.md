@@ -103,6 +103,7 @@ Committed public keys and explorer tx ids (no secrets): `data/testnet-proof.json
 - Memo is the payout id, truncated to Stellar memo limits.
 - HTTP body matches lomi. `CreatePayoutDto` so a later `rail: "stellar"` can reuse the same shape.
 - Bridge and last-mile adapters here are stubs.
+- SCF #45 panel freeze: do not add Anchor Platform, real Bridge, or a production `POST /payouts` rail here until the award / Tranche 1 kickoff. The remaining lab close is Circle testnet USDC on the current omnibus, then `pnpm settle:10`.
 
 ## License
 
