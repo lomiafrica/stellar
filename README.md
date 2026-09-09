@@ -32,23 +32,20 @@ Not in this repo: Anchor Platform, HSM/KMS, mainnet keys, or calls into `apps/ap
 ```bash
 pnpm install
 cp .env.example .env
+pnpm map
 pnpm bootstrap
+pnpm settle:10
+pnpm proof
 ```
 
-`pnpm bootstrap` reuses `keys/` if present, funds accounts via Friendbot, and opens Circle testnet USDC trustlines.
+`pnpm map` prints the lab map and live testnet balances. `pnpm bootstrap` reuses keys in `.env` or `keys/` if present, funds accounts via Friendbot, and opens Circle testnet USDC trustlines. If the omnibus has no test USDC, it prints the Circle faucet steps.
 
 Current testnet accounts:
 
 - Omnibus: `GD6PH2FAK5DQFFFALZVAT337R7NDGSPWT4R6UBGA5GYLL7N5U4C4GI7I`
 - Merchant: `GAOHXCYCLGQDETU33F4AB5DZUSEPRHHEROJ3FCZ6I4S6MDV7FZQVVW2Y`
 
-```bash
-pnpm settle:10
-pnpm proof
-pnpm reconcile
-```
-
-`pnpm settle:10` submits a memo-keyed USDC payment if the omnibus has test USDC. `pnpm proof` prints stellar.expert links from `data/testnet-proof.json`.
+`pnpm settle:10` submits a memo-keyed USDC Payment when the omnibus has at least 10 test USDC. `pnpm proof` prints stellar.expert links from `data/testnet-proof.json` and reconciles the last hop. `pnpm reconcile` walks the local ledger.
 
 Do not send mainnet USDC to these addresses.
 
@@ -103,7 +100,7 @@ Committed public keys and explorer tx ids (no secrets): `data/testnet-proof.json
 - Memo is the payout id, truncated to Stellar memo limits.
 - HTTP body matches lomi. `CreatePayoutDto` so a later `rail: "stellar"` can reuse the same shape.
 - Bridge and last-mile adapters here are stubs.
-- SCF #45 panel freeze: do not add Anchor Platform, real Bridge, or a production `POST /payouts` rail here until the award / Tranche 1 kickoff. The remaining lab close is Circle testnet USDC on the current omnibus, then `pnpm settle:10`.
+- SCF #45 panel freeze: do not add Anchor Platform, real Bridge, or a production `POST /payouts` rail here until the award / Tranche 1 kickoff.
 
 ## License
 

@@ -55,19 +55,20 @@ export function loadKeypair(role: KeyRole): Keypair {
       `Missing ${role} keys. Run pnpm bootstrap or set ${role === 'omnibus' ? 'OMNIBUS_SECRET' : 'MERCHANT_SECRET'} in .env`,
     );
   }
-  // SAFETY: Key files are written by generateAndStoreKeys with this schema.
+  // SAFETY: Key files are written by persistStoredKeys with this schema.
   const parsed = JSON.parse(readFileSync(path, 'utf8')) as {
     secret: string;
   };
   return Keypair.fromSecret(parsed.secret);
 }
 
-export function generateAndStoreKeys(): StoredKeys {
-  const keysDir = ensureKeysDir();
-  const omnibus = Keypair.random();
-  const merchant = Keypair.random();
-
-  const stored: StoredKeys = {
+function keysFromSecret(
+  omnibusSecret: string,
+  merchantSecret: string,
+): StoredKeys {
+  const omnibus = Keypair.fromSecret(omnibusSecret);
+  const merchant = Keypair.fromSecret(merchantSecret);
+  return {
     omnibus: {
       publicKey: omnibus.publicKey(),
       secret: omnibus.secret(),
@@ -77,17 +78,40 @@ export function generateAndStoreKeys(): StoredKeys {
       secret: merchant.secret(),
     },
   };
+}
 
+function writeKeyFiles(stored: StoredKeys): void {
+  const keysDir = ensureKeysDir();
   writeFileSync(
     join(keysDir, 'omnibus.json'),
-    JSON.stringify(stored.omnibus, null, 2),
+    `${JSON.stringify(stored.omnibus, null, 2)}\n`,
   );
   writeFileSync(
     join(keysDir, 'merchant.json'),
-    JSON.stringify(stored.merchant, null, 2),
+    `${JSON.stringify(stored.merchant, null, 2)}\n`,
   );
+}
 
+function readKeysFromEnv(): StoredKeys | null {
+  const omnibusSecret = process.env.OMNIBUS_SECRET?.trim();
+  const merchantSecret = process.env.MERCHANT_SECRET?.trim();
+  if (!omnibusSecret || !merchantSecret) return null;
+  return keysFromSecret(omnibusSecret, merchantSecret);
+}
+
+export function persistStoredKeys(stored: StoredKeys): void {
+  writeKeyFiles(stored);
   upsertEnvSecrets(stored);
+}
+
+export function generateAndStoreKeys(): StoredKeys {
+  const omnibus = Keypair.random();
+  const merchant = Keypair.random();
+  const stored: StoredKeys = {
+    omnibus: { publicKey: omnibus.publicKey(), secret: omnibus.secret() },
+    merchant: { publicKey: merchant.publicKey(), secret: merchant.secret() },
+  };
+  persistStoredKeys(stored);
   return stored;
 }
 
@@ -115,6 +139,9 @@ function setEnvLine(content: string, key: string, value: string): string {
 }
 
 export function readStoredKeys(): StoredKeys | null {
+  const fromEnv = readKeysFromEnv();
+  if (fromEnv) return fromEnv;
+
   const keysDir = getKeysDir();
   const omnibusPath = join(keysDir, 'omnibus.json');
   const merchantPath = join(keysDir, 'merchant.json');
@@ -122,9 +149,9 @@ export function readStoredKeys(): StoredKeys | null {
     return null;
   }
   return {
-    // SAFETY: Both key files are written by generateAndStoreKeys.
+    // SAFETY: Both key files are written by persistStoredKeys.
     omnibus: JSON.parse(readFileSync(omnibusPath, 'utf8')) as StoredKeys['omnibus'],
-    // SAFETY: Both key files are written by generateAndStoreKeys.
+    // SAFETY: Both key files are written by persistStoredKeys.
     merchant: JSON.parse(readFileSync(merchantPath, 'utf8')) as StoredKeys['merchant'],
   };
 }

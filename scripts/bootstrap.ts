@@ -1,4 +1,16 @@
-import { explorerAccount } from '../src/config.js';
+import {
+  printFaucetHint,
+  printLabHeader,
+  printNext,
+  printStepList,
+  printWhy,
+  SETTLE_USDC,
+} from '../src/cli/talk.js';
+import {
+  formatAmount,
+  loadAccountBalances,
+} from '../src/cli/balances.js';
+import { explorerAccount, explorerTx } from '../src/config.js';
 import {
   createMerchantAccountFromOmnibus,
   ensureFundedAccount,
@@ -6,41 +18,64 @@ import {
 import {
   generateAndStoreKeys,
   loadKeypair,
+  persistStoredKeys,
   readStoredKeys,
 } from '../src/stellar/keys.js';
 import { establishUsdcTrustline } from '../src/stellar/trustline.js';
 import { writeTestnetProof } from '../src/testnet-proof.js';
 
 async function main() {
-  console.log('lomi. Stellar testnet bootstrap\n');
+  printLabHeader();
+  printStepList(1);
+  printWhy(
+    'Friendbot gives free testnet XLM. Trustlines let these accounts hold Circle USDC.',
+  );
+  console.log('');
 
   const existing = readStoredKeys();
   const keys = existing ?? generateAndStoreKeys();
   if (existing) {
-    console.log('Reusing existing keys in keys/ (not rotating).\n');
+    persistStoredKeys(existing);
+    console.log('Reusing keys from .env or keys/ (not rotating).');
+  } else {
+    console.log('Created new testnet keys. Secrets stay in keys/ and .env (gitignored).');
   }
+  console.log('');
+
   const omnibus = loadKeypair('omnibus');
   const merchant = loadKeypair('merchant');
 
-  console.log('Funding omnibus with Friendbot (free testnet XLM)...');
+  console.log('Omnibus: Friendbot XLM...');
   await ensureFundedAccount(omnibus);
-  console.log('Omnibus:', omnibus.publicKey());
-  console.log('Explorer:', explorerAccount(omnibus.publicKey()));
+  console.log(`  ${omnibus.publicKey()}`);
+  console.log(`  ${explorerAccount(omnibus.publicKey())}`);
+  console.log('');
 
-  console.log('\nCreating / funding merchant account...');
+  console.log('Merchant: create or fund...');
   const createHash = await createMerchantAccountFromOmnibus(omnibus, merchant);
   if (createHash) {
-    console.log('Created merchant account, tx:', createHash);
+    console.log(`  created  ${explorerTx(createHash)}`);
+  } else {
+    console.log('  already on testnet');
   }
   await ensureFundedAccount(merchant);
-  console.log('Merchant:', merchant.publicKey());
-  console.log('Explorer:', explorerAccount(merchant.publicKey()));
+  console.log(`  ${merchant.publicKey()}`);
+  console.log(`  ${explorerAccount(merchant.publicKey())}`);
+  console.log('');
 
-  console.log('\nEstablishing USDC trustlines...');
+  console.log('USDC trustlines...');
   const omnibusTrust = await establishUsdcTrustline(omnibus);
   const merchantTrust = await establishUsdcTrustline(merchant);
-  if (omnibusTrust) console.log('Omnibus trustline tx:', omnibusTrust);
-  if (merchantTrust) console.log('Merchant trustline tx:', merchantTrust);
+  if (omnibusTrust) {
+    console.log(`  omnibus  ${explorerTx(omnibusTrust)}`);
+  } else {
+    console.log('  omnibus already trusts Circle USDC');
+  }
+  if (merchantTrust) {
+    console.log(`  merchant ${explorerTx(merchantTrust)}`);
+  } else {
+    console.log('  merchant already trusts Circle USDC');
+  }
 
   writeTestnetProof({
     omnibusPublicKey: omnibus.publicKey(),
@@ -50,14 +85,14 @@ async function main() {
     merchantTrustlineTx: merchantTrust ?? undefined,
   });
 
-  console.log('\n--- Next step (manual, free) ---');
-  console.log(
-    '1. Open https://faucet.circle.com and select Stellar Testnet',
-  );
-  console.log('2. Paste OMNIBUS public key:', keys.omnibus.publicKey);
-  console.log('3. Request test USDC (e.g. 10 USDC for the demo payment)');
-  console.log('4. Run: pnpm settle:10');
-  console.log('\nKeys and .env updated. Secrets are in keys/ and .env (gitignored).');
+  console.log('');
+  const omnibusBal = await loadAccountBalances(omnibus.publicKey());
+  if (omnibusBal.usdc >= SETTLE_USDC) {
+    console.log(`Omnibus has ${formatAmount(omnibusBal.usdc)} USDC.`);
+    printNext('pnpm settle:10');
+    return;
+  }
+  printFaucetHint(keys.omnibus.publicKey);
 }
 
 main().catch((err) => {
