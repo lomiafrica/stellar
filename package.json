@@ -66,7 +66,9 @@
       "brace-expansion@^5": "^5.0.9",
       "@isaacs/brace-expansion": "^5.0.1",
       "postcss": "^8.5.23",
-      "js-yaml": "^4.3.1"
+      "js-yaml": "^4.3.2",
+      "multer": "^2.3.0",
+      "toml": "^4.2.0"
     }
   }
 }
