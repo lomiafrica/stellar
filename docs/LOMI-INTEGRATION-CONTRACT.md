@@ -57,7 +57,7 @@ Each row is the proposed `stellar_settlements` table plus payout join keys:
 
 ## Later (private API)
 
-1. **Migration**: `stellar_settlements` (`20250226000121_stellar.sql`).
+1. **Migration**: `stellar_settlements` (`20250226000119_stellar.sql`).
 2. **API**: `'stellar'` on `CreatePayoutDto.rail`; `STELLAR_RAIL_ORGANIZATION_IDS` allowlist; Test first.
 3. **Ledger**: do not add USDC to merchant `accounts`; treasury USDC stays off that ledger.
 4. **Webhooks**: `stellar_transaction_id` and `bridge_transfer_id` on payout events.
