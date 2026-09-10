@@ -6,7 +6,7 @@
 
 lomi. processes merchant payments in UEMOA (XOF). This repo is a standalone NestJS lab for a custodial Circle USDC hop on Stellar: same payout model we already run, merchants never hold keys.
 
-A later rail would use Bridge for USD/USDC treasury and Stellar Anchor Platform for the XOF SEP stack. Neither is deployed here.
+A later rail would use Bridge for USD/USDC treasury and Stellar Anchor Platform for the XOF SEP stack. Anchor Platform config is in `anchor/`. Bridge stays mocked here.
 
 ## 1. Goal
 
@@ -46,7 +46,7 @@ If we wire this into the live API later: feature-flagged `rail: stellar`, real B
 | Circle USDC | Settlement asset (consume, do not issue) | Testnet trustlines |
 | Stellar classic payments | Omnibus to merchant, memo = payout id | Implemented |
 | Bridge | USD <-> USDC treasury | Mock adapter |
-| Stellar Anchor Platform | XOF on/off-ramp SEP stack | Not deployed |
+| Stellar Anchor Platform | XOF on/off-ramp SEP stack | Official image in `anchor/` |
 
 ## 3. What runs today
 
@@ -138,16 +138,18 @@ Idempotency: same `payout_id` means at most one on-chain Payment (same idea as `
 | --- | --- | --- |
 | Circle USDC | Settlement asset | Testnet; consume only, never issue |
 | Bridge | USD <-> USDC | Mock now; later HMAC webhooks + dedupe |
-| Anchor Platform (SDF) | SEP stack | Not in this repo |
+| Anchor Platform (SDF) | SEP stack | `anchor/docker-compose.yml` |
 | Wave / MTN / SPI | Last mile | Live in lomi.; mocked here |
 | BCEAO | Regulatory | PI licence application in progress; MoR under partner banks |
 
 ## 10. If we take this live
 
+See [BUILD-PHASES.md](./BUILD-PHASES.md). Short version:
+
 1. Keep this repo public: memo-keyed payments, ledger, reconcile, SEP-1.
-2. XOF Anchor on testnet: Anchor Platform (SEP-1/10/12/24), last mile on rails we already run.
-3. `rail: stellar` on POST /payouts: same DTO, feature-flagged, HSM/KMS, idempotent replay.
-4. Bridge + SEP-6/38 + three-way reconcile.
+2. XOF Anchor on testnet: official Anchor Platform (SEP-1/10/12/24), last mile adapters here.
+3. `rail: stellar` on POST /payouts in the private API: same DTO, org allowlist, Test first.
+4. Bridge HMAC + signing interface + three-way reconcile (private).
 5. Mainnet, merchant pilot, optional SEP-31 receiving corridor. Still custodial. Still no merchant wallets.
 
 ## 11. Regulatory

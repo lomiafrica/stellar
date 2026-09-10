@@ -16,6 +16,7 @@ test('amountsFromHorizonBalances reads XLM and Circle USDC', () => {
   ]);
   assert.equal(amounts.xlm, 9994.99995);
   assert.equal(amounts.usdc, 10);
+  assert.equal(amounts.hasUsdcTrustline, true);
 });
 
 test('amountsFromHorizonBalances ignores other credit assets', () => {
@@ -30,6 +31,7 @@ test('amountsFromHorizonBalances ignores other credit assets', () => {
   ]);
   assert.equal(amounts.xlm, 5);
   assert.equal(amounts.usdc, 0);
+  assert.equal(amounts.hasUsdcTrustline, false);
 });
 
 test('visibleWidth ignores ANSI color codes', () => {

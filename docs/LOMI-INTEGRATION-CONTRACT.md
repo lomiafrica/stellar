@@ -55,13 +55,13 @@ Each row is the proposed `stellar_settlements` table plus payout join keys:
 
 `pnpm reconcile` checks Horizon/RPC success and memo against the ledger row.
 
-## Later (not in this repo)
+## Later (private API)
 
-1. **Migration**: `stellar_settlements` table (see [ARCHITECTURE.md](./ARCHITECTURE.md) §7).
-2. **API**: add `'stellar'` to `CreatePayoutDto.rail`; feature flag per organization.
-3. **Ledger**: do not add USDC to merchant `accounts` at first; treasury USDC stays off-ledger or on separate treasury accounts.
-4. **Webhooks**: add `stellar_transaction_id`, `bridge_transfer_id` to payout events.
-5. **Signing**: HSM/KMS instead of local `keys/` files.
+1. **Migration**: `stellar_settlements` (`20250226000121_stellar.sql`).
+2. **API**: `'stellar'` on `CreatePayoutDto.rail`; `STELLAR_RAIL_ORGANIZATION_IDS` allowlist; Test first.
+3. **Ledger**: do not add USDC to merchant `accounts`; treasury USDC stays off that ledger.
+4. **Webhooks**: `stellar_transaction_id` and `bridge_transfer_id` on payout events.
+5. **Signing / Bridge**: private `apps/api` module. Lab `keys/` stay here.
 
 ## Non-goals
 

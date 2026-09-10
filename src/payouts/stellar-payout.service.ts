@@ -7,7 +7,9 @@ import {
 } from '../ledger/store.js';
 import { mockBridgeUsdToUsdc } from '../mock/bridge.js';
 import { mockMobileMoneyOfframp } from '../mock/offramp.js';
+import { assertReadyToSettle } from '../operator/ready.js';
 import { loadKeypair } from '../stellar/keys.js';
+import { stellarMemoFromPayoutId } from '../stellar/memo.js';
 import { sendUsdcPayment } from '../stellar/payment.js';
 import { writeTestnetProof } from '../testnet-proof.js';
 import type {
@@ -113,7 +115,9 @@ export async function runSettlementDemo(
   const lastMileRail = input.last_mile_rail ?? 'wave';
   const currencyCode = input.currency_code ?? 'USD';
   const now = new Date().toISOString();
-  const memo = payoutId.slice(0, 28);
+  const memo = stellarMemoFromPayoutId(payoutId);
+
+  await assertReadyToSettle(Number(amountUsdc) || 10);
 
   let record: StellarSettlementRecord = {
     id: existing?.id ?? randomUUID(),

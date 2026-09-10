@@ -13,13 +13,15 @@ export interface AccountBalances {
   exists: boolean;
   xlm: number;
   usdc: number;
+  hasUsdcTrustline: boolean;
 }
 
 export function amountsFromHorizonBalances(
   lines: HorizonBalanceLine[],
-): { xlm: number; usdc: number } {
+): { xlm: number; usdc: number; hasUsdcTrustline: boolean } {
   let xlm = 0;
   let usdc = 0;
+  let hasUsdcTrustline = false;
   for (const line of lines) {
     const amount = Number(line.balance);
     if (!Number.isFinite(amount)) continue;
@@ -32,9 +34,10 @@ export function amountsFromHorizonBalances(
       line.asset_issuer === STELLAR_USDC_ISSUER
     ) {
       usdc = amount;
+      hasUsdcTrustline = true;
     }
   }
-  return { xlm, usdc };
+  return { xlm, usdc, hasUsdcTrustline };
 }
 
 function asBalanceLines(raw: readonly object[]): HorizonBalanceLine[] {
@@ -73,7 +76,13 @@ export async function loadAccountBalances(
     );
     return { publicKey, exists: true, ...amounts };
   } catch {
-    return { publicKey, exists: false, xlm: 0, usdc: 0 };
+    return {
+      publicKey,
+      exists: false,
+      xlm: 0,
+      usdc: 0,
+      hasUsdcTrustline: false,
+    };
   }
 }
 

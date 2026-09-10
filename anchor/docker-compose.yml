@@ -1,0 +1,32 @@
+# Official Anchor Platform next to the lab. Not inside apps/api.
+# From apps/tools/stellar: docker compose -f anchor/docker-compose.yml up
+services:
+  lab:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "3456:3456"
+    environment:
+      PORT: "3456"
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3456}
+      STELLAR_NETWORK: testnet
+    env_file:
+      - ../.env
+
+  anchor-platform:
+    image: stellar/anchor-platform:2
+    depends_on:
+      - lab
+    ports:
+      - "8080:8080"
+    environment:
+      STELLAR_ANCHOR_CONFIG: /config/anchor-config.yaml
+      HOME_DOMAIN: ${HOME_DOMAIN:-localhost}
+      LAB_BASE_URL: ${LAB_BASE_URL:-http://lab:3456}
+      XOF_ISSUER: ${XOF_ISSUER:-GD6PH2FAK5DQFFFALZVAT337R7NDGSPWT4R6UBGA5GYLL7N5U4C4GI7I}
+      SEP10_JWT_SECRET: ${SEP10_JWT_SECRET:-dev-sep10-jwt-secret-change-me}
+      SEP10_SIGNING_SEED: ${SEP10_SIGNING_SEED:-}
+      CALLBACK_AUTH_SECRET: ${CALLBACK_AUTH_SECRET:-dev-callback-secret-change-me}
+    volumes:
+      - ./config:/config:ro

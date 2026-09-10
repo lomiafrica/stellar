@@ -18,7 +18,7 @@ It is not wired to lomi. live systems. Merchants never hold keys. We do not issu
 - Mock Bridge treasury and mock last-mile (Wave / MTN / SPI)
 - SEP-1 `stellar.toml` at `/.well-known/stellar.toml`
 
-Not in this repo: Anchor Platform, HSM/KMS, mainnet keys, or calls into `apps/api`.
+Not in this repo: HSM/KMS, mainnet keys, or calls into `apps/api`. Anchor Platform is the official SDF image under `anchor/`.
 
 `pnpm install` does not need the lomi. monorepo.
 
@@ -38,7 +38,7 @@ pnpm settle:10
 pnpm proof
 ```
 
-`pnpm map` prints the two accounts and live balances. `pnpm bootstrap` reuses keys in `.env` or `keys/` if present, funds accounts via Friendbot, and opens Circle testnet USDC trustlines. If the omnibus has no test USDC, it prints the Circle faucet URL. `pnpm demo` runs map → bootstrap → settle:10 → proof with a pause between each.
+`pnpm map` prints the two accounts and live balances. `pnpm bootstrap` reuses keys in `.env` or `keys/` if present, funds accounts via Friendbot, and opens Circle testnet USDC trustlines. `pnpm fund` recycles merchant USDC back to the omnibus or prints the Circle faucet URL. Settle and `POST /demo/payouts` fail closed if the trustline or balance is missing. `pnpm demo` runs map → bootstrap → fund → settle:10 → proof.
 
 Output is a small colored header (plain text if the terminal has no color). Set `STELLAR_LAB_PACE=0` to skip the pauses.
 
@@ -59,11 +59,12 @@ pnpm start:dev
 
 | Method | Path | Notes |
 | --- | --- | --- |
-| `POST` | `/demo/payouts` | Payout-shaped body + `rail: "stellar"`; optional `Idempotency-Key` |
+| `POST` | `/demo/payouts` | Payout-shaped body + `rail: "stellar"`; optional `Idempotency-Key`. Fails closed if the omnibus is unfunded. |
 | `GET` | `/demo/payouts/:payout_id` | Status + reconcile snapshot |
 | `POST` | `/demo/settle` | Thin settle helper |
 | `POST` | `/mock/bridge/fund` | Mock treasury credit |
-| `GET` | `/.well-known/stellar.toml` | SEP-1 |
+| `GET` | `/.well-known/stellar.toml` | SEP-1 (CORS open; set `PUBLIC_BASE_URL` when hosted) |
+| `POST` | `/anchor/last-mile/:rail` | Sandbox Wave / MTN / SPI last mile |
 
 ```json
 {
@@ -102,7 +103,7 @@ Committed public keys and explorer tx ids (no secrets): `data/testnet-proof.json
 - Memo is the payout id, truncated to Stellar memo limits.
 - HTTP body matches lomi. `CreatePayoutDto` so a later `rail: "stellar"` can reuse the same shape.
 - Bridge and last-mile adapters here are stubs.
-- SCF #45 panel freeze: do not add Anchor Platform, real Bridge, or a production `POST /payouts` rail here until the award / Tranche 1 kickoff.
+- Build order after KYC / kickoff: [docs/BUILD-PHASES.md](./docs/BUILD-PHASES.md). Anchor Platform config lives in this repo (`anchor/`). Real Bridge, HSM, and `POST /payouts` `rail: stellar` stay in the private API.
 
 ## License
 

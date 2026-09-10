@@ -7,6 +7,7 @@ import {
 } from '@stellar/stellar-sdk';
 import { NETWORK_PASSPHRASE } from '../config.js';
 import { getHorizonServer, getRpcServer } from './client.js';
+import { stellarMemoFromPayoutId } from './memo.js';
 import { testnetUsdcAsset } from './trustline.js';
 
 export interface UsdcPaymentResult {
@@ -40,7 +41,7 @@ export async function sendUsdcPayment(
         amount,
       }),
     )
-    .addMemo(Memo.text(payoutId.slice(0, 28)))
+    .addMemo(Memo.text(stellarMemoFromPayoutId(payoutId)))
     .setTimeout(180)
     .build();
 
@@ -66,6 +67,6 @@ export async function sendUsdcPayment(
     amount,
     from: from.publicKey(),
     to: toPublicKey,
-    memo: payoutId.slice(0, 28),
+    memo: stellarMemoFromPayoutId(payoutId),
   };
 }

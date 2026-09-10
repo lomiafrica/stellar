@@ -1,0 +1,40 @@
+# Official Stellar Anchor Platform (testnet). Do not write custom SEP servers.
+# Docs: https://developers.stellar.org/docs/category/anchor-platform
+version: 2
+stellar:
+  network: TESTNET
+  toml:
+    path: /config/stellar.toml
+  sep1:
+    enabled: true
+  sep10:
+    enabled: true
+    home_domain: ${HOME_DOMAIN}
+    client_attribution_required: false
+  sep12:
+    enabled: true
+  sep24:
+    enabled: true
+    interactive_jwt_expiration: 3600
+assets:
+  - id: stellar:XOF:${XOF_ISSUER}
+    significant_decimals: 0
+    deposit:
+      enabled: true
+      min_amount: 100
+      max_amount: 1000000
+    withdraw:
+      enabled: true
+      min_amount: 100
+      max_amount: 1000000
+callback_api:
+  base_url: ${LAB_BASE_URL}/anchor
+data:
+  type: sqlite
+  url: jdbc:sqlite:/tmp/anchor-platform.db
+secret:
+  sep10:
+    jwt_secret: ${SEP10_JWT_SECRET}
+    signing_seed: ${SEP10_SIGNING_SEED}
+  callback_api:
+    auth_secret: ${CALLBACK_AUTH_SECRET}

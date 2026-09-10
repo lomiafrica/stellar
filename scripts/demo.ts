@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { pace, printLabHeader } from '../src/cli/talk.js';
 
-const STEPS = ['map', 'bootstrap', 'settle:10', 'proof'] as const;
+const STEPS = ['map', 'bootstrap', 'fund', 'settle:10', 'proof'] as const;
 
 async function run(script: string): Promise<void> {
   await new Promise<void>((resolve, reject) => {

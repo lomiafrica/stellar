@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -7,6 +8,7 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
+import { SettleNotReadyError } from '../operator/ready.js';
 import {
   getIdempotentResponse,
   saveIdempotentResponse,
@@ -66,11 +68,23 @@ export class DemoPayoutsController {
       phone: body.recipient?.phone,
     };
 
-    const response = await createStellarPayout(input);
-    if (idempotencyKey) {
-      saveIdempotentResponse(idempotencyKey, response.payout_id, response);
+    try {
+      const response = await createStellarPayout(input);
+      if (idempotencyKey) {
+        saveIdempotentResponse(idempotencyKey, response.payout_id, response);
+      }
+      return response;
+    } catch (err) {
+      if (err instanceof SettleNotReadyError) {
+        throw new BadRequestException({
+          success: false,
+          message: err.message,
+          reason: err.reason,
+          hint: err.hint,
+        });
+      }
+      throw err;
     }
-    return response;
   }
 
   @Get(':payout_id')

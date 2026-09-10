@@ -1,29 +1,27 @@
 import { Controller, Get, Header } from '@nestjs/common';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { PUBLIC_BASE_URL } from '../config.js';
 import { getAppRoot } from '../paths.js';
 import { readStoredKeys } from '../stellar/keys.js';
 import { readTestnetProof } from '../testnet-proof.js';
+import { renderStellarToml } from './stellar-toml.js';
 
 @Controller()
 export class TomlController {
   @Get('.well-known/stellar.toml')
   @Header('Content-Type', 'text/plain; charset=utf-8')
+  @Header('Access-Control-Allow-Origin', '*')
+  @Header('Cache-Control', 'public, max-age=300')
   getToml(): string {
     const root = getAppRoot();
-    const template = readFileSync(
-      join(root, 'public', 'stellar.toml'),
-      'utf8',
-    );
+    const template = readFileSync(join(root, 'public', 'stellar.toml'), 'utf8');
     const keys = readStoredKeys();
     const proof = readTestnetProof();
-    const issuer = keys?.omnibus.publicKey ?? proof?.omnibusPublicKey;
-    let body = issuer
-      ? template.replace(/issuer = "[^"]+"/, `issuer = "${issuer}"`)
-      : template;
-    if (!body.includes('DOCUMENTATION')) {
-      body += `\nDOCUMENTATION="https://github.com/lomiafrica/stellar/blob/main/docs/ARCHITECTURE.md"\n`;
-    }
-    return body;
+    return renderStellarToml(template, {
+      omnibusPublicKey: keys?.omnibus.publicKey ?? proof?.omnibusPublicKey,
+      merchantPublicKey: keys?.merchant.publicKey ?? proof?.merchantPublicKey,
+      publicBaseUrl: PUBLIC_BASE_URL,
+    });
   }
 }
