@@ -1,10 +1,11 @@
 import {
   printFaucetHint,
   printLabHeader,
-  printNext,
-  printStepList,
-  printWhy,
+  say,
+  sayDim,
+  sayOk,
   SETTLE_USDC,
+  thenRun,
 } from '../src/cli/talk.js';
 import {
   formatAmount,
@@ -25,56 +26,44 @@ import { establishUsdcTrustline } from '../src/stellar/trustline.js';
 import { writeTestnetProof } from '../src/testnet-proof.js';
 
 async function main() {
-  printLabHeader();
-  printStepList(1);
-  printWhy(
-    'Friendbot gives free testnet XLM. Trustlines let these accounts hold Circle USDC.',
-  );
-  console.log('');
+  await printLabHeader(1);
 
   const existing = readStoredKeys();
   const keys = existing ?? generateAndStoreKeys();
   if (existing) {
     persistStoredKeys(existing);
-    console.log('Reusing keys from .env or keys/ (not rotating).');
+    await sayDim('Reusing keys.');
   } else {
-    console.log('Created new testnet keys. Secrets stay in keys/ and .env (gitignored).');
+    await sayDim('New keys in keys/ and .env.');
   }
   console.log('');
 
   const omnibus = loadKeypair('omnibus');
   const merchant = loadKeypair('merchant');
 
-  console.log('Omnibus: Friendbot XLM...');
+  await say('Omnibus');
   await ensureFundedAccount(omnibus);
-  console.log(`  ${omnibus.publicKey()}`);
-  console.log(`  ${explorerAccount(omnibus.publicKey())}`);
+  await sayDim(omnibus.publicKey());
+  await sayDim(explorerAccount(omnibus.publicKey()));
   console.log('');
 
-  console.log('Merchant: create or fund...');
+  await say('Merchant');
   const createHash = await createMerchantAccountFromOmnibus(omnibus, merchant);
   if (createHash) {
-    console.log(`  created  ${explorerTx(createHash)}`);
-  } else {
-    console.log('  already on testnet');
+    await sayOk(explorerTx(createHash));
   }
   await ensureFundedAccount(merchant);
-  console.log(`  ${merchant.publicKey()}`);
-  console.log(`  ${explorerAccount(merchant.publicKey())}`);
+  await sayDim(merchant.publicKey());
+  await sayDim(explorerAccount(merchant.publicKey()));
   console.log('');
 
-  console.log('USDC trustlines...');
   const omnibusTrust = await establishUsdcTrustline(omnibus);
   const merchantTrust = await establishUsdcTrustline(merchant);
   if (omnibusTrust) {
-    console.log(`  omnibus  ${explorerTx(omnibusTrust)}`);
-  } else {
-    console.log('  omnibus already trusts Circle USDC');
+    await sayOk(`USDC  ${explorerTx(omnibusTrust)}`);
   }
   if (merchantTrust) {
-    console.log(`  merchant ${explorerTx(merchantTrust)}`);
-  } else {
-    console.log('  merchant already trusts Circle USDC');
+    await sayOk(`USDC  ${explorerTx(merchantTrust)}`);
   }
 
   writeTestnetProof({
@@ -88,11 +77,11 @@ async function main() {
   console.log('');
   const omnibusBal = await loadAccountBalances(omnibus.publicKey());
   if (omnibusBal.usdc >= SETTLE_USDC) {
-    console.log(`Omnibus has ${formatAmount(omnibusBal.usdc)} USDC.`);
-    printNext('pnpm settle:10');
+    await say(`${formatAmount(omnibusBal.usdc)} USDC`);
+    await thenRun('pnpm settle:10');
     return;
   }
-  printFaucetHint(keys.omnibus.publicKey);
+  await printFaucetHint(keys.omnibus.publicKey);
 }
 
 main().catch((err) => {

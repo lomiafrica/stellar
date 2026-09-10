@@ -38,7 +38,9 @@ pnpm settle:10
 pnpm proof
 ```
 
-`pnpm map` prints the lab map and live testnet balances. `pnpm bootstrap` reuses keys in `.env` or `keys/` if present, funds accounts via Friendbot, and opens Circle testnet USDC trustlines. If the omnibus has no test USDC, it prints the Circle faucet steps.
+`pnpm map` prints the two accounts and live balances. `pnpm bootstrap` reuses keys in `.env` or `keys/` if present, funds accounts via Friendbot, and opens Circle testnet USDC trustlines. If the omnibus has no test USDC, it prints the Circle faucet URL. `pnpm demo` runs map → bootstrap → settle:10 → proof with a pause between each.
+
+Output is a small colored header (plain text if the terminal has no color). Set `STELLAR_LAB_PACE=0` to skip the pauses.
 
 Current testnet accounts:
 

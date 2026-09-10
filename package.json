@@ -14,6 +14,7 @@
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main.js",
     "map": "tsx scripts/map.ts",
+    "demo": "tsx scripts/demo.ts",
     "bootstrap": "tsx scripts/bootstrap.ts",
     "settle:10": "tsx scripts/settle-10.ts",
     "proof": "tsx scripts/print-proof.ts",

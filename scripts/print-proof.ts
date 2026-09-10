@@ -1,73 +1,50 @@
-import { printLabHeader, printNext, printStepList, printWhy } from '../src/cli/talk.js';
+import {
+  ink,
+  printLabHeader,
+  say,
+  sayDim,
+  sayOk,
+  thenRun,
+} from '../src/cli/talk.js';
 import { readLedger } from '../src/ledger/store.js';
 import { reconcileTransaction } from '../src/ledger/reconcile.js';
-import { explorerAccount, explorerTx, PUBLIC_BASE_URL } from '../src/config.js';
+import { explorerAccount, explorerTx } from '../src/config.js';
 import { readStoredKeys } from '../src/stellar/keys.js';
 import { readTestnetProof } from '../src/testnet-proof.js';
 
 async function main() {
-  printLabHeader();
-  printStepList(3);
-  printWhy(
-    'Each link is something a reviewer can open without reading the code.',
-  );
-  console.log('');
+  await printLabHeader(3);
 
   const keys = readStoredKeys();
-  const proof = readTestnetProof();
+  const saved = readTestnetProof();
   const rows = readLedger();
   const last = rows[rows.length - 1];
 
-  const omnibusPk = keys?.omnibus.publicKey ?? proof?.omnibusPublicKey;
-  const merchantPk = keys?.merchant.publicKey ?? proof?.merchantPublicKey;
+  const omnibusPk = keys?.omnibus.publicKey ?? saved?.omnibusPublicKey;
+  const merchantPk = keys?.merchant.publicKey ?? saved?.merchantPublicKey;
 
-  if (omnibusPk && merchantPk) {
-    console.log(`Omnibus (treasury)     ${explorerAccount(omnibusPk)}`);
-    console.log(`Merchant (destination) ${explorerAccount(merchantPk)}`);
-  } else {
-    console.log('No accounts yet.');
-    printNext('pnpm bootstrap');
+  if (!omnibusPk || !merchantPk) {
+    await say('No accounts yet.');
+    await thenRun('pnpm bootstrap');
     return;
   }
 
-  if (proof?.omnibusTrustlineTx) {
-    console.log(
-      `Omnibus USDC trust     ${explorerTx(proof.omnibusTrustlineTx)}`,
-    );
-  }
-  if (proof?.merchantTrustlineTx) {
-    console.log(
-      `Merchant USDC trust    ${explorerTx(proof.merchantTrustlineTx)}`,
-    );
-  }
+  await sayDim(explorerAccount(omnibusPk));
+  await sayDim(explorerAccount(merchantPk));
 
-  const settlementHash = last?.stellar_tx_hash ?? proof?.settlementTx;
-  if (settlementHash) {
-    const amount = last?.amount_usdc ?? '10';
-    console.log(
-      `USDC Payment (~${amount})   ${explorerTx(settlementHash)}`,
-    );
-    const recon = await reconcileTransaction(settlementHash);
-    console.log(
-      `Reconcile              ${recon.ok ? 'OK' : 'FAILED'}  ${recon.details}`,
-    );
-  } else {
-    console.log('No settlement yet.');
-    printNext('pnpm settle:10');
+  const settlementHash = last?.stellar_tx_hash ?? saved?.settlementTx;
+  if (!settlementHash) {
+    await thenRun('pnpm settle:10');
     return;
   }
 
-  console.log(
-    `SEP-1 source           https://github.com/lomiafrica/stellar/blob/main/public/stellar.toml`,
-  );
-  console.log(
-    `Architecture           https://github.com/lomiafrica/stellar/blob/main/docs/ARCHITECTURE.md`,
-  );
-  console.log(
-    `SEP-1 local            ${PUBLIC_BASE_URL}/.well-known/stellar.toml`,
-  );
-  console.log('');
-  console.log('Repository: https://github.com/lomiafrica/stellar');
+  await sayOk(explorerTx(settlementHash));
+  const recon = await reconcileTransaction(settlementHash);
+  if (recon.ok) {
+    await sayOk('OK');
+  } else {
+    await say(`${ink.yellow('FAILED')}  ${recon.details}`);
+  }
 }
 
 main().catch((err) => {

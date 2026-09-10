@@ -1,9 +1,10 @@
 import {
   printFaucetHint,
   printLabHeader,
-  printNext,
-  printStepList,
+  say,
+  sayDim,
   SETTLE_USDC,
+  thenRun,
 } from '../src/cli/talk.js';
 import {
   formatAmount,
@@ -13,53 +14,49 @@ import { explorerAccount } from '../src/config.js';
 import { readStoredKeys } from '../src/stellar/keys.js';
 
 async function main() {
-  printLabHeader();
-  printStepList();
+  await printLabHeader();
 
   const keys = readStoredKeys();
   if (!keys) {
-    console.log('No keys yet. Bootstrap creates the omnibus and merchant accounts.');
-    printNext('pnpm bootstrap');
+    await say('No accounts yet.');
+    await thenRun('pnpm bootstrap');
     return;
   }
 
   const omnibus = await loadAccountBalances(keys.omnibus.publicKey);
   const merchant = await loadAccountBalances(keys.merchant.publicKey);
 
-  printRole('Omnibus', 'lomi. treasury. Signs the USDC Payment.', omnibus);
+  await printRole('Omnibus', omnibus);
   console.log('');
-  printRole('Merchant', 'Custodial destination. Merchants never see this key.', merchant);
+  await printRole('Merchant', merchant);
   console.log('');
 
   if (!omnibus.exists) {
-    console.log('Omnibus is not on testnet yet.');
-    printNext('pnpm bootstrap');
+    await thenRun('pnpm bootstrap');
     return;
   }
 
   if (omnibus.usdc < SETTLE_USDC) {
-    printFaucetHint(omnibus.publicKey);
+    await printFaucetHint(omnibus.publicKey);
     return;
   }
 
-  console.log(`Omnibus has ${formatAmount(omnibus.usdc)} USDC.`);
-  printNext('pnpm settle:10');
+  await thenRun('pnpm settle:10');
 }
 
-function printRole(
+async function printRole(
   title: string,
-  why: string,
   bal: Awaited<ReturnType<typeof loadAccountBalances>>,
-): void {
-  console.log(`${title}  ${bal.publicKey}`);
-  console.log(`  ${why}`);
+): Promise<void> {
+  await say(title);
+  await sayDim(bal.publicKey);
   if (!bal.exists) {
-    console.log('  not on testnet yet');
+    await sayDim('not on testnet yet');
     return;
   }
-  console.log(`  XLM   ${formatAmount(bal.xlm)}`);
-  console.log(`  USDC  ${formatAmount(bal.usdc)}`);
-  console.log(`  ${explorerAccount(bal.publicKey)}`);
+  await say(`  ${formatAmount(bal.xlm)} XLM`);
+  await say(`  ${formatAmount(bal.usdc)} USDC`);
+  await sayDim(`  ${explorerAccount(bal.publicKey)}`);
 }
 
 main().catch((err) => {
