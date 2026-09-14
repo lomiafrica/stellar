@@ -16,9 +16,18 @@ export interface AccountBalances {
   hasUsdcTrustline: boolean;
 }
 
+export type HorizonBalanceAmounts = Pick<
+  AccountBalances,
+  'xlm' | 'usdc' | 'hasUsdcTrustline'
+>;
+
+function isString<Value>(value: Value): value is Value & string {
+  return typeof value === 'string';
+}
+
 export function amountsFromHorizonBalances(
   lines: HorizonBalanceLine[],
-): { xlm: number; usdc: number; hasUsdcTrustline: boolean } {
+): HorizonBalanceAmounts {
   let xlm = 0;
   let usdc = 0;
   let hasUsdcTrustline = false;
@@ -46,16 +55,16 @@ function asBalanceLines(raw: readonly object[]): HorizonBalanceLine[] {
     if (!('asset_type' in row) || !('balance' in row)) continue;
     const assetType = row.asset_type;
     const balance = row.balance;
-    if (typeof assetType !== 'string' || typeof balance !== 'string') continue;
+    if (!isString(assetType) || !isString(balance)) continue;
     const line: HorizonBalanceLine = {
       asset_type: assetType,
       balance,
     };
     if (
       'asset_code' in row &&
-      typeof row.asset_code === 'string' &&
+      isString(row.asset_code) &&
       'asset_issuer' in row &&
-      typeof row.asset_issuer === 'string'
+      isString(row.asset_issuer)
     ) {
       line.asset_code = row.asset_code;
       line.asset_issuer = row.asset_issuer;

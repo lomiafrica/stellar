@@ -3,11 +3,15 @@ export const SETTLE_USDC = 10;
 
 const BOX_WIDTH = 44;
 
+function isFunction<T>(value: T): value is Extract<T, (...args: never[]) => void> {
+  return typeof value === 'function';
+}
+
 const colorOn =
   process.stdout.isTTY === true &&
   process.env.NO_COLOR === undefined &&
   process.env.STELLAR_LAB_COLOR !== '0' &&
-  (typeof process.stdout.hasColors !== 'function' || process.stdout.hasColors());
+  (!isFunction(process.stdout.hasColors) || process.stdout.hasColors());
 
 function paint(code: number, text: string): string {
   if (!colorOn) return text;
