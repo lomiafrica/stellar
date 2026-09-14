@@ -7,43 +7,43 @@ import {
   NotFoundException,
   Param,
   Post,
-} from '@nestjs/common';
-import { SettleNotReadyError } from '../operator/ready.js';
+} from "@nestjs/common";
+import { SettleNotReadyError } from "../operator/ready.js";
 import {
   getIdempotentResponse,
   saveIdempotentResponse,
-} from '../ledger/idempotency.js';
-import { findByPayoutId } from '../ledger/store.js';
-import { reconcileTransaction } from '../ledger/reconcile.js';
-import { createStellarPayout } from '../payouts/stellar-payout.service.js';
-import type { CreateStellarPayoutInput } from '../payouts/types.js';
-import type { JsonObject } from '../json.js';
+} from "../ledger/idempotency.js";
+import { findByPayoutId } from "../ledger/store.js";
+import { reconcileTransaction } from "../ledger/reconcile.js";
+import { createStellarPayout } from "../payouts/stellar-payout.service.js";
+import type { CreateStellarPayoutInput } from "../payouts/types.js";
+import type { JsonObject } from "../json.js";
 
-@Controller('demo/payouts')
+@Controller("demo/payouts")
 export class DemoPayoutsController {
   @Post()
   async create(
     @Body()
     body: {
-      destination: 'self' | 'beneficiary';
-      rail: 'stellar';
+      destination: "self" | "beneficiary";
+      rail: "stellar";
       amount: number;
       currency_code: string;
       payout_id?: string;
       organization_id?: string;
-      last_mile_rail?: 'wave' | 'mtn' | 'spi' | 'bank';
+      last_mile_rail?: "wave" | "mtn" | "spi" | "bank";
       payout_method_id?: string;
       recipient?: { name: string; phone: string };
       reason?: string;
       metadata?: JsonObject;
       amount_usdc?: string;
     },
-    @Headers('idempotency-key') idempotencyKey?: string,
+    @Headers("idempotency-key") idempotencyKey?: string,
   ) {
-    if (body.rail !== 'stellar') {
+    if (body.rail !== "stellar") {
       return {
         success: false,
-        message: 'This demo only supports rail=stellar.',
+        message: "This demo only supports rail=stellar.",
       };
     }
 
@@ -54,7 +54,7 @@ export class DemoPayoutsController {
 
     const input: CreateStellarPayoutInput = {
       destination: body.destination,
-      rail: 'stellar',
+      rail: "stellar",
       amount: body.amount,
       currency_code: body.currency_code,
       payout_id: body.payout_id,
@@ -87,11 +87,13 @@ export class DemoPayoutsController {
     }
   }
 
-  @Get(':payout_id')
-  async get(@Param('payout_id') payoutId: string) {
+  @Get(":payout_id")
+  async get(@Param("payout_id") payoutId: string) {
     const row = findByPayoutId(payoutId);
     if (!row) {
-      throw new NotFoundException(`No stellar settlement for payout_id ${payoutId}`);
+      throw new NotFoundException(
+        `No stellar settlement for payout_id ${payoutId}`,
+      );
     }
     let reconcile = null;
     if (row.stellar_tx_hash) {

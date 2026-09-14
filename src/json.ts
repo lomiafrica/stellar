@@ -34,9 +34,7 @@ function isFunction<T>(value: T): value is Extract<T, Callable> {
 }
 
 /** True when value is a plain JSON object (not an array). */
-export function isJsonObject<Value>(
-  value: Value,
-): value is Value & JsonObject {
+export function isJsonObject<Value>(value: Value): value is Value & JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 

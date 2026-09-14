@@ -57,14 +57,14 @@ Do not send mainnet USDC to these addresses.
 pnpm start:dev
 ```
 
-| Method | Path | Notes |
-| --- | --- | --- |
-| `POST` | `/demo/payouts` | Payout-shaped body + `rail: "stellar"`; optional `Idempotency-Key`. Fails closed if the omnibus is unfunded. |
-| `GET` | `/demo/payouts/:payout_id` | Status + reconcile snapshot |
-| `POST` | `/demo/settle` | Thin settle helper |
-| `POST` | `/mock/bridge/fund` | Mock treasury credit |
-| `GET` | `/.well-known/stellar.toml` | SEP-1 (CORS open; set `PUBLIC_BASE_URL` when hosted) |
-| `POST` | `/anchor/last-mile/:rail` | Sandbox Wave / MTN / SPI last mile |
+| Method | Path                        | Notes                                                                                                        |
+| ------ | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `POST` | `/demo/payouts`             | Payout-shaped body + `rail: "stellar"`; optional `Idempotency-Key`. Fails closed if the omnibus is unfunded. |
+| `GET`  | `/demo/payouts/:payout_id`  | Status + reconcile snapshot                                                                                  |
+| `POST` | `/demo/settle`              | Thin settle helper                                                                                           |
+| `POST` | `/mock/bridge/fund`         | Mock treasury credit                                                                                         |
+| `GET`  | `/.well-known/stellar.toml` | SEP-1 (CORS open; set `PUBLIC_BASE_URL` when hosted)                                                         |
+| `POST` | `/anchor/last-mile/:rail`   | Sandbox Wave / MTN / SPI last mile                                                                           |
 
 ```json
 {
@@ -89,11 +89,11 @@ CI on `main` runs the same plus `pnpm knip`. Tests cover JSON parsing, the local
 
 ## Local data (gitignored)
 
-| Path | Purpose |
-| --- | --- |
-| `data/stellar_settlements.json` | Settlement rows |
-| `data/demo_idempotency.json` | Idempotency cache |
-| `keys/` | Testnet signing keys (never commit) |
+| Path                            | Purpose                             |
+| ------------------------------- | ----------------------------------- |
+| `data/stellar_settlements.json` | Settlement rows                     |
+| `data/demo_idempotency.json`    | Idempotency cache                   |
+| `keys/`                         | Testnet signing keys (never commit) |
 
 Committed public keys and explorer tx ids (no secrets): `data/testnet-proof.json`.
 

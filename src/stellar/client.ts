@@ -1,6 +1,6 @@
-import { Horizon } from '@stellar/stellar-sdk';
-import { rpc } from '@stellar/stellar-sdk';
-import { STELLAR_HORIZON_URL, STELLAR_RPC_URL } from '../config.js';
+import { Horizon } from "@stellar/stellar-sdk";
+import { rpc } from "@stellar/stellar-sdk";
+import { STELLAR_HORIZON_URL, STELLAR_RPC_URL } from "../config.js";
 
 export function getRpcServer(): rpc.Server {
   return new rpc.Server(STELLAR_RPC_URL, { allowHttp: true });

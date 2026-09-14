@@ -1,6 +1,10 @@
-import { getHorizonServer, getRpcServer } from '../stellar/client.js';
-import { memoMatchesPayoutId } from '../stellar/memo.js';
-import { findByPayoutId, findByTxHash, type StellarSettlementRecord } from './store.js';
+import { getHorizonServer, getRpcServer } from "../stellar/client.js";
+import { memoMatchesPayoutId } from "../stellar/memo.js";
+import {
+  findByPayoutId,
+  findByTxHash,
+  type StellarSettlementRecord,
+} from "./store.js";
 
 export interface ReconcileResult {
   ok: boolean;
@@ -48,12 +52,14 @@ export function evaluateReconcile(input: {
     memoMatch,
     ledgerFound,
     details: ok
-      ? 'Ledger row matches successful on-chain payment with memo.'
-      : 'Reconciliation incomplete. Check hash, ledger, and memo.',
+      ? "Ledger row matches successful on-chain payment with memo."
+      : "Reconciliation incomplete. Check hash, ledger, and memo.",
   };
 }
 
-export async function reconcileTransaction(hash: string): Promise<ReconcileResult> {
+export async function reconcileTransaction(
+  hash: string,
+): Promise<ReconcileResult> {
   const rpc = getRpcServer();
   const horizon = getHorizonServer();
   const ledgerRow = findByTxHash(hash);
@@ -63,12 +69,12 @@ export async function reconcileTransaction(hash: string): Promise<ReconcileResul
 
   try {
     const polled = await rpc.getTransaction(hash);
-    onChainSuccess = polled.status === 'SUCCESS';
+    onChainSuccess = polled.status === "SUCCESS";
   } catch {
     try {
       const tx = await horizon.transactions().transaction(hash).call();
       onChainSuccess = tx.successful;
-      if (tx.memo_type === 'text' && tx.memo) {
+      if (tx.memo_type === "text" && tx.memo) {
         onChainMemo = tx.memo;
       }
     } catch {

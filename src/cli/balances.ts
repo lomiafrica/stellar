@@ -1,5 +1,5 @@
-import { STELLAR_USDC_ISSUER } from '../config.js';
-import { getHorizonServer } from '../stellar/client.js';
+import { STELLAR_USDC_ISSUER } from "../config.js";
+import { getHorizonServer } from "../stellar/client.js";
 
 export interface HorizonBalanceLine {
   asset_type: string;
@@ -18,11 +18,11 @@ export interface AccountBalances {
 
 export type HorizonBalanceAmounts = Pick<
   AccountBalances,
-  'xlm' | 'usdc' | 'hasUsdcTrustline'
+  "xlm" | "usdc" | "hasUsdcTrustline"
 >;
 
 function isString<Value>(value: Value): value is Value & string {
-  return typeof value === 'string';
+  return typeof value === "string";
 }
 
 export function amountsFromHorizonBalances(
@@ -34,12 +34,12 @@ export function amountsFromHorizonBalances(
   for (const line of lines) {
     const amount = Number(line.balance);
     if (!Number.isFinite(amount)) continue;
-    if (line.asset_type === 'native') {
+    if (line.asset_type === "native") {
       xlm = amount;
       continue;
     }
     if (
-      line.asset_code === 'USDC' &&
+      line.asset_code === "USDC" &&
       line.asset_issuer === STELLAR_USDC_ISSUER
     ) {
       usdc = amount;
@@ -52,7 +52,7 @@ export function amountsFromHorizonBalances(
 function asBalanceLines(raw: readonly object[]): HorizonBalanceLine[] {
   const lines: HorizonBalanceLine[] = [];
   for (const row of raw) {
-    if (!('asset_type' in row) || !('balance' in row)) continue;
+    if (!("asset_type" in row) || !("balance" in row)) continue;
     const assetType = row.asset_type;
     const balance = row.balance;
     if (!isString(assetType) || !isString(balance)) continue;
@@ -61,9 +61,9 @@ function asBalanceLines(raw: readonly object[]): HorizonBalanceLine[] {
       balance,
     };
     if (
-      'asset_code' in row &&
+      "asset_code" in row &&
       isString(row.asset_code) &&
-      'asset_issuer' in row &&
+      "asset_issuer" in row &&
       isString(row.asset_issuer)
     ) {
       line.asset_code = row.asset_code;
@@ -96,7 +96,7 @@ export async function loadAccountBalances(
 }
 
 export function formatAmount(value: number): string {
-  return value.toLocaleString('en-US', {
+  return value.toLocaleString("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 7,
   });

@@ -1,20 +1,20 @@
-import { spawn } from 'node:child_process';
-import { pace, printLabHeader } from '../src/cli/talk.js';
+import { spawn } from "node:child_process";
+import { pace, printLabHeader } from "../src/cli/talk.js";
 
-const STEPS = ['map', 'bootstrap', 'fund', 'settle:10', 'proof'] as const;
+const STEPS = ["map", "bootstrap", "fund", "settle:10", "proof"] as const;
 
 async function run(script: string): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    const child = spawn('pnpm', ['run', script], {
-      stdio: 'inherit',
+    const child = spawn("pnpm", ["run", script], {
+      stdio: "inherit",
       env: process.env,
     });
-    child.on('exit', (code) => {
+    child.on("exit", (code) => {
       if (code === 0) {
         resolve();
         return;
       }
-      reject(new Error(`pnpm ${script} exited ${code ?? '?'}`));
+      reject(new Error(`pnpm ${script} exited ${code ?? "?"}`));
     });
   });
 }
@@ -25,7 +25,7 @@ async function main() {
   for (const [index, script] of STEPS.entries()) {
     if (index > 0) {
       await pace(3500);
-      console.log('');
+      console.log("");
     }
     await run(script);
   }

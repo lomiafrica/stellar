@@ -5,11 +5,11 @@ import {
   sayOk,
   SETTLE_USDC,
   thenRun,
-} from '../src/cli/talk.js';
-import { fundOmnibusFromMerchant } from '../src/operator/fund.js';
-import { SettleNotReadyError } from '../src/operator/ready.js';
-import { runSettlementDemo } from '../src/settlement-demo.js';
-import { loadKeypair } from '../src/stellar/keys.js';
+} from "../src/cli/talk.js";
+import { fundOmnibusFromMerchant } from "../src/operator/fund.js";
+import { SettleNotReadyError } from "../src/operator/ready.js";
+import { runSettlementDemo } from "../src/settlement-demo.js";
+import { loadKeypair } from "../src/stellar/keys.js";
 
 async function main() {
   await printLabHeader(2);
@@ -20,7 +20,7 @@ async function main() {
     await say(`${result.amountUsdc} USDC`);
     await say(result.payoutId);
     await sayOk(result.explorerTx);
-    await thenRun('pnpm proof');
+    await thenRun("pnpm proof");
   } catch (err) {
     if (err instanceof SettleNotReadyError) {
       await say(err.message);
@@ -38,18 +38,18 @@ async function main() {
 main().catch((err) => {
   console.error(err);
   const underfunded =
-    String(err).includes('payment failed') ||
-    String(err).includes('op_underfunded');
+    String(err).includes("payment failed") ||
+    String(err).includes("op_underfunded");
   if (!underfunded) {
     process.exit(1);
   }
   try {
-    const omnibus = loadKeypair('omnibus');
+    const omnibus = loadKeypair("omnibus");
     printFaucetHint(omnibus.publicKey())
       .catch(() => undefined)
       .finally(() => process.exit(1));
   } catch {
-    thenRun('pnpm bootstrap')
+    thenRun("pnpm bootstrap")
       .catch(() => undefined)
       .finally(() => process.exit(1));
   }

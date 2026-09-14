@@ -4,11 +4,11 @@ import {
   Memo,
   Operation,
   TransactionBuilder,
-} from '@stellar/stellar-sdk';
-import { NETWORK_PASSPHRASE } from '../config.js';
-import { getHorizonServer, getRpcServer } from './client.js';
-import { stellarMemoFromPayoutId } from './memo.js';
-import { testnetUsdcAsset } from './trustline.js';
+} from "@stellar/stellar-sdk";
+import { NETWORK_PASSPHRASE } from "../config.js";
+import { getHorizonServer, getRpcServer } from "./client.js";
+import { stellarMemoFromPayoutId } from "./memo.js";
+import { testnetUsdcAsset } from "./trustline.js";
 
 export interface UsdcPaymentResult {
   hash: string;
@@ -47,14 +47,14 @@ export async function sendUsdcPayment(
 
   tx.sign(from);
   const send = await rpc.sendTransaction(tx);
-  if (send.status === 'ERROR') {
+  if (send.status === "ERROR") {
     throw new Error(`payment failed: ${JSON.stringify(send)}`);
   }
   const polled = await rpc.pollTransaction(send.hash, {
     attempts: 30,
     sleepStrategy: () => 2000,
   });
-  if (polled.status !== 'SUCCESS') {
+  if (polled.status !== "SUCCESS") {
     const detail = JSON.stringify(polled);
     throw new Error(
       `payment not successful: ${polled.status} (${detail}). If balance is 0 USDC, fund omnibus at https://faucet.circle.com (Stellar Testnet).`,

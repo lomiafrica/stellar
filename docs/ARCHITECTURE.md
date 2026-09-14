@@ -41,25 +41,25 @@ This lab (testnet)
 
 If we wire this into the live API later: feature-flagged `rail: stellar`, real Bridge, Anchor Platform for XOF SEPs. Field map: [LOMI-INTEGRATION-CONTRACT.md](./LOMI-INTEGRATION-CONTRACT.md).
 
-| Building block | Role | In this repo |
-| --- | --- | --- |
-| Circle USDC | Settlement asset (consume, do not issue) | Testnet trustlines |
-| Stellar classic payments | Omnibus to merchant, memo = payout id | Implemented |
-| Bridge | USD <-> USDC treasury | Mock adapter |
-| Stellar Anchor Platform | XOF on/off-ramp SEP stack | Official image in `anchor/` |
+| Building block           | Role                                     | In this repo                |
+| ------------------------ | ---------------------------------------- | --------------------------- |
+| Circle USDC              | Settlement asset (consume, do not issue) | Testnet trustlines          |
+| Stellar classic payments | Omnibus to merchant, memo = payout id    | Implemented                 |
+| Bridge                   | USD <-> USDC treasury                    | Mock adapter                |
+| Stellar Anchor Platform  | XOF on/off-ramp SEP stack                | Official image in `anchor/` |
 
 ## 3. What runs today
 
 Isolated NestJS app. Clone and run without the lomi. monorepo.
 
-| Capability | Status |
-| --- | --- |
-| Friendbot XLM + Circle USDC trustlines | On testnet |
-| Memo-keyed USDC Payment (omnibus to merchant) | `pnpm settle:10` |
-| Local `stellar_settlements.json` ledger | Snake_case fields for a later Postgres table |
-| `POST /demo/payouts` (`rail: stellar`) | Mirrors `CreatePayoutDto` |
-| Mock Bridge + mock Wave off-ramp | Stubs |
-| SEP-1 `stellar.toml` | In repo / local HTTP |
+| Capability                                    | Status                                       |
+| --------------------------------------------- | -------------------------------------------- |
+| Friendbot XLM + Circle USDC trustlines        | On testnet                                   |
+| Memo-keyed USDC Payment (omnibus to merchant) | `pnpm settle:10`                             |
+| Local `stellar_settlements.json` ledger       | Snake_case fields for a later Postgres table |
+| `POST /demo/payouts` (`rail: stellar`)        | Mirrors `CreatePayoutDto`                    |
+| Mock Bridge + mock Wave off-ramp              | Stubs                                        |
+| SEP-1 `stellar.toml`                          | In repo / local HTTP                         |
 
 **Testnet accounts**
 
@@ -85,15 +85,15 @@ Merchants never see wallets or keys.
 
 ## 5. SEP map
 
-| SEP | Lab | Later |
-| --- | --- | --- |
-| SEP-1 | `stellar.toml` + XOF metadata | Hosted toml with XOF fiat metadata |
-| SEP-10 | Not here | Wallet / anchor auth |
-| SEP-12 | Not here | KYC/KYB via existing merchant verification |
-| SEP-24 | Not here | Interactive deposit/withdraw to Wave/MTN |
-| SEP-6 | Not here | Programmatic deposit/withdraw |
-| SEP-38 | Not here | XOF/USDC quotes (XOF pegged to EUR) |
-| SEP-31 | Not here | UEMOA receiving corridor |
+| SEP    | Lab                           | Later                                      |
+| ------ | ----------------------------- | ------------------------------------------ |
+| SEP-1  | `stellar.toml` + XOF metadata | Hosted toml with XOF fiat metadata         |
+| SEP-10 | Not here                      | Wallet / anchor auth                       |
+| SEP-12 | Not here                      | KYC/KYB via existing merchant verification |
+| SEP-24 | Not here                      | Interactive deposit/withdraw to Wave/MTN   |
+| SEP-6  | Not here                      | Programmatic deposit/withdraw              |
+| SEP-38 | Not here                      | XOF/USDC quotes (XOF pegged to EUR)        |
+| SEP-31 | Not here                      | UEMOA receiving corridor                   |
 
 No Soroban. Classic payments, then Anchor Platform if we take the rail live.
 
@@ -134,13 +134,13 @@ Idempotency: same `payout_id` means at most one on-chain Payment (same idea as `
 
 ## 9. Dependencies
 
-| Dependency | Role | Here vs later |
-| --- | --- | --- |
-| Circle USDC | Settlement asset | Testnet; consume only, never issue |
-| Bridge | USD <-> USDC | Mock now; later HMAC webhooks + dedupe |
-| Anchor Platform (SDF) | SEP stack | `anchor/docker-compose.yml` |
-| Wave / MTN / SPI | Last mile | Live in lomi.; mocked here |
-| BCEAO | Regulatory | PI licence application in progress; MoR under partner banks |
+| Dependency            | Role             | Here vs later                                               |
+| --------------------- | ---------------- | ----------------------------------------------------------- |
+| Circle USDC           | Settlement asset | Testnet; consume only, never issue                          |
+| Bridge                | USD <-> USDC     | Mock now; later HMAC webhooks + dedupe                      |
+| Anchor Platform (SDF) | SEP stack        | `anchor/docker-compose.yml`                                 |
+| Wave / MTN / SPI      | Last mile        | Live in lomi.; mocked here                                  |
+| BCEAO                 | Regulatory       | PI licence application in progress; MoR under partner banks |
 
 ## 10. If we take this live
 

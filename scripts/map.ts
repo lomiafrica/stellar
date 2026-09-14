@@ -5,34 +5,31 @@ import {
   sayDim,
   SETTLE_USDC,
   thenRun,
-} from '../src/cli/talk.js';
-import {
-  formatAmount,
-  loadAccountBalances,
-} from '../src/cli/balances.js';
-import { explorerAccount } from '../src/config.js';
-import { readStoredKeys } from '../src/stellar/keys.js';
+} from "../src/cli/talk.js";
+import { formatAmount, loadAccountBalances } from "../src/cli/balances.js";
+import { explorerAccount } from "../src/config.js";
+import { readStoredKeys } from "../src/stellar/keys.js";
 
 async function main() {
   await printLabHeader();
 
   const keys = readStoredKeys();
   if (!keys) {
-    await say('No accounts yet.');
-    await thenRun('pnpm bootstrap');
+    await say("No accounts yet.");
+    await thenRun("pnpm bootstrap");
     return;
   }
 
   const omnibus = await loadAccountBalances(keys.omnibus.publicKey);
   const merchant = await loadAccountBalances(keys.merchant.publicKey);
 
-  await printRole('Omnibus', omnibus);
-  console.log('');
-  await printRole('Merchant', merchant);
-  console.log('');
+  await printRole("Omnibus", omnibus);
+  console.log("");
+  await printRole("Merchant", merchant);
+  console.log("");
 
   if (!omnibus.exists) {
-    await thenRun('pnpm bootstrap');
+    await thenRun("pnpm bootstrap");
     return;
   }
 
@@ -41,7 +38,7 @@ async function main() {
     return;
   }
 
-  await thenRun('pnpm settle:10');
+  await thenRun("pnpm settle:10");
 }
 
 async function printRole(
@@ -51,7 +48,7 @@ async function printRole(
   await say(title);
   await sayDim(bal.publicKey);
   if (!bal.exists) {
-    await sayDim('not on testnet yet');
+    await sayDim("not on testnet yet");
     return;
   }
   await say(`  ${formatAmount(bal.xlm)} XLM`);

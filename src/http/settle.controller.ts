@@ -1,10 +1,10 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { runSettlementDemo } from '../settlement-demo.js';
+import { Body, Controller, Post } from "@nestjs/common";
+import { runSettlementDemo } from "../settlement-demo.js";
 
-@Controller('demo')
+@Controller("demo")
 export class SettleController {
   /** Thin settle helper; prefer POST /demo/payouts */
-  @Post('settle')
+  @Post("settle")
   async settle(
     @Body()
     body: {
@@ -12,8 +12,8 @@ export class SettleController {
       payout_id?: string;
       phone?: string;
       organization_id?: string;
-      destination?: 'self' | 'beneficiary';
-      last_mile_rail?: 'wave' | 'mtn' | 'spi' | 'bank';
+      destination?: "self" | "beneficiary";
+      last_mile_rail?: "wave" | "mtn" | "spi" | "bank";
       currency_code?: string;
       amount_number?: number;
     },

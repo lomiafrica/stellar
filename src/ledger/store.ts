@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   isJsonObject,
   parseJson,
@@ -7,15 +7,15 @@ import {
   readString,
   type JsonObject,
   type JsonValue,
-} from '../json.js';
-import { getDataDir } from '../paths.js';
+} from "../json.js";
+import { getDataDir } from "../paths.js";
 
 /** Mirrors prod `payouts.status` */
-export type PayoutStatus = 'pending' | 'processing' | 'completed' | 'failed';
+export type PayoutStatus = "pending" | "processing" | "completed" | "failed";
 
-export type LastMileRail = 'wave' | 'mtn' | 'spi' | 'bank';
-export type PayoutDestination = 'self' | 'beneficiary';
-export type LomiEnvironment = 'test' | 'live';
+export type LastMileRail = "wave" | "mtn" | "spi" | "bank";
+export type PayoutDestination = "self" | "beneficiary";
+export type LomiEnvironment = "test" | "live";
 
 /**
  * Local shadow of the proposed `stellar_settlements` table + `payouts` join keys.
@@ -47,11 +47,11 @@ export interface StellarSettlementRecord {
 }
 
 function ledgerPath(): string {
-  return join(getDataDir(), 'stellar_settlements.json');
+  return join(getDataDir(), "stellar_settlements.json");
 }
 
 function legacyLedgerPath(): string {
-  return join(getDataDir(), 'settlements.json');
+  return join(getDataDir(), "settlements.json");
 }
 
 function ensureDataDir(): void {
@@ -62,47 +62,47 @@ function ensureDataDir(): void {
 }
 
 function normalizeLegacyRow(raw: JsonObject): StellarSettlementRecord {
-  const payoutId = firstString(raw, 'payout_id', 'payoutId') ?? '';
+  const payoutId = firstString(raw, "payout_id", "payoutId") ?? "";
   const now = new Date().toISOString();
   return {
-    id: readString(raw, 'id') ?? payoutId,
+    id: readString(raw, "id") ?? payoutId,
     organization_id:
-      readString(raw, 'organization_id') ??
-      '00000000-0000-4000-8000-000000000001',
-    environment: readString(raw, 'environment') === 'live' ? 'live' : 'test',
+      readString(raw, "organization_id") ??
+      "00000000-0000-4000-8000-000000000001",
+    environment: readString(raw, "environment") === "live" ? "live" : "test",
     payout_id: payoutId,
-    destination: readDestination(raw['destination']),
-    last_mile_rail: readLastMileRail(raw['last_mile_rail']),
-    amount: firstNumber(raw, 'amount', 'amountUsdc') ?? 0,
-    currency_code: readString(raw, 'currency_code') ?? 'USD',
-    amount_usdc: firstString(raw, 'amount_usdc', 'amountUsdc') ?? '0',
-    stellar_tx_hash: firstString(raw, 'stellar_tx_hash', 'stellarTxHash'),
-    stellar_from: firstString(raw, 'stellar_from', 'from'),
-    stellar_to: firstString(raw, 'stellar_to', 'to'),
+    destination: readDestination(raw["destination"]),
+    last_mile_rail: readLastMileRail(raw["last_mile_rail"]),
+    amount: firstNumber(raw, "amount", "amountUsdc") ?? 0,
+    currency_code: readString(raw, "currency_code") ?? "USD",
+    amount_usdc: firstString(raw, "amount_usdc", "amountUsdc") ?? "0",
+    stellar_tx_hash: firstString(raw, "stellar_tx_hash", "stellarTxHash"),
+    stellar_from: firstString(raw, "stellar_from", "from"),
+    stellar_to: firstString(raw, "stellar_to", "to"),
     bridge_transfer_id: firstString(
       raw,
-      'bridge_transfer_id',
-      'bridgeTransferId',
+      "bridge_transfer_id",
+      "bridgeTransferId",
     ),
-    memo: readString(raw, 'memo') ?? payoutId.slice(0, 28),
+    memo: readString(raw, "memo") ?? payoutId.slice(0, 28),
     status: mapLegacyStatus(raw.status),
-    created_at: firstString(raw, 'created_at', 'createdAt') ?? now,
-    updated_at: firstString(raw, 'updated_at', 'updatedAt') ?? now,
-    mock_offramp: readMockOfframp(raw['mock_offramp'] ?? raw['mockOfframp']),
+    created_at: firstString(raw, "created_at", "createdAt") ?? now,
+    updated_at: firstString(raw, "updated_at", "updatedAt") ?? now,
+    mock_offramp: readMockOfframp(raw["mock_offramp"] ?? raw["mockOfframp"]),
   };
 }
 
 function mapLegacyStatus(status: JsonValue | undefined): PayoutStatus {
-  if (status === 'confirmed') return 'completed';
+  if (status === "confirmed") return "completed";
   if (
-    status === 'pending' ||
-    status === 'processing' ||
-    status === 'completed' ||
-    status === 'failed'
+    status === "pending" ||
+    status === "processing" ||
+    status === "completed" ||
+    status === "failed"
   ) {
     return status;
   }
-  return 'completed';
+  return "completed";
 }
 
 function firstString(
@@ -126,25 +126,23 @@ function firstNumber(
   return Number.isFinite(converted) ? converted : undefined;
 }
 
-function readDestination(
-  value: JsonValue | undefined,
-): PayoutDestination {
-  return value === 'beneficiary' ? 'beneficiary' : 'self';
+function readDestination(value: JsonValue | undefined): PayoutDestination {
+  return value === "beneficiary" ? "beneficiary" : "self";
 }
 
 function readLastMileRail(value: JsonValue | undefined): LastMileRail {
-  if (value === 'mtn' || value === 'spi' || value === 'bank') return value;
-  return 'wave';
+  if (value === "mtn" || value === "spi" || value === "bank") return value;
+  return "wave";
 }
 
 function readMockOfframp(
   value: JsonValue | undefined,
-): StellarSettlementRecord['mock_offramp'] {
+): StellarSettlementRecord["mock_offramp"] {
   if (value === undefined || !isJsonObject(value)) return undefined;
   return {
-    rail: readString(value, 'rail') ?? 'wave',
-    phone: readString(value, 'phone'),
-    status: readString(value, 'status') ?? 'pending',
+    rail: readString(value, "rail") ?? "wave",
+    phone: readString(value, "phone"),
+    status: readString(value, "status") ?? "pending",
   };
 }
 
@@ -160,12 +158,12 @@ function readRawLedger(): StellarSettlementRecord[] {
   if (!existsSync(path)) {
     return [];
   }
-  const raw = readFileSync(path, 'utf8');
+  const raw = readFileSync(path, "utf8");
   const parsed = parseJson(raw);
   const rows = Array.isArray(parsed)
     ? parsed
-    : isJsonObject(parsed) && Array.isArray(parsed['settlements'])
-      ? parsed['settlements']
+    : isJsonObject(parsed) && Array.isArray(parsed["settlements"])
+      ? parsed["settlements"]
       : [];
   return rows.filter(isJsonObject).map(normalizeLegacyRow);
 }

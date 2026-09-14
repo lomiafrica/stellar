@@ -1,8 +1,8 @@
-import { CIRCLE_FAUCET_URL, SETTLE_USDC } from '../cli/talk.js';
-import { loadAccountBalances } from '../cli/balances.js';
-import { loadKeypair, readStoredKeys } from '../stellar/keys.js';
-import { sendUsdcPayment } from '../stellar/payment.js';
-import { SettleNotReadyError } from './ready.js';
+import { CIRCLE_FAUCET_URL, SETTLE_USDC } from "../cli/talk.js";
+import { loadAccountBalances } from "../cli/balances.js";
+import { loadKeypair, readStoredKeys } from "../stellar/keys.js";
+import { sendUsdcPayment } from "../stellar/payment.js";
+import { SettleNotReadyError } from "./ready.js";
 
 export interface FundResult {
   alreadyFunded: boolean;
@@ -16,21 +16,21 @@ export async function fundOmnibusFromMerchant(
 ): Promise<FundResult> {
   if (!readStoredKeys()) {
     throw new SettleNotReadyError(
-      'no_keys',
-      { next: 'pnpm bootstrap' },
-      'Missing keys. Run pnpm bootstrap.',
+      "no_keys",
+      { next: "pnpm bootstrap" },
+      "Missing keys. Run pnpm bootstrap.",
     );
   }
 
-  const omnibus = loadKeypair('omnibus');
-  const merchant = loadKeypair('merchant');
+  const omnibus = loadKeypair("omnibus");
+  const merchant = loadKeypair("merchant");
   const beforeOmnibus = await loadAccountBalances(omnibus.publicKey());
 
   if (!beforeOmnibus.exists || !beforeOmnibus.hasUsdcTrustline) {
     throw new SettleNotReadyError(
-      beforeOmnibus.exists ? 'no_trustline' : 'no_account',
-      { next: 'pnpm bootstrap', publicKey: omnibus.publicKey() },
-      'Omnibus is not ready. Run pnpm bootstrap.',
+      beforeOmnibus.exists ? "no_trustline" : "no_account",
+      { next: "pnpm bootstrap", publicKey: omnibus.publicKey() },
+      "Omnibus is not ready. Run pnpm bootstrap.",
     );
   }
 
@@ -46,11 +46,11 @@ export async function fundOmnibusFromMerchant(
   const need = minUsdc - beforeOmnibus.usdc;
   if (!beforeMerchant.hasUsdcTrustline || beforeMerchant.usdc < need) {
     throw new SettleNotReadyError(
-      'underfunded',
+      "underfunded",
       {
         faucet: CIRCLE_FAUCET_URL,
         publicKey: omnibus.publicKey(),
-        next: 'pnpm fund',
+        next: "pnpm fund",
       },
       `Need ${need} more test USDC on the omnibus. Merchant has ${beforeMerchant.usdc}. Fund the omnibus at the Circle faucet (Stellar Testnet).`,
     );
@@ -60,7 +60,7 @@ export async function fundOmnibusFromMerchant(
     merchant,
     omnibus.publicKey(),
     String(need),
-    'lab-recycle-usdc',
+    "lab-recycle-usdc",
   );
   const after = await loadAccountBalances(omnibus.publicKey());
   return {

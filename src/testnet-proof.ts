@@ -1,6 +1,6 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { getDataDir } from './paths.js';
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { getDataDir } from "./paths.js";
 
 export interface TestnetProofFile {
   omnibusPublicKey: string;
@@ -12,11 +12,11 @@ export interface TestnetProofFile {
   updatedAt: string;
 }
 
-const PROOF_PATH = () => join(getDataDir(), 'testnet-proof.json');
+const PROOF_PATH = () => join(getDataDir(), "testnet-proof.json");
 
 export function readTestnetProof(): TestnetProofFile | null {
   try {
-    const raw = readFileSync(PROOF_PATH(), 'utf8');
+    const raw = readFileSync(PROOF_PATH(), "utf8");
     // SAFETY: This private proof file is written by writeTestnetProof below.
     return JSON.parse(raw) as TestnetProofFile;
   } catch {
@@ -38,7 +38,8 @@ export function writeTestnetProof(
     omnibusPublicKey: patch.omnibusPublicKey,
     merchantPublicKey: patch.merchantPublicKey,
     createMerchantTx:
-      patch.createMerchantTx ?? (sameAccounts ? prev?.createMerchantTx : undefined),
+      patch.createMerchantTx ??
+      (sameAccounts ? prev?.createMerchantTx : undefined),
     omnibusTrustlineTx:
       patch.omnibusTrustlineTx ??
       (sameAccounts ? prev?.omnibusTrustlineTx : undefined),

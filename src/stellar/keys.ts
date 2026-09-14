@@ -1,14 +1,14 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { Keypair } from '@stellar/stellar-sdk';
-import '../env.js';
-import { getAppRoot, getKeysDir } from '../paths.js';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { Keypair } from "@stellar/stellar-sdk";
+import "../env.js";
+import { getAppRoot, getKeysDir } from "../paths.js";
 
-export { getAppRoot } from '../paths.js';
+export { getAppRoot } from "../paths.js";
 
-const envPath = () => join(getAppRoot(), '.env');
+const envPath = () => join(getAppRoot(), ".env");
 
-export type KeyRole = 'omnibus' | 'merchant';
+export type KeyRole = "omnibus" | "merchant";
 
 export interface StoredKeys {
   omnibus: { publicKey: string; secret: string };
@@ -25,7 +25,7 @@ function ensureKeysDir(): string {
 
 export function loadKeypair(role: KeyRole): Keypair {
   const fromEnv =
-    role === 'omnibus'
+    role === "omnibus"
       ? process.env.OMNIBUS_SECRET
       : process.env.MERCHANT_SECRET;
   if (fromEnv?.trim()) {
@@ -35,11 +35,11 @@ export function loadKeypair(role: KeyRole): Keypair {
   const path = join(ensureKeysDir(), `${role}.json`);
   if (!existsSync(path)) {
     throw new Error(
-      `Missing ${role} keys. Run pnpm bootstrap or set ${role === 'omnibus' ? 'OMNIBUS_SECRET' : 'MERCHANT_SECRET'} in .env`,
+      `Missing ${role} keys. Run pnpm bootstrap or set ${role === "omnibus" ? "OMNIBUS_SECRET" : "MERCHANT_SECRET"} in .env`,
     );
   }
   // SAFETY: Key files are written by persistStoredKeys with this schema.
-  const parsed = JSON.parse(readFileSync(path, 'utf8')) as {
+  const parsed = JSON.parse(readFileSync(path, "utf8")) as {
     secret: string;
   };
   return Keypair.fromSecret(parsed.secret);
@@ -66,11 +66,11 @@ function keysFromSecret(
 function writeKeyFiles(stored: StoredKeys): void {
   const keysDir = ensureKeysDir();
   writeFileSync(
-    join(keysDir, 'omnibus.json'),
+    join(keysDir, "omnibus.json"),
     `${JSON.stringify(stored.omnibus, null, 2)}\n`,
   );
   writeFileSync(
-    join(keysDir, 'merchant.json'),
+    join(keysDir, "merchant.json"),
     `${JSON.stringify(stored.merchant, null, 2)}\n`,
   );
 }
@@ -101,11 +101,11 @@ export function generateAndStoreKeys(): StoredKeys {
 function upsertEnvSecrets(keys: StoredKeys): void {
   const envFile = envPath();
   let content = existsSync(envFile)
-    ? readFileSync(envFile, 'utf8')
-    : readFileSync(join(getAppRoot(), '.env.example'), 'utf8');
+    ? readFileSync(envFile, "utf8")
+    : readFileSync(join(getAppRoot(), ".env.example"), "utf8");
 
-  content = setEnvLine(content, 'OMNIBUS_SECRET', keys.omnibus.secret);
-  content = setEnvLine(content, 'MERCHANT_SECRET', keys.merchant.secret);
+  content = setEnvLine(content, "OMNIBUS_SECRET", keys.omnibus.secret);
+  content = setEnvLine(content, "MERCHANT_SECRET", keys.merchant.secret);
   writeFileSync(envFile, content);
 
   process.env.OMNIBUS_SECRET = keys.omnibus.secret;
@@ -114,7 +114,7 @@ function upsertEnvSecrets(keys: StoredKeys): void {
 
 function setEnvLine(content: string, key: string, value: string): string {
   const line = `${key}=${value}`;
-  const regex = new RegExp(`^${key}=.*$`, 'm');
+  const regex = new RegExp(`^${key}=.*$`, "m");
   if (regex.test(content)) {
     return content.replace(regex, line);
   }
@@ -126,16 +126,19 @@ export function readStoredKeys(): StoredKeys | null {
   if (fromEnv) return fromEnv;
 
   const keysDir = getKeysDir();
-  const omnibusPath = join(keysDir, 'omnibus.json');
-  const merchantPath = join(keysDir, 'merchant.json');
+  const omnibusPath = join(keysDir, "omnibus.json");
+  const merchantPath = join(keysDir, "merchant.json");
   if (!existsSync(omnibusPath) || !existsSync(merchantPath)) {
     return null;
   }
   return {
     // SAFETY: Both key files are written by persistStoredKeys.
-    omnibus: JSON.parse(readFileSync(omnibusPath, 'utf8')) as StoredKeys['omnibus'],
+    omnibus: JSON.parse(
+      readFileSync(omnibusPath, "utf8"),
+    ) as StoredKeys["omnibus"],
     // SAFETY: Both key files are written by persistStoredKeys.
-    merchant: JSON.parse(readFileSync(merchantPath, 'utf8')) as StoredKeys['merchant'],
+    merchant: JSON.parse(
+      readFileSync(merchantPath, "utf8"),
+    ) as StoredKeys["merchant"],
   };
 }
-

@@ -3,9 +3,9 @@ import {
   Keypair,
   Operation,
   TransactionBuilder,
-} from '@stellar/stellar-sdk';
-import { NETWORK_PASSPHRASE } from '../config.js';
-import { getHorizonServer, getRpcServer } from './client.js';
+} from "@stellar/stellar-sdk";
+import { NETWORK_PASSPHRASE } from "../config.js";
+import { getHorizonServer, getRpcServer } from "./client.js";
 
 export async function fundWithFriendbot(publicKey: string): Promise<void> {
   const rpc = getRpcServer();
@@ -21,7 +21,7 @@ export async function fundWithFriendbot(publicKey: string): Promise<void> {
 
 export async function ensureFundedAccount(
   keypair: Keypair,
-  minBalanceXlm = '5',
+  minBalanceXlm = "5",
 ): Promise<void> {
   const horizon = getHorizonServer();
   try {
@@ -32,8 +32,8 @@ export async function ensureFundedAccount(
   }
 
   const parent = await horizon.loadAccount(keypair.publicKey());
-  const balance = parent.balances.find((b) => b.asset_type === 'native');
-  const native = balance && 'balance' in balance ? Number(balance.balance) : 0;
+  const balance = parent.balances.find((b) => b.asset_type === "native");
+  const native = balance && "balance" in balance ? Number(balance.balance) : 0;
   if (native >= Number(minBalanceXlm)) {
     return;
   }
@@ -63,7 +63,7 @@ export async function createMerchantAccountFromOmnibus(
     .addOperation(
       Operation.createAccount({
         destination: merchant.publicKey(),
-        startingBalance: '5',
+        startingBalance: "5",
       }),
     )
     .setTimeout(180)
@@ -71,14 +71,14 @@ export async function createMerchantAccountFromOmnibus(
 
   tx.sign(omnibus);
   const send = await rpc.sendTransaction(tx);
-  if (send.status === 'ERROR') {
+  if (send.status === "ERROR") {
     throw new Error(`createAccount failed: ${JSON.stringify(send)}`);
   }
   const polled = await rpc.pollTransaction(send.hash, {
     attempts: 30,
     sleepStrategy: () => 2000,
   });
-  if (polled.status !== 'SUCCESS') {
+  if (polled.status !== "SUCCESS") {
     throw new Error(`createAccount not successful: ${polled.status}`);
   }
   return send.hash;

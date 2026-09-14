@@ -1,17 +1,17 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   isJsonObject,
   parseJson,
   readString,
   type JsonObject,
-} from '../json.js';
-import { getDataDir } from '../paths.js';
-import type { CreateStellarPayoutResponse } from '../payouts/types.js';
-import type { PayoutStatus } from './store.js';
+} from "../json.js";
+import { getDataDir } from "../paths.js";
+import type { CreateStellarPayoutResponse } from "../payouts/types.js";
+import type { PayoutStatus } from "./store.js";
 
 function idempotencyPath(): string {
-  return join(getDataDir(), 'demo_idempotency.json');
+  return join(getDataDir(), "demo_idempotency.json");
 }
 
 interface IdempotencyEntry {
@@ -30,29 +30,30 @@ function ensureDataDir(): void {
 
 function readStatus(value: string | undefined): PayoutStatus {
   if (
-    value === 'pending' ||
-    value === 'processing' ||
-    value === 'completed' ||
-    value === 'failed'
+    value === "pending" ||
+    value === "processing" ||
+    value === "completed" ||
+    value === "failed"
   ) {
     return value;
   }
-  return 'failed';
+  return "failed";
 }
 
 function readCachedResponse(row: JsonObject): CreateStellarPayoutResponse {
-  const kind = readString(row, 'kind') === 'beneficiary' ? 'beneficiary' : 'withdrawal';
+  const kind =
+    readString(row, "kind") === "beneficiary" ? "beneficiary" : "withdrawal";
   return {
     success: row.success === true,
-    payout_id: readString(row, 'payout_id') ?? '',
+    payout_id: readString(row, "payout_id") ?? "",
     kind,
-    status: readStatus(readString(row, 'status')),
-    message: readString(row, 'message'),
-    stellar_tx_hash: readString(row, 'stellar_tx_hash'),
-    explorer_tx: readString(row, 'explorer_tx'),
-    explorer_account_omnibus: readString(row, 'explorer_account_omnibus'),
-    explorer_account_merchant: readString(row, 'explorer_account_merchant'),
-    bridge_transfer_id: readString(row, 'bridge_transfer_id'),
+    status: readStatus(readString(row, "status")),
+    message: readString(row, "message"),
+    stellar_tx_hash: readString(row, "stellar_tx_hash"),
+    explorer_tx: readString(row, "explorer_tx"),
+    explorer_account_omnibus: readString(row, "explorer_account_omnibus"),
+    explorer_account_merchant: readString(row, "explorer_account_merchant"),
+    bridge_transfer_id: readString(row, "bridge_transfer_id"),
   };
 }
 
@@ -60,7 +61,7 @@ function readAll(): IdempotencyEntry[] {
   ensureDataDir();
   const path = idempotencyPath();
   if (!existsSync(path)) return [];
-  const parsed = parseJson(readFileSync(path, 'utf8'));
+  const parsed = parseJson(readFileSync(path, "utf8"));
   if (!Array.isArray(parsed)) return [];
   return parsed.filter(isJsonObject).map((row) => {
     const responseValue = row.response;
@@ -68,10 +69,10 @@ function readAll(): IdempotencyEntry[] {
       ? readCachedResponse(responseValue)
       : readCachedResponse(row);
     return {
-      idempotency_key: readString(row, 'idempotency_key') ?? '',
-      payout_id: readString(row, 'payout_id') ?? response.payout_id,
+      idempotency_key: readString(row, "idempotency_key") ?? "",
+      payout_id: readString(row, "payout_id") ?? response.payout_id,
       response,
-      created_at: readString(row, 'created_at') ?? '',
+      created_at: readString(row, "created_at") ?? "",
     };
   });
 }
