@@ -11,8 +11,7 @@ callback_api:
   auth:
     type: none
 data:
-  type: sqlite
-  database: /tmp/anchor-platform
+  type: h2
 sep1:
   enabled: false
 sep6:
