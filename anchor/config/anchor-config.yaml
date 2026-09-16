@@ -1,45 +1,48 @@
-# Official Stellar Anchor Platform (testnet). Do not write custom SEP servers.
-# Docs: https://developers.stellar.org/docs/category/anchor-platform
+# Anchor Platform 4.8.0 uses config schema v1 (no v2 schema on the image).
 # SEP-1 toml is served by the lab on HOME_DOMAIN.
-version: 2
-stellar:
+version: 1
+stellar_network:
   network: TESTNET
-  sep1:
-    enabled: false
-  sep6:
-    enabled: true
-  sep10:
-    enabled: true
-    home_domain: ${HOME_DOMAIN}
-    client_attribution_required: false
-  sep12:
-    enabled: true
-  sep24:
-    enabled: true
-    interactive_jwt_expiration: 3600
-  sep31:
-    enabled: true
-  sep38:
-    enabled: true
-assets:
-  - id: stellar:XOF:${XOF_ISSUER}
-    significant_decimals: 0
-    deposit:
-      enabled: true
-      min_amount: 100
-      max_amount: 1000000
-    withdraw:
-      enabled: true
-      min_amount: 100
-      max_amount: 1000000
+  type: TESTNET
+sep_server:
+  port: 8080
 callback_api:
-  base_url: ${LAB_BASE_URL}/anchor
+  base_url: https://lab-production-5fac.up.railway.app/anchor
+  auth:
+    type: none
 data:
   type: sqlite
-  url: jdbc:sqlite:/tmp/anchor-platform.db
-secret:
-  sep10:
-    jwt_secret: ${SEP10_JWT_SECRET}
-    signing_seed: ${SEP10_SIGNING_SEED}
-  callback_api:
-    auth_secret: ${CALLBACK_AUTH_SECRET}
+  database: /tmp/anchor-platform
+sep1:
+  enabled: false
+sep6:
+  enabled: true
+sep10:
+  enabled: true
+  home_domains: lab-production-5fac.up.railway.app
+  client_attribution_required: false
+sep12:
+  enabled: true
+sep24:
+  enabled: true
+  interactive_url:
+    base_url: https://lab-production-5fac.up.railway.app/anchor/sep24
+    jwt_expiration: 3600
+sep31:
+  enabled: true
+sep38:
+  enabled: true
+assets:
+  type: json
+  value: |
+    {
+      "assets": [
+        {
+          "schema": "iso4217",
+          "code": "XOF",
+          "significant_decimals": 0,
+          "deposit": { "enabled": true, "min_amount": 100, "max_amount": 1000000 },
+          "withdraw": { "enabled": true, "min_amount": 100, "max_amount": 1000000 }
+        }
+      ]
+    }
