@@ -8,7 +8,7 @@ Isolation: this lab lives on its own Railway project named **Stellar**. Do not a
 
 1. Private project **Stellar** in the same workspace as the other products.
 2. Service **lab** from `lomiafrica/stellar` (`main`), Dockerfile at repo root.
-3. Health check: `/.well-known/stellar.toml`.
+3. Health check: `/health` (SEP-1 remains `/.well-known/stellar.toml`).
 4. Generate a `*.up.railway.app` domain. Do not wait on `stellar.lomi.africa`.
 5. Lab env only (no lomi. `SUPABASE_*`, live Stripe, or Wave keys; leave `LOMI_MERCHANT_VERIFY_URL` empty):
 

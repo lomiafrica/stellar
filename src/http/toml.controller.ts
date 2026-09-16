@@ -9,6 +9,11 @@ import { renderStellarToml } from "./stellar-toml.js";
 
 @Controller()
 export class TomlController {
+  @Get("health")
+  health(): { ok: true } {
+    return { ok: true };
+  }
+
   @Get(".well-known/stellar.toml")
   @Header("Content-Type", "text/plain; charset=utf-8")
   @Header("Access-Control-Allow-Origin", "*")
