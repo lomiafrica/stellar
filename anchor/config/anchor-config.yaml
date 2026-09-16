@@ -3,7 +3,8 @@
 version: 1
 stellar_network:
   network: TESTNET
-  type: TESTNET
+  type: horizon
+  horizon_url: https://horizon-testnet.stellar.org
 sep_server:
   port: 8080
 callback_api:
@@ -18,23 +19,20 @@ data:
 sep1:
   enabled: false
 sep6:
-  enabled: true
+  enabled: false
 sep10:
   enabled: true
   home_domains: lab-production-5fac.up.railway.app
   web_auth_domain: anchor-production-5059.up.railway.app
   client_attribution_required: false
 sep12:
-  enabled: true
+  enabled: false
 sep24:
-  enabled: true
-  interactive_url:
-    base_url: https://lab-production-5fac.up.railway.app/anchor/sep24
-    jwt_expiration: 3600
+  enabled: false
 sep31:
-  enabled: true
+  enabled: false
 sep38:
-  enabled: true
+  enabled: false
 assets:
   type: file
   value: /config/assets.yaml
