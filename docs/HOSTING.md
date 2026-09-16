@@ -27,6 +27,6 @@ SEP12_ACCEPTED_ACCOUNTS=G…
 
 Prefer env secrets so Railway's ephemeral filesystem does not need a volume. Bootstrap keys from env on each deploy.
 
-6. Second service **anchor** from the same repo, `anchor/` as root, `FROM stellar/anchor-platform:4.8.0`. Start: `java -jar /app/anchor-platform-runner.jar --sep-server`. `HOME_DOMAIN` = lab host (no scheme), `LAB_BASE_URL` = public lab URL, `SEP10_SIGNING_SEED` from env. Never commit the seed.
+6. Second service **anchor** from the same repo, `anchor/` as root, `FROM stellar/anchor-platform:4.8.0`. Start: `java -jar /app/anchor-platform-runner.jar --sep-server`. `HOME_DOMAIN` = lab host (no scheme), `LAB_BASE_URL` = public lab URL, `SEP10_SIGNING_SEED` from env. Never commit the seed. 4.8.0 needs Postgres (`data.type`); SQLite/H2 drivers are not on the image.
 
 Until a later connect, Nest does not call this host. The HTTP contract is still `POST {STELLAR_LAB_URL}/demo/payouts`.
