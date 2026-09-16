@@ -1,6 +1,6 @@
 # Host the lab
 
-The Nest lab serves SEP-1 at `/.well-known/stellar.toml`. Anchor Platform is a second container (`stellar/anchor-platform:2.11.3`).
+The Nest lab serves SEP-1 at `/.well-known/stellar.toml`. Anchor Platform is a second container (`stellar/anchor-platform:4.8.0`).
 
 Isolation: this lab lives on its own Railway project named **Stellar**. Do not attach it to the lomi. Railway canvas. Do not set `STELLAR_LAB_URL` or `STELLAR_RAIL_ORGANIZATION_IDS` on `api.lomi.africa` / `sandbox.api.lomi.africa`. Connecting Nest is a later flag flip.
 
@@ -27,6 +27,6 @@ SEP12_ACCEPTED_ACCOUNTS=G…
 
 Prefer env secrets so Railway's ephemeral filesystem does not need a volume. Bootstrap keys from env on each deploy.
 
-6. Second service **anchor** from the same repo, `anchor/` as root, `FROM stellar/anchor-platform:2.11.3`. Start: `java -jar /app/anchor-platform-runner.jar --sep-server`. `HOME_DOMAIN` = lab host (no scheme), `LAB_BASE_URL` = public lab URL, `SEP10_SIGNING_SEED` from env. Never commit the seed.
+6. Second service **anchor** from the same repo, `anchor/` as root, `FROM stellar/anchor-platform:4.8.0`. Start: `java -jar /app/anchor-platform-runner.jar --sep-server`. `HOME_DOMAIN` = lab host (no scheme), `LAB_BASE_URL` = public lab URL, `SEP10_SIGNING_SEED` from env. Never commit the seed.
 
 Until a later connect, Nest does not call this host. The HTTP contract is still `POST {STELLAR_LAB_URL}/demo/payouts`.

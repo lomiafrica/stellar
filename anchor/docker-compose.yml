@@ -20,7 +20,7 @@ services:
       - ../.env
 
   anchor-platform:
-    image: stellar/anchor-platform:2.11.3
+    image: stellar/anchor-platform:4.8.0
     command: ["--sep-server"]
     depends_on:
       - lab
