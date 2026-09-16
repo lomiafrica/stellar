@@ -12,10 +12,12 @@ Hosted (Railway or equivalent): set `PUBLIC_BASE_URL` and `HOME_DOMAIN` to the p
 
 `https://<HOME_DOMAIN>/.well-known/stellar.toml`
 
+`WEB_AUTH_ENDPOINT` is the Anchor host `/auth` (SEP-10), not the lab `/anchor/sep10` stub.
+
 Local:
 
 - SEP-1: `http://localhost:3456/.well-known/stellar.toml`
-- Platform: `http://localhost:8080`
+- Platform: `http://localhost:8080` (SEP-10 `GET/POST /auth`)
 - Last mile: `POST http://localhost:3456/anchor/last-mile/wave`
 
 SEP-12 calls `LOMI_MERCHANT_VERIFY_URL` when set. Otherwise it only ACCEPTs `SEP12_ACCEPTED_ACCOUNTS`. Unknown accounts return `NEEDS_INFO`. SEP-24 pages credit Wave / MTN / SPI **sandbox** only. No live Wave money.

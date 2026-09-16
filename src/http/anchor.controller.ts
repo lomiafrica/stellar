@@ -32,7 +32,9 @@ export class AnchorController {
     return {
       sep1: `${PUBLIC_BASE_URL}/.well-known/stellar.toml`,
       sep6: `${PUBLIC_BASE_URL}/anchor/sep6`,
-      sep10: `${PUBLIC_BASE_URL}/anchor/sep10`,
+      sep10:
+        process.env.WEB_AUTH_ENDPOINT?.replace(/\/$/, "") ??
+        `${PUBLIC_BASE_URL}/anchor/sep10`,
       sep12: `${PUBLIC_BASE_URL}/anchor/sep12`,
       sep24: `${PUBLIC_BASE_URL}/anchor/sep24`,
       sep31: `${PUBLIC_BASE_URL}/anchor/sep31`,

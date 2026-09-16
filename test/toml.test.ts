@@ -5,6 +5,7 @@ import { renderStellarToml } from "../src/http/stellar-toml.js";
 const TEMPLATE = `NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
 ACCOUNTS=[]
 TRANSFER_SERVER="{{PUBLIC_BASE_URL}}/anchor"
+WEB_AUTH_ENDPOINT="{{WEB_AUTH_ENDPOINT}}"
 SIGNING_KEY="{{SIGNING_KEY}}"
 issuer = "GPLACEHOLDER"
 DOCUMENTATION="https://github.com/lomiafrica/stellar/blob/main/docs/ARCHITECTURE.md"
@@ -15,11 +16,16 @@ test("renderStellarToml substitutes base URL, signing key, and accounts", () => 
     omnibusPublicKey: "GOMNI",
     merchantPublicKey: "GMERCH",
     publicBaseUrl: "https://stellar.example.test/",
+    webAuthEndpoint: "https://anchor.example.test/auth",
     sep10SigningPublicKey: "GSIGN",
   });
   assert.match(
     body,
     /TRANSFER_SERVER="https:\/\/stellar.example.test\/anchor"/,
+  );
+  assert.match(
+    body,
+    /WEB_AUTH_ENDPOINT="https:\/\/anchor.example.test\/auth"/,
   );
   assert.match(body, /issuer = "GOMNI"/);
   assert.match(body, /ACCOUNTS=\["GOMNI", "GMERCH"\]/);

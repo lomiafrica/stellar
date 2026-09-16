@@ -1,0 +1,45 @@
+items:
+  - id: iso4217:XOF
+    significant_decimals: 0
+    sep6:
+      enabled: true
+      deposit:
+        enabled: true
+        min_amount: 100
+        max_amount: 1000000
+        methods:
+          - wave
+          - mtn
+          - spi
+      withdraw:
+        enabled: true
+        min_amount: 100
+        max_amount: 1000000
+        methods:
+          - wave
+          - mtn
+          - spi
+    sep24:
+      enabled: true
+    sep31:
+      enabled: true
+    sep38:
+      enabled: true
+      exchangeable_assets:
+        - stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5
+      country_codes:
+        - CI
+        - SN
+  - id: stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5
+    distribution_account: GD6PH2FAK5DQFFFALZVAT337R7NDGSPWT4R6UBGA5GYLL7N5U4C4GI7I
+    significant_decimals: 2
+    sep6:
+      enabled: true
+    sep24:
+      enabled: true
+    sep31:
+      enabled: true
+    sep38:
+      enabled: true
+      exchangeable_assets:
+        - iso4217:XOF

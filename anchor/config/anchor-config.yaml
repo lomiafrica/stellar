@@ -11,7 +11,10 @@ callback_api:
   auth:
     type: none
 data:
-  type: h2
+  type: postgres
+  server: postgres:5432
+  database: platform
+  flyway_enabled: true
 sep1:
   enabled: false
 sep6:
@@ -19,6 +22,7 @@ sep6:
 sep10:
   enabled: true
   home_domains: lab-production-5fac.up.railway.app
+  web_auth_domain: anchor-production-5059.up.railway.app
   client_attribution_required: false
 sep12:
   enabled: true
@@ -32,16 +36,5 @@ sep31:
 sep38:
   enabled: true
 assets:
-  type: json
-  value: |
-    {
-      "assets": [
-        {
-          "schema": "iso4217",
-          "code": "XOF",
-          "significant_decimals": 0,
-          "deposit": { "enabled": true, "min_amount": 100, "max_amount": 1000000 },
-          "withdraw": { "enabled": true, "min_amount": 100, "max_amount": 1000000 }
-        }
-      ]
-    }
+  type: file
+  value: /config/assets.yaml

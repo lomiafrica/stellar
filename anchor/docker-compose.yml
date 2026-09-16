@@ -19,11 +19,26 @@ services:
     env_file:
       - ../.env
 
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: platform
+      POSTGRES_DB: platform
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   anchor-platform:
     image: stellar/anchor-platform:4.8.0
     command: ["--sep-server"]
     depends_on:
-      - lab
+      lab:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
@@ -34,5 +49,12 @@ services:
       SEP10_JWT_SECRET: ${SEP10_JWT_SECRET}
       SEP10_SIGNING_SEED: ${SEP10_SIGNING_SEED}
       CALLBACK_AUTH_SECRET: ${CALLBACK_AUTH_SECRET}
+      DATA_TYPE: postgres
+      DATA_SERVER: postgres:5432
+      DATA_DATABASE: platform
+      DATA_FLYWAY_ENABLED: "true"
+      SECRET_DATA_USERNAME: platform
+      SECRET_DATA_PASSWORD: platform
+      SEP10_WEB_AUTH_DOMAIN: localhost:8080
     volumes:
       - ./config:/config:ro

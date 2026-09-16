@@ -23,10 +23,25 @@ SEP10_SIGNING_PUBLIC_KEY=G…
 SEP10_JWT_SECRET=
 CALLBACK_AUTH_SECRET=
 SEP12_ACCEPTED_ACCOUNTS=G…
+WEB_AUTH_ENDPOINT=https://<anchor-host>/auth
 ```
 
 Prefer env secrets so Railway's ephemeral filesystem does not need a volume. Bootstrap keys from env on each deploy.
 
-6. Second service **anchor** from the same repo, `anchor/` as root, `FROM stellar/anchor-platform:4.8.0`. Start: `java -jar /app/anchor-platform-runner.jar --sep-server`. `HOME_DOMAIN` = lab host (no scheme), `LAB_BASE_URL` = public lab URL, `SEP10_SIGNING_SEED` from env. Never commit the seed. 4.8.0 needs Postgres (`data.type`); SQLite/H2 drivers are not on the image.
+6. Service **Postgres** (Railway plugin). Anchor 4.8.0 has no SQLite/H2 driver.
+
+7. Service **anchor** from the same repo, `anchor/` as root, `FROM stellar/anchor-platform:4.8.0`. Start: `java -jar /app/anchor-platform-runner.jar --sep-server`. `HOME_DOMAIN` = lab host (no scheme), `LAB_BASE_URL` = public lab URL, `SEP10_SIGNING_SEED` from env. Never commit the seed.
+
+```
+DATA_TYPE=postgres
+DATA_SERVER=${{Postgres.PGHOST}}:${{Postgres.PGPORT}}
+DATA_DATABASE=${{Postgres.PGDATABASE}}
+DATA_FLYWAY_ENABLED=true
+SECRET_DATA_USERNAME=${{Postgres.PGUSER}}
+SECRET_DATA_PASSWORD=${{Postgres.PGPASSWORD}}
+SEP10_WEB_AUTH_DOMAIN=<anchor public host, no scheme>
+```
+
+Lab `WEB_AUTH_ENDPOINT=https://<anchor-host>/auth` so SEP-1 points wallets at SEP-10.
 
 Until a later connect, Nest does not call this host. The HTTP contract is still `POST {STELLAR_LAB_URL}/demo/payouts`.

@@ -89,7 +89,7 @@ Merchants never see wallets or keys.
 | SEP    | Lab                           | Later                                      |
 | ------ | ----------------------------- | ------------------------------------------ |
 | SEP-1  | `stellar.toml` + XOF metadata | Hosted toml with XOF fiat metadata         |
-| SEP-10 | Not here                      | Wallet / anchor auth                       |
+| SEP-10 | Official platform `/auth`     | Wallet / anchor auth                       |
 | SEP-12 | Not here                      | KYC/KYB via existing merchant verification |
 | SEP-24 | Not here                      | Interactive deposit/withdraw to Wave/MTN   |
 | SEP-6  | Not here                      | Programmatic deposit/withdraw              |
