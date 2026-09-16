@@ -7,10 +7,16 @@ stellar_network:
   horizon_url: https://horizon-testnet.stellar.org
 sep_server:
   port: 8080
+platform_server:
+  port: 8085
+platform_api:
+  base_url: http://localhost:8085
+  auth:
+    type: api_key
 callback_api:
   base_url: https://lab-production-5fac.up.railway.app/anchor
   auth:
-    type: none
+    type: api_key
 data:
   type: postgres
   server: postgres:5432
@@ -26,9 +32,15 @@ sep10:
   web_auth_domain: anchor-production-5059.up.railway.app
   client_attribution_required: false
 sep12:
-  enabled: false
+  enabled: true
 sep24:
-  enabled: false
+  enabled: true
+  interactive_url:
+    base_url: https://lab-production-5fac.up.railway.app/anchor/sep24/interactive
+    jwt_expiration: 3600
+  more_info_url:
+    base_url: https://lab-production-5fac.up.railway.app/anchor/sep24/more_info
+    jwt_expiration: 3600
 sep31:
   enabled: false
 sep38:

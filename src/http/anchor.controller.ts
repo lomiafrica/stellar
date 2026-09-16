@@ -4,14 +4,27 @@ import {
   Controller,
   Get,
   Header,
+  Headers,
   Param,
   Post,
+  Put,
   Query,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { PUBLIC_BASE_URL } from "../config.js";
+import {
+  callbackAuthOk,
+  toCallbackCustomer,
+} from "../anchor/callback-customer.js";
+import {
+  readJwtDataString,
+  readJwtString,
+  verifyHs256Jwt,
+} from "../anchor/jwt.js";
 import { dispatchLastMile, type LastMileRail } from "../anchor/last-mile.js";
 import { verifySep12Customer } from "../anchor/merchant-verify.js";
+import { patchPlatformTransaction } from "../anchor/platform-patch.js";
 import { createSep6Transfer } from "../anchor/sep6.js";
 import { recordSep31Inbound } from "../anchor/sep31.js";
 import {
@@ -19,6 +32,32 @@ import {
   createSep38Quote,
   getSep38Quote,
 } from "../anchor/sep38.js";
+
+function sep24JwtSecret(): string {
+  return (
+    process.env.SEP24_INTERACTIVE_URL_JWT_SECRET?.trim() ??
+    process.env.SECRET_SEP24_INTERACTIVE_URL_JWT_SECRET?.trim() ??
+    ""
+  );
+}
+
+function decodeSep24Token(token?: string): {
+  account?: string;
+  transactionId?: string;
+  amount?: string;
+} {
+  const secret = sep24JwtSecret();
+  if (!token || !secret) return {};
+  const payload = verifyHs256Jwt(token, secret);
+  if (!payload) return {};
+  return {
+    account: readJwtString(payload, "sub"),
+    transactionId:
+      readJwtDataString(payload, "transaction_id") ??
+      readJwtString(payload, "jti"),
+    amount: readJwtDataString(payload, "amount"),
+  };
+}
 
 /**
  * Callback surface for official Anchor Platform on testnet.
@@ -43,6 +82,45 @@ export class AnchorController {
     };
   }
 
+  @Get("customer")
+  async callbackCustomerGet(
+    @Headers("x-api-key") apiKey: string | undefined,
+    @Headers("authorization") authorization: string | undefined,
+    @Query("account") account?: string,
+    @Query("id") id?: string,
+    @Query("type") type?: string,
+  ) {
+    if (!callbackAuthOk(apiKey, authorization)) {
+      throw new UnauthorizedException("Callback API key required");
+    }
+    const customer = await verifySep12Customer({
+      account: account ?? id,
+      type: type ?? "sep24",
+    });
+    return toCallbackCustomer(customer);
+  }
+
+  @Put("customer")
+  async callbackCustomerPut(
+    @Headers("x-api-key") apiKey: string | undefined,
+    @Headers("authorization") authorization: string | undefined,
+    @Body()
+    body: {
+      account?: string;
+      id?: string;
+      type?: string;
+    },
+  ) {
+    if (!callbackAuthOk(apiKey, authorization)) {
+      throw new UnauthorizedException("Callback API key required");
+    }
+    const customer = await verifySep12Customer({
+      account: body.account ?? body.id,
+      type: body.type ?? "sep24",
+    });
+    return toCallbackCustomer(customer);
+  }
+
   @Post("sep12/customer")
   async sep12Customer(
     @Body()
@@ -64,9 +142,37 @@ export class AnchorController {
 
   @Get("sep24/:kind")
   @Header("Content-Type", "text/html; charset=utf-8")
-  sep24Page(@Param("kind") kind: string): string {
-    const title = kind === "withdraw" ? "Withdraw XOF" : "Deposit XOF";
+  sep24Page(
+    @Param("kind") kind: string,
+    @Query("token") token?: string,
+    @Query("transaction_id") transactionId?: string,
+  ): string {
+    if (kind === "more_info") {
+      const decoded = decodeSep24Token(token);
+      const id = (decoded.transactionId ?? transactionId ?? "").replace(
+        /[^\w-]/g,
+        "",
+      );
+      return `<!doctype html><html lang="en"><body>
+<h1>SEP-24 more info</h1>
+<p>transaction_id=${id}</p>
+<p>Sandbox last mile only. No live mobile money.</p>
+</body></html>`;
+    }
+    const decoded = decodeSep24Token(token);
+    if (kind === "interactive" && sep24JwtSecret() && !token) {
+      throw new BadRequestException("SEP-24 token required");
+    }
+    if (token && sep24JwtSecret() && !verifyHs256Jwt(token, sep24JwtSecret())) {
+      throw new UnauthorizedException("Invalid SEP-24 token");
+    }
     const action = kind === "withdraw" ? "withdraw" : "deposit";
+    const title = action === "withdraw" ? "Withdraw XOF" : "Deposit XOF";
+    const amount = decoded.amount ?? "1000";
+    const tx = decoded.transactionId ?? transactionId ?? "";
+    const safeToken = (token ?? "").replace(/[^\w.-=]/g, "");
+    const safeTx = tx.replace(/[^\w-]/g, "");
+    const safeAmount = /^\d+(\.\d+)?$/.test(amount) ? amount : "1000";
     return `<!doctype html>
 <html lang="en">
 <head>
@@ -85,8 +191,10 @@ export class AnchorController {
   <h1>${title}</h1>
   <p>Testnet SEP-24. Completing this form credits Wave, MTN, or SPI sandbox only. No live mobile money.</p>
   <form method="post" action="/anchor/sep24/${action}">
+    <input type="hidden" name="token" value="${safeToken}">
+    <input type="hidden" name="transaction_id" value="${safeTx}">
     <label for="amount">Amount (XOF)</label>
-    <input id="amount" name="amount" type="number" min="100" value="1000" required>
+    <input id="amount" name="amount" type="number" min="100" value="${safeAmount}" required>
     <label for="phone">Phone</label>
     <input id="phone" name="phone" type="tel" value="+2250700000000" required>
     <label for="rail">Last mile</label>
@@ -102,24 +210,47 @@ export class AnchorController {
   }
 
   @Post("sep24/:kind")
-  sep24Complete(
+  async sep24Complete(
     @Param("kind") kind: string,
     @Body()
-    body: { amount?: string; phone?: string; rail?: LastMileRail },
+    body: {
+      amount?: string;
+      phone?: string;
+      rail?: LastMileRail;
+      token?: string;
+      transaction_id?: string;
+    },
   ) {
-    const payoutId = randomUUID();
+    if (
+      body.token &&
+      sep24JwtSecret() &&
+      !verifyHs256Jwt(body.token, sep24JwtSecret())
+    ) {
+      throw new UnauthorizedException("Invalid SEP-24 token");
+    }
+    const decoded = decodeSep24Token(body.token);
+    const payoutId = decoded.transactionId ?? body.transaction_id ?? randomUUID();
     const lastMile = dispatchLastMile({
       rail: body.rail ?? "wave",
-      amountXof: body.amount ?? "1000",
+      amountXof: body.amount ?? decoded.amount ?? "1000",
       phone: body.phone ?? "+2250700000000",
       payoutId,
       kind: kind === "withdraw" ? "withdraw" : "deposit",
     });
+    let platform: { ok: boolean; detail: string } | undefined;
+    if (decoded.transactionId ?? body.transaction_id) {
+      platform = await patchPlatformTransaction({
+        transactionId: payoutId,
+        status: "completed",
+        message: lastMile.message,
+      });
+    }
     return {
       id: payoutId,
       status: "pending_user_transfer_start",
       kind: lastMile.kind,
       last_mile: lastMile,
+      platform,
     };
   }
 

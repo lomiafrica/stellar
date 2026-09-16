@@ -25,6 +25,7 @@ export function renderStellarToml(
     merchantPublicKey?: string;
     publicBaseUrl?: string;
     webAuthEndpoint?: string;
+    anchorPublicUrl?: string;
     sep10SigningSeed?: string;
     sep10SigningPublicKey?: string;
   },
@@ -36,7 +37,13 @@ export function renderStellarToml(
     process.env.WEB_AUTH_ENDPOINT?.trim() ??
     `${base}/anchor/sep10`
   ).replace(/\/$/, "");
+  const anchor = (
+    input.anchorPublicUrl ??
+    process.env.ANCHOR_PUBLIC_URL?.trim() ??
+    base
+  ).replace(/\/$/, "");
   let body = template.replaceAll("{{PUBLIC_BASE_URL}}", base);
+  body = body.replaceAll("{{ANCHOR_PUBLIC_URL}}", anchor);
   body = body.replaceAll("{{WEB_AUTH_ENDPOINT}}", webAuth);
   body = body.replaceAll("{{SIGNING_KEY}}", signingKey);
   if (input.omnibusPublicKey) {

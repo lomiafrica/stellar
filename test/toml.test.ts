@@ -4,7 +4,7 @@ import { renderStellarToml } from "../src/http/stellar-toml.js";
 
 const TEMPLATE = `NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
 ACCOUNTS=[]
-TRANSFER_SERVER="{{PUBLIC_BASE_URL}}/anchor"
+TRANSFER_SERVER="{{ANCHOR_PUBLIC_URL}}/sep6"
 WEB_AUTH_ENDPOINT="{{WEB_AUTH_ENDPOINT}}"
 SIGNING_KEY="{{SIGNING_KEY}}"
 issuer = "GPLACEHOLDER"
@@ -17,11 +17,12 @@ test("renderStellarToml substitutes base URL, signing key, and accounts", () => 
     merchantPublicKey: "GMERCH",
     publicBaseUrl: "https://stellar.example.test/",
     webAuthEndpoint: "https://anchor.example.test/auth",
+    anchorPublicUrl: "https://anchor.example.test",
     sep10SigningPublicKey: "GSIGN",
   });
   assert.match(
     body,
-    /TRANSFER_SERVER="https:\/\/stellar.example.test\/anchor"/,
+    /TRANSFER_SERVER="https:\/\/anchor.example.test\/sep6"/,
   );
   assert.match(
     body,

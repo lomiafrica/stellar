@@ -28,6 +28,7 @@ export class TomlController {
       merchantPublicKey: keys?.merchant.publicKey ?? proof?.merchantPublicKey,
       publicBaseUrl: PUBLIC_BASE_URL,
       webAuthEndpoint: process.env.WEB_AUTH_ENDPOINT,
+      anchorPublicUrl: process.env.ANCHOR_PUBLIC_URL,
       sep10SigningSeed: process.env.SEP10_SIGNING_SEED,
       sep10SigningPublicKey: process.env.SEP10_SIGNING_PUBLIC_KEY,
     });

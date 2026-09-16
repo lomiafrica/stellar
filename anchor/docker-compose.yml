@@ -11,11 +11,15 @@ services:
     environment:
       PORT: "3456"
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3456}
+      ANCHOR_PUBLIC_URL: ${ANCHOR_PUBLIC_URL:-http://localhost:8080}
       STELLAR_NETWORK: testnet
       SEP10_SIGNING_SEED: ${SEP10_SIGNING_SEED:-}
       SEP10_SIGNING_PUBLIC_KEY: ${SEP10_SIGNING_PUBLIC_KEY:-}
       SEP12_ACCEPTED_ACCOUNTS: ${SEP12_ACCEPTED_ACCOUNTS:-}
       LOMI_MERCHANT_VERIFY_URL: ${LOMI_MERCHANT_VERIFY_URL:-}
+      CALLBACK_AUTH_SECRET: ${CALLBACK_AUTH_SECRET:-}
+      SEP24_INTERACTIVE_URL_JWT_SECRET: ${SEP24_INTERACTIVE_URL_JWT_SECRET:-}
+      PLATFORM_API_URL: ${PLATFORM_API_URL:-http://anchor-platform:8085}
     env_file:
       - ../.env
 
@@ -33,7 +37,7 @@ services:
 
   anchor-platform:
     image: stellar/anchor-platform:4.8.0
-    command: ["--sep-server"]
+    command: ["--sep-server", "--platform-server"]
     depends_on:
       lab:
         condition: service_started
@@ -41,6 +45,7 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
+      - "8085:8085"
     environment:
       STELLAR_ANCHOR_CONFIG: /config/anchor-config.yaml
       HOME_DOMAIN: ${HOME_DOMAIN:-localhost}
@@ -49,6 +54,10 @@ services:
       SEP10_JWT_SECRET: ${SEP10_JWT_SECRET}
       SEP10_SIGNING_SEED: ${SEP10_SIGNING_SEED}
       CALLBACK_AUTH_SECRET: ${CALLBACK_AUTH_SECRET}
+      SECRET_CALLBACK_API_AUTH_SECRET: ${CALLBACK_AUTH_SECRET}
+      SECRET_PLATFORM_API_AUTH_SECRET: ${CALLBACK_AUTH_SECRET}
+      SECRET_SEP24_INTERACTIVE_URL_JWT_SECRET: ${SEP24_INTERACTIVE_URL_JWT_SECRET}
+      SECRET_SEP24_MORE_INFO_URL_JWT_SECRET: ${SEP24_INTERACTIVE_URL_JWT_SECRET}
       DATA_TYPE: postgres
       DATA_SERVER: postgres:5432
       DATA_DATABASE: platform
