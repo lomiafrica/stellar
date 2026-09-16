@@ -1,3 +1,6 @@
+import { readString, type JsonObject } from "../json.js";
+import { readJsonArray, writeJsonArray } from "./json-store.js";
+
 export type LastMileRail = "wave" | "mtn" | "spi";
 
 export interface LastMileRequest {
@@ -16,12 +19,37 @@ export interface LastMileResult {
   kind: "deposit" | "withdraw";
   status: "accepted" | "sandbox";
   message: string;
+  createdAt: string;
+}
+
+const STORE = "last-mile.json";
+
+function persist(result: LastMileResult): void {
+  const rows = readJsonArray(STORE);
+  const next: JsonObject = {
+    rail: result.rail,
+    amount_xof: result.amountXof,
+    phone: result.phone,
+    payout_id: result.payoutId,
+    kind: result.kind,
+    status: result.status,
+    message: result.message,
+    created_at: result.createdAt,
+  };
+  rows.push(next);
+  writeJsonArray(STORE, rows);
+}
+
+export function listLastMileCredits(payoutId?: string): JsonObject[] {
+  const rows = readJsonArray(STORE);
+  if (!payoutId) return rows;
+  return rows.filter((row) => readString(row, "payout_id") === payoutId);
 }
 
 export function dispatchLastMile(input: LastMileRequest): LastMileResult {
   const rail: LastMileRail =
     input.rail === "mtn" || input.rail === "spi" ? input.rail : "wave";
-  return {
+  const result: LastMileResult = {
     rail,
     amountXof: input.amountXof,
     phone: input.phone,
@@ -29,5 +57,8 @@ export function dispatchLastMile(input: LastMileRequest): LastMileResult {
     kind: input.kind,
     status: "sandbox",
     message: `Sandbox ${rail} ${input.kind}. No live mobile money. Same adapter shape as the production ${rail} rail.`,
+    createdAt: new Date().toISOString(),
   };
+  persist(result);
+  return result;
 }

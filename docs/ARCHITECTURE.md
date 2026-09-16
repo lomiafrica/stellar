@@ -59,7 +59,8 @@ Isolated NestJS app. Clone and run without the lomi. monorepo.
 | Local `stellar_settlements.json` ledger       | Snake_case fields for a later Postgres table |
 | `POST /demo/payouts` (`rail: stellar`)        | Mirrors `CreatePayoutDto`                    |
 | Mock Bridge + mock Wave off-ramp              | Stubs                                        |
-| SEP-1 `stellar.toml`                          | In repo / local HTTP                         |
+| SEP-1 `stellar.toml`                          | Hosted at `/.well-known/stellar.toml`        |
+| SEP-12 / SEP-24 sandbox                       | Merchant verify callback + last-mile sandbox |
 
 **Testnet accounts**
 

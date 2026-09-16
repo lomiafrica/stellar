@@ -1,8 +1,12 @@
 NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
 ACCOUNTS=[]
-TRANSFER_SERVER="{{PUBLIC_BASE_URL}}/anchor"
+SIGNING_KEY="{{SIGNING_KEY}}"
+TRANSFER_SERVER="{{PUBLIC_BASE_URL}}/anchor/sep6"
+TRANSFER_SERVER_SEP0024="{{PUBLIC_BASE_URL}}/anchor/sep24"
 WEB_AUTH_ENDPOINT="{{PUBLIC_BASE_URL}}/anchor/sep10"
 KYC_SERVER="{{PUBLIC_BASE_URL}}/anchor/sep12"
+DIRECT_PAYMENT_SERVER="{{PUBLIC_BASE_URL}}/anchor/sep31"
+ANCHOR_QUOTE_SERVER="{{PUBLIC_BASE_URL}}/anchor/sep38"
 ORG_NAME="lomi.africa SARL"
 ORG_URL="https://lomi.africa"
 ORG_DESCRIPTION="Custodial USDC settlement on Stellar Testnet for UEMOA merchant payouts."

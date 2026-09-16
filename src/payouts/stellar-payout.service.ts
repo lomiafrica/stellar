@@ -30,6 +30,7 @@ export interface SettleDemoInput {
   last_mile_rail?: "wave" | "mtn" | "spi" | "bank";
   currency_code?: string;
   amount_number?: number;
+  bridge_transfer_id?: string;
 }
 
 export interface SettleDemoResult {
@@ -138,7 +139,16 @@ export async function runSettlementDemo(
   const omnibus = loadKeypair("omnibus");
   const merchant = loadKeypair("merchant");
 
-  const bridge = mockBridgeUsdToUsdc(amountUsdc);
+  const bridge = input.bridge_transfer_id
+    ? {
+        id: input.bridge_transfer_id,
+        usdAmount: amountUsdc,
+        usdcAmount: amountUsdc,
+        stellarNetwork: "testnet" as const,
+        status: "completed" as const,
+        createdAt: now,
+      }
+    : mockBridgeUsdToUsdc(amountUsdc);
   record = upsertSettlement({
     ...record,
     status: "processing",
@@ -214,6 +224,7 @@ export async function createStellarPayout(
     destination: input.destination,
     last_mile_rail: input.last_mile_rail ?? "wave",
     phone: input.recipient?.phone,
+    bridge_transfer_id: input.bridge_transfer_id,
   });
 
   const kind: "withdrawal" | "beneficiary" =

@@ -1,5 +1,6 @@
 # Official Anchor Platform next to the lab. Not inside apps/api.
 # From apps/tools/stellar: docker compose -f anchor/docker-compose.yml up
+# SEP10_SIGNING_SEED must come from the environment. Never commit a dummy seed.
 services:
   lab:
     build:
@@ -11,6 +12,10 @@ services:
       PORT: "3456"
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3456}
       STELLAR_NETWORK: testnet
+      SEP10_SIGNING_SEED: ${SEP10_SIGNING_SEED:-}
+      SEP10_SIGNING_PUBLIC_KEY: ${SEP10_SIGNING_PUBLIC_KEY:-}
+      SEP12_ACCEPTED_ACCOUNTS: ${SEP12_ACCEPTED_ACCOUNTS:-}
+      LOMI_MERCHANT_VERIFY_URL: ${LOMI_MERCHANT_VERIFY_URL:-}
     env_file:
       - ../.env
 
@@ -25,8 +30,8 @@ services:
       HOME_DOMAIN: ${HOME_DOMAIN:-localhost}
       LAB_BASE_URL: ${LAB_BASE_URL:-http://lab:3456}
       XOF_ISSUER: ${XOF_ISSUER:-GD6PH2FAK5DQFFFALZVAT337R7NDGSPWT4R6UBGA5GYLL7N5U4C4GI7I}
-      SEP10_JWT_SECRET: ${SEP10_JWT_SECRET:-dev-sep10-jwt-secret-change-me}
-      SEP10_SIGNING_SEED: ${SEP10_SIGNING_SEED:-}
-      CALLBACK_AUTH_SECRET: ${CALLBACK_AUTH_SECRET:-dev-callback-secret-change-me}
+      SEP10_JWT_SECRET: ${SEP10_JWT_SECRET}
+      SEP10_SIGNING_SEED: ${SEP10_SIGNING_SEED}
+      CALLBACK_AUTH_SECRET: ${CALLBACK_AUTH_SECRET}
     volumes:
       - ./config:/config:ro

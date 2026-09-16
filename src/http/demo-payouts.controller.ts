@@ -37,6 +37,7 @@ export class DemoPayoutsController {
       reason?: string;
       metadata?: JsonObject;
       amount_usdc?: string;
+      bridge_transfer_id?: string;
     },
     @Headers("idempotency-key") idempotencyKey?: string,
   ) {
@@ -66,6 +67,7 @@ export class DemoPayoutsController {
       metadata: body.metadata,
       amount_usdc: body.amount_usdc,
       phone: body.recipient?.phone,
+      bridge_transfer_id: body.bridge_transfer_id,
     };
 
     try {

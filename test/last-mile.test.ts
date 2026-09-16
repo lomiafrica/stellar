@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
-import { dispatchLastMile } from "../src/anchor/last-mile.js";
+import { dispatchLastMile, listLastMileCredits } from "../src/anchor/last-mile.js";
 
 test("dispatchLastMile keeps Wave / MTN / SPI shape", () => {
+  process.env.STELLAR_DATA_DIR = mkdtempSync(join(tmpdir(), "stellar-lm-"));
   const wave = dispatchLastMile({
     rail: "wave",
     amountXof: "1000",
@@ -23,4 +27,5 @@ test("dispatchLastMile keeps Wave / MTN / SPI shape", () => {
   });
   assert.equal(mtn.rail, "mtn");
   assert.equal(mtn.kind, "deposit");
+  assert.equal(listLastMileCredits("p1").length, 1);
 });

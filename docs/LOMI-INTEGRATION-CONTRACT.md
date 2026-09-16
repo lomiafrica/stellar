@@ -9,12 +9,12 @@ How this lab mirrors lomi. payout and ledger fields without writing to Supabase 
 | Merchant balances  | `accounts`                 | `organization_id`, `currency_code` in `XOF`, `USD`, `EUR`, `balance`                                  |
 | Self withdrawals   | `payouts`                  | `payout_id` UUID, `status` `pending` / `processing` / `completed` / `failed`                          |
 | Beneficiary sends  | `beneficiary_payouts`      | Same status model                                                                                     |
-| Create payout API  | `apps/api` `POST /payouts` | `CreatePayoutDto`: `destination`, `rail` (`wave` / `mtn` / `spi` / `bank`), `amount`, `currency_code` |
-| Response           | `CreatePayoutResponseDto`  | `success`, `payout_id`, `kind`, `status`                                                              |
-| HTTP idempotency   | `api_idempotency_records`  | Header `Idempotency-Key` scoped per org + route                                                       |
-| Settlement periods | `GET /settlements`         | Virtual `settlement_id` = `{currency}:{YYYY-MM-DD}` from `transactions.available_at`                  |
+| Create payout API  | `apps/api` `POST /payouts` | `CreatePayoutDto`: `destination`, `rail` (`wave` / `mtn` / `spi` / `bank` / `stellar`), `amount`, `currency_code` |
+| Response           | `CreatePayoutResponseDto`  | `success`, `payout_id`, `kind`, `status`                                                                         |
+| HTTP idempotency   | `api_idempotency_records`  | Header `Idempotency-Key` scoped per org + route                                                                  |
+| Settlement periods | `GET /settlements`         | Virtual `settlement_id` = `{currency}:{YYYY-MM-DD}` from `transactions.available_at`                             |
 
-USDC is not a merchant `currency_code` today. There is no `rail: 'stellar'` on the live API.
+USDC is not a merchant `currency_code`. Nest already implements `rail: 'stellar'` in `apps/api/src/core/stellar` (allowlisted orgs, Test-only until `STELLAR_RAIL_ALLOW_LIVE=1`). It is **not deployed** on `api.lomi.africa` / `sandbox.api.lomi.africa` until a later connect. This lab never calls Nest.
 
 ## Lab mapping
 
@@ -38,9 +38,15 @@ Each row is the proposed `stellar_settlements` table plus payout join keys:
 
 ### HTTP
 
-| Lab endpoint                   | Prod analogue                                                  |
+Nest `StellarLabClient` POSTs `{STELLAR_LAB_URL}/demo/payouts` with:
+
+`destination`, `rail: 'stellar'`, `amount`, `currency_code`, `payout_id`, `organization_id`, `bridge_transfer_id`.
+
+The lab controller already accepts that body. Same `payout_id` twice returns the existing chain Payment (ledger replay). Header `Idempotency-Key` is an extra cache on top.
+
+| Lab endpoint                   | Nest analogue                                                  |
 | ------------------------------ | -------------------------------------------------------------- |
-| `POST /demo/payouts`           | `POST /payouts` with `rail: 'stellar'`                         |
+| `POST /demo/payouts`           | `POST /payouts` with `rail: 'stellar'` (un-deployed)           |
 | `GET /demo/payouts/:payout_id` | Payout status + reconcile snapshot                             |
 | `POST /demo/settle`            | Same orchestration as `/demo/payouts`                          |
 | Header `Idempotency-Key`       | `api_idempotency_records` (local `data/demo_idempotency.json`) |
@@ -55,17 +61,19 @@ Each row is the proposed `stellar_settlements` table plus payout join keys:
 
 `pnpm reconcile` checks Horizon/RPC success and memo against the ledger row.
 
-## Later (private API)
+## Later connect (not this lab pass)
 
-1. **Migration**: `stellar_settlements` (`20250226000119_stellar.sql`).
-2. **API**: `'stellar'` on `CreatePayoutDto.rail`; `STELLAR_RAIL_ORGANIZATION_IDS` allowlist; Test first.
+Nest already has the rail, Bridge HMAC ingest, and reconcile cron. Connecting production is a flag flip: set `STELLAR_LAB_URL` and `STELLAR_RAIL_ORGANIZATION_IDS` on sandbox/live Nest. Do not set those on this isolated lab host.
+
+1. **Migration**: `stellar_settlements` (`20250226000119_stellar.sql`) plus TEST `stellar_t1_ops`.
+2. **Flags**: `STELLAR_RAIL_ORGANIZATION_IDS` allowlist; Test first; `STELLAR_RAIL_ALLOW_LIVE` stays off.
 3. **Ledger**: do not add USDC to merchant `accounts`; treasury USDC stays off that ledger.
 4. **Webhooks**: `stellar_transaction_id` and `bridge_transfer_id` on payout events.
 5. **Signing / Bridge**: private `apps/api` module. Lab `keys/` stay here.
 
-## Non-goals
+## Non-goals (this lab repo)
 
-- No edits to `apps/api`, `apps/dashboard`, or Supabase migrations
+- This public lab does not import `apps/api`, the dashboard, or Supabase
 - No merchant key custody
 - No mainnet or real Bridge / mobile-money calls
 

@@ -7,6 +7,8 @@ stellar:
     path: /config/stellar.toml
   sep1:
     enabled: true
+  sep6:
+    enabled: true
   sep10:
     enabled: true
     home_domain: ${HOME_DOMAIN}
@@ -16,6 +18,10 @@ stellar:
   sep24:
     enabled: true
     interactive_jwt_expiration: 3600
+  sep31:
+    enabled: true
+  sep38:
+    enabled: true
 assets:
   - id: stellar:XOF:${XOF_ISSUER}
     significant_decimals: 0

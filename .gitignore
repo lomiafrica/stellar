@@ -12,6 +12,10 @@ keys/
 data/stellar_settlements.json
 data/demo_idempotency.json
 data/settlements.json
+data/last-mile.json
+data/sep12-customers.json
+data/sep38-quotes.json
+data/sep31-inbound.json
 
 # Logs
 *.log

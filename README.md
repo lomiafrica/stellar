@@ -7,7 +7,10 @@ lomi. is a payment processor for francophone West Africa. Merchants collect XOF 
 It is not wired to lomi. live systems. Merchants never hold keys. We do not issue a stablecoin.
 
 **Architecture:** [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)  
-**Payout mapping:** [docs/LOMI-INTEGRATION-CONTRACT.md](./docs/LOMI-INTEGRATION-CONTRACT.md)
+**Payout mapping:** [docs/LOMI-INTEGRATION-CONTRACT.md](./docs/LOMI-INTEGRATION-CONTRACT.md)  
+**Anchor:** [docs/ANCHOR.md](./docs/ANCHOR.md) · [docs/WALKTHROUGH.md](./docs/WALKTHROUGH.md)  
+**Adapter:** [docs/MIT-ADAPTER.md](./docs/MIT-ADAPTER.md)  
+**Hosting:** [docs/HOSTING.md](./docs/HOSTING.md) (standalone Railway project, not lomi.)
 
 ## What is in here
 
@@ -16,7 +19,9 @@ It is not wired to lomi. live systems. Merchants never hold keys. We do not issu
 - Local JSON ledger (`data/`, gitignored) for reconcile
 - Nest demo on `:3456` shaped like `POST /payouts` with `rail: "stellar"`
 - Mock Bridge treasury and mock last-mile (Wave / MTN / SPI)
-- SEP-1 `stellar.toml` at `/.well-known/stellar.toml`
+- SEP-1 `stellar.toml` at `/.well-known/stellar.toml` (set `PUBLIC_BASE_URL` / `HOME_DOMAIN` when hosted)
+- Official Anchor Platform under `anchor/` (SEP-10/12/24; SEP-6/38/31 callbacks in this app)
+- Sandbox last-mile adapters (Wave / MTN / SPI)
 
 Not in this repo: HSM/KMS, mainnet keys, or calls into `apps/api`. Anchor Platform is the official SDF image under `anchor/`.
 
@@ -64,6 +69,11 @@ pnpm start:dev
 | `POST` | `/demo/settle`              | Thin settle helper                                                                                           |
 | `POST` | `/mock/bridge/fund`         | Mock treasury credit                                                                                         |
 | `GET`  | `/.well-known/stellar.toml` | SEP-1 (CORS open; set `PUBLIC_BASE_URL` when hosted)                                                         |
+| `POST` | `/anchor/sep12/customer`    | Merchant verification callback (not a blanket ACCEPTED stub)                                                 |
+| `GET`  | `/anchor/sep24/:kind`       | Interactive SEP-24 sandbox page                                                                              |
+| `POST` | `/anchor/sep6/:kind`        | Programmatic deposit/withdraw                                                                                |
+| `POST` | `/anchor/sep38/quote`       | Firm XOF/USDC quote with TTL                                                                                 |
+| `POST` | `/anchor/sep31/receive`     | Inbound from an external sending anchor                                                                      |
 | `POST` | `/anchor/last-mile/:rail`   | Sandbox Wave / MTN / SPI last mile                                                                           |
 
 ```json
