@@ -25,10 +25,18 @@ items:
         enabled: true
         min_amount: 100
         max_amount: 1000000
+        methods:
+          - wave
+          - mtn
+          - spi
       withdraw:
         enabled: true
         min_amount: 100
         max_amount: 1000000
+        methods:
+          - wave
+          - mtn
+          - spi
     sep31:
       enabled: true
     sep38:
@@ -49,10 +57,18 @@ items:
         enabled: true
         min_amount: 1
         max_amount: 10000
+        methods:
+          - wave
+          - mtn
+          - spi
       withdraw:
         enabled: true
         min_amount: 1
         max_amount: 10000
+        methods:
+          - wave
+          - mtn
+          - spi
     sep31:
       enabled: true
     sep38:
