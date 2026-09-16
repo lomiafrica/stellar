@@ -1,12 +1,11 @@
 # Official Stellar Anchor Platform (testnet). Do not write custom SEP servers.
 # Docs: https://developers.stellar.org/docs/category/anchor-platform
+# SEP-1 toml is served by the lab on HOME_DOMAIN.
 version: 2
 stellar:
   network: TESTNET
-  toml:
-    path: /config/stellar.toml
   sep1:
-    enabled: true
+    enabled: false
   sep6:
     enabled: true
   sep10:
