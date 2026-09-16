@@ -4,4 +4,6 @@
 FROM stellar/anchor-platform:2.11.3
 COPY config /config
 ENV STELLAR_ANCHOR_CONFIG=/config/anchor-config.yaml
+# Official image ENTRYPOINT is `/bin/bash /app/start.sh` (runner.jar).
+# Railway startCommand must be the full runner path, not `anchor-platform.jar`.
 CMD ["--sep-server"]
