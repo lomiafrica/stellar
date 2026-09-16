@@ -1,10 +1,10 @@
 FROM node:22-alpine
 WORKDIR /app
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile --ignore-scripts || pnpm install --ignore-scripts
+RUN pnpm install --frozen-lockfile || pnpm install
 COPY . .
-RUN pnpm build
+RUN pnpm exec nest build
 ENV PORT=3456
 EXPOSE 3456
 CMD ["node", "dist/main.js"]
