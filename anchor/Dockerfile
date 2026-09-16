@@ -4,3 +4,4 @@
 FROM stellar/anchor-platform:2.11.3
 COPY config /config
 ENV STELLAR_ANCHOR_CONFIG=/config/anchor-config.yaml
+CMD ["--sep-server"]

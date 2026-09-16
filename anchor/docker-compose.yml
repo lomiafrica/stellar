@@ -21,6 +21,7 @@ services:
 
   anchor-platform:
     image: stellar/anchor-platform:2.11.3
+    command: ["--sep-server"]
     depends_on:
       - lab
     ports:
