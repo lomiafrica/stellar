@@ -37,7 +37,12 @@ import {
   verifySep12Customer,
 } from "../anchor/merchant-verify.js";
 import { patchPlatformTransaction } from "../anchor/platform-patch.js";
-import { renderSep24CreditReceipt } from "../anchor/sep24-receipt.js";
+import {
+  renderSep24CreditReceipt,
+  renderSep24FlowPage,
+  renderSep24Interactive,
+  renderSep24MoreInfo,
+} from "../anchor/sep24-pages.js";
 import { createSep6Transfer } from "../anchor/sep6.js";
 import { recordSep31Inbound } from "../anchor/sep31.js";
 import {
@@ -57,6 +62,10 @@ function sep24JwtSecret(): string {
 function wantsJson(req: Request): boolean {
   const type = String(req.headers["content-type"] ?? "");
   return type.includes("application/json");
+}
+
+function prefersHtml(req: Request): boolean {
+  return String(req.headers.accept ?? "").includes("text/html");
 }
 
 function decodeSep24Token(token?: string): {
@@ -163,11 +172,19 @@ export class AnchorController {
   }
 
   @Get("sep24/credit/:id")
-  sep24Credit(@Param("id") id: string) {
+  sep24Credit(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Param("id") id: string,
+  ) {
     const safeId = id.replace(/[^\w-]/g, "");
     const credit = getLastMileCredit(safeId);
     if (!credit) {
       throw new NotFoundException("Sandbox credit not found");
+    }
+    if (prefersHtml(req)) {
+      res.type("html");
+      return renderSep24CreditReceipt(credit);
     }
     return credit;
   }
@@ -179,17 +196,16 @@ export class AnchorController {
     @Query("token") token?: string,
     @Query("transaction_id") transactionId?: string,
   ): string {
+    if (kind === "flow") {
+      return renderSep24FlowPage();
+    }
     if (kind === "more_info") {
       const decoded = decodeSep24Token(token);
       const id = (decoded.transactionId ?? transactionId ?? "").replace(
         /[^\w-]/g,
         "",
       );
-      return `<!doctype html><html lang="en"><body>
-<h1>SEP-24 more info</h1>
-<p>transaction_id=${id}</p>
-<p>Sandbox last mile only. No live mobile money.</p>
-</body></html>`;
+      return renderSep24MoreInfo(id);
     }
     const decoded = decodeSep24Token(token);
     if (kind === "interactive" && sep24JwtSecret() && !token) {
@@ -199,46 +215,17 @@ export class AnchorController {
       throw new UnauthorizedException("Invalid SEP-24 token");
     }
     const action = kind === "withdraw" ? "withdraw" : "deposit";
-    const title = action === "withdraw" ? "Withdraw XOF" : "Deposit XOF";
     const amount = decoded.amount ?? "1000";
     const tx = decoded.transactionId ?? transactionId ?? "";
-    const safeToken = (token ?? "").replace(/[^\w.-=]/g, "");
+    const safeToken = (token ?? "").replace(/[^A-Za-z0-9._=-]/g, "");
     const safeTx = tx.replace(/[^\w-]/g, "");
     const safeAmount = /^\d+(\.\d+)?$/.test(amount) ? amount : "1000";
-    return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${title}</title>
-  <style>
-    body { font-family: ui-sans-serif, system-ui, sans-serif; max-width: 28rem; margin: 2rem auto; padding: 0 1rem; color: #111; }
-    label { display: block; margin: 0.75rem 0 0.25rem; font-size: 0.875rem; }
-    input, select { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
-    button { margin-top: 1rem; width: 100%; padding: 0.65rem; border: 0; border-radius: 4px; background: #111; color: #fff; }
-    p { color: #555; font-size: 0.9rem; }
-  </style>
-</head>
-<body>
-  <h1>${title}</h1>
-  <p>Testnet SEP-24. Completing this form credits Wave, MTN, or SPI sandbox only. No live mobile money.</p>
-  <form method="post" action="/anchor/sep24/${action}">
-    <input type="hidden" name="token" value="${safeToken}">
-    <input type="hidden" name="transaction_id" value="${safeTx}">
-    <label for="amount">Amount (XOF)</label>
-    <input id="amount" name="amount" type="number" min="100" value="${safeAmount}" required>
-    <label for="phone">Phone</label>
-    <input id="phone" name="phone" type="tel" value="+2250700000000" required>
-    <label for="rail">Last mile</label>
-    <select id="rail" name="rail">
-      <option value="wave">Wave sandbox</option>
-      <option value="mtn">MTN sandbox</option>
-      <option value="spi">SPI sandbox</option>
-    </select>
-    <button type="submit">Complete sandbox ${action}</button>
-  </form>
-</body>
-</html>`;
+    return renderSep24Interactive({
+      kind: action,
+      amount: safeAmount,
+      token: safeToken,
+      transactionId: safeTx,
+    });
   }
 
   @Post("sep24/:kind")

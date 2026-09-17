@@ -51,18 +51,22 @@ function writeLog(name: string, value: unknown): void {
 function walkthroughMarkdown(): string {
   return `# SEP-24 sandbox walkthrough
 
-Record this on Freighter or LOBSTR (Testnet). Curl replay is second.
+Two proofs. Do not mix them in one clip.
 
-## Wallet clip (you record)
+## Wave last mile (this clip)
 
-1. Open \`https://${HOME_DOMAIN}/.well-known/stellar.toml\`. Confirm it lists XOF and USDC, and \`SIGNING_KEY\` is a G… address.
-2. Open \`https://${new URL(ANCHOR).host}/sep24/info\`. USDC deposit and withdraw are enabled.
-3. Freighter or LOBSTR on **Testnet**. Add home domain \`${HOME_DOMAIN}\`.
-4. Complete SEP-10 against \`${ANCHOR}/auth\`.
-5. SEP-12: a new G… is \`NEEDS_INFO\` until you submit email on the wallet KYC form (testnet sandbox accept). Then \`ACCEPTED\`.
-6. Start a **USDC** SEP-24 withdraw or deposit. Interactive page: sandbox phone, Wave or MTN, submit.
-7. Receipt page shows \`status=sandbox\` and a transaction id. Open \`https://${HOME_DOMAIN}/anchor/sep24/credit/<id>\`. No live mobile money.
-8. Nest Test hop (already landed): payout \`${NEST_PAYOUT}\` — ${NEST_EXPLORER}
+Money path on the page: Wave CFA, then Anchor, then the wallet. Only the Wave hop runs. It writes a sandbox receipt. It does not create a Stellar payment. Do not open StellarExpert here.
+
+1. Open \`https://${HOME_DOMAIN}/anchor/sep24/flow\`. Read cash in vs cash out.
+2. Open the interactive form (Freighter, or lab \`/anchor/sep24/interactive\`). Last mile = Wave sandbox. Submit.
+3. Receipt shows a sandbox Wave hop and says this lab id is not a Stellar transaction.
+4. Optional: \`https://${HOME_DOMAIN}/anchor/sep24/credit/<id>\` in a browser (same receipt).
+
+Freighter/LOBSTR on Testnet still needs home domain \`${HOME_DOMAIN}\` for a wallet-signed SEP-10. Toml and \`/sep24/info\` stay protocol pages, not the human story.
+
+## Nest USDC hop (separate clip)
+
+Different money. Merchant \`POST /payouts\` \`rail=stellar\`. Payout \`${NEST_PAYOUT}\`. Explorer ${NEST_EXPLORER}
 
 Logs from \`pnpm t1:walkthrough\` live in gitignored \`.scf/t1-logs/\`. Do not commit JWT secrets or seeds.
 
@@ -132,13 +136,11 @@ async function main(): Promise<void> {
   console.log("updated docs/WALKTHROUGH.md");
 
   console.log(`
-Operator clip
-  1. Toml  ${LAB}/.well-known/stellar.toml
-  2. Info  ${ANCHOR}/sep24/info
-  3. Freighter Testnet, home domain ${HOME_DOMAIN}
-  4. SEP-10  ${ANCHOR}/auth
-  5. USDC SEP-24 → Wave/MTN sandbox form → receipt
-  6. Nest hop  ${NEST_EXPLORER}
+Wave clip (no explorer)
+  1. Flow  ${LAB}/anchor/sep24/flow
+  2. Form  ${LAB}/anchor/sep24/interactive
+  3. Receipt after Wave sandbox submit
+Nest hop is a separate clip  ${NEST_EXPLORER}
 `);
 }
 

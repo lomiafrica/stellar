@@ -81,7 +81,7 @@ export function dispatchLastMile(input: LastMileRequest): LastMileResult {
     payoutId: input.payoutId,
     kind: input.kind,
     status: "sandbox",
-    message: `Sandbox ${rail} ${input.kind}. No live mobile money. Same adapter shape as the production ${rail} rail.`,
+    message: `No live mobile money. ${rail} sandbox only.`,
     createdAt: new Date().toISOString(),
   };
   persist(result);
