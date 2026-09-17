@@ -84,7 +84,7 @@ Nest already has the rail, Bridge HMAC ingest, and reconcile cron. Connecting Te
 curl -s -X POST http://localhost:3456/demo/payouts \
   -H 'Content-Type: application/json' \
   -H 'Idempotency-Key: demo-key-001' \
-  -H 'X-Lab-Key: local-only-if-set' \
+  -H "X-Lab-Key: $LAB_API_KEY" \
   -d '{
     "destination": "self",
     "rail": "stellar",

@@ -31,6 +31,9 @@ importers:
       '@stellar/stellar-sdk':
         specifier: ^14.6.1
         version: 14.6.1
+      express:
+        specifier: ^5.1.0
+        version: 5.2.1
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
