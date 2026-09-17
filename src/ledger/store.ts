@@ -9,6 +9,7 @@ import {
   type JsonValue,
 } from "../json.js";
 import { getDataDir } from "../paths.js";
+import { withNamedLock } from "./lock.js";
 
 /** Mirrors prod `payouts.status` */
 export type PayoutStatus = "pending" | "processing" | "completed" | "failed";
@@ -172,9 +173,97 @@ export function readLedger(): StellarSettlementRecord[] {
   return readRawLedger();
 }
 
-export function writeLedger(rows: StellarSettlementRecord[]): void {
+function writeRawLedger(rows: StellarSettlementRecord[]): void {
   ensureDataDir();
   writeFileSync(ledgerPath(), `${JSON.stringify(rows, null, 2)}\n`);
+}
+
+export function writeLedger(rows: StellarSettlementRecord[]): void {
+  withNamedLock("ledger", () => {
+    writeRawLedger(rows);
+  });
+}
+
+/** Drop phones before HTML or JSON demo pages. */
+export function publicSettlement(
+  row: StellarSettlementRecord,
+): StellarSettlementRecord {
+  if (!row.mock_offramp) return row;
+  return {
+    ...row,
+    mock_offramp: {
+      rail: row.mock_offramp.rail,
+      status: row.mock_offramp.status,
+    },
+  };
+}
+
+export type ClaimOutcome =
+  | { kind: "replay"; record: StellarSettlementRecord }
+  | { kind: "recover"; record: StellarSettlementRecord }
+  | { kind: "busy"; record: StellarSettlementRecord }
+  | { kind: "claimed"; record: StellarSettlementRecord };
+
+const CLAIM_STALE_MS = 180_000;
+
+/**
+ * Atomically mark a payout processing before sign/submit.
+ * A second caller gets replay, recover, or busy instead of a second Payment.
+ */
+export function claimPayout(draft: StellarSettlementRecord): ClaimOutcome {
+  return withNamedLock("ledger", () => {
+    const rows = readRawLedger();
+    const idx = rows.findIndex((row) => row.payout_id === draft.payout_id);
+    const existing = idx >= 0 ? rows[idx] : undefined;
+    if (existing?.stellar_tx_hash && existing.status === "completed") {
+      return { kind: "replay", record: existing };
+    }
+    if (existing?.status === "processing") {
+      if (existing.stellar_tx_hash) {
+        return { kind: "recover", record: existing };
+      }
+      const created = Date.parse(existing.updated_at || existing.created_at);
+      const stale =
+        Number.isFinite(created) && Date.now() - created > CLAIM_STALE_MS;
+      if (!stale) {
+        return { kind: "busy", record: existing };
+      }
+    }
+    const now = new Date().toISOString();
+    const next: StellarSettlementRecord = {
+      ...draft,
+      id: existing?.id ?? draft.id,
+      created_at: existing?.created_at ?? draft.created_at,
+      status: "processing",
+      stellar_tx_hash: undefined,
+      updated_at: now,
+    };
+    if (idx >= 0) rows[idx] = next;
+    else rows.push(next);
+    writeRawLedger(rows);
+    return { kind: "claimed", record: next };
+  });
+}
+
+const DEFAULT_TTL_DAYS = 14;
+
+/** Drop settlement rows older than STELLAR_DATA_TTL_DAYS (default 14). */
+export function purgeExpiredSettlements(
+  now = Date.now(),
+  ttlDays = Number(process.env.STELLAR_DATA_TTL_DAYS ?? DEFAULT_TTL_DAYS),
+): number {
+  if (!Number.isFinite(ttlDays) || ttlDays <= 0) return 0;
+  const cutoff = now - ttlDays * 24 * 60 * 60 * 1000;
+  return withNamedLock("ledger", () => {
+    const rows = readRawLedger();
+    const kept = rows.filter((row) => {
+      const created = Date.parse(row.created_at);
+      return !Number.isFinite(created) || created >= cutoff;
+    });
+    const dropped = rows.length - kept.length;
+    if (dropped > 0) writeRawLedger(kept);
+    return dropped;
+  });
 }
 
 export function findByPayoutId(
@@ -192,16 +281,18 @@ export function findByTxHash(
 export function upsertSettlement(
   record: StellarSettlementRecord,
 ): StellarSettlementRecord {
-  const rows = readLedger();
-  const idx = rows.findIndex((r) => r.payout_id === record.payout_id);
-  const next = { ...record, updated_at: new Date().toISOString() };
-  if (idx >= 0) {
-    rows[idx] = next;
-  } else {
-    rows.push(next);
-  }
-  writeLedger(rows);
-  return next;
+  return withNamedLock("ledger", () => {
+    const rows = readRawLedger();
+    const idx = rows.findIndex((r) => r.payout_id === record.payout_id);
+    const next = { ...record, updated_at: new Date().toISOString() };
+    if (idx >= 0) {
+      rows[idx] = next;
+    } else {
+      rows.push(next);
+    }
+    writeRawLedger(rows);
+    return next;
+  });
 }
 
 export function patchSettlement(

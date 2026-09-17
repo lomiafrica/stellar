@@ -2,6 +2,7 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 
 const BASE = __ENV.STELLAR_LAB_URL || "http://localhost:3456";
+const LAB_KEY = __ENV.LAB_API_KEY || "";
 
 export const options = {
   vus: 5,
@@ -13,6 +14,10 @@ export const options = {
 };
 
 export default function stellarPayouts() {
+  const mutatingHeaders = {
+    "Content-Type": "application/json",
+    ...(LAB_KEY ? { "X-Lab-Key": LAB_KEY } : {}),
+  };
   const toml = http.get(`${BASE}/.well-known/stellar.toml`);
   check(toml, {
     "toml 200": (res) => res.status === 200,
@@ -29,7 +34,7 @@ export default function stellarPayouts() {
       currency_code: "USD",
       payout_id: payoutId,
     }),
-    { headers: { "Content-Type": "application/json", "Idempotency-Key": payoutId } },
+    { headers: { ...mutatingHeaders, "Idempotency-Key": payoutId } },
   );
   check(create, {
     "payout accepted or funded-closed": (res) =>
@@ -45,7 +50,7 @@ export default function stellarPayouts() {
       currency_code: "USD",
       payout_id: payoutId,
     }),
-    { headers: { "Content-Type": "application/json", "Idempotency-Key": payoutId } },
+    { headers: { ...mutatingHeaders, "Idempotency-Key": payoutId } },
   );
   check(replay, {
     "idempotent replay": (res) => res.status === 200 || res.status === 201 || res.status === 400,

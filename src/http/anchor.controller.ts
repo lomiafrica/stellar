@@ -12,6 +12,7 @@ import {
   Query,
   Req,
   Res,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
@@ -44,6 +45,7 @@ import {
   renderSep24MoreInfo,
 } from "../anchor/sep24-pages.js";
 import { prefersHtml } from "./page-chrome.js";
+import { isPublicDeploy } from "./lab-auth.js";
 import { createSep6Transfer } from "../anchor/sep6.js";
 import { recordSep31Inbound } from "../anchor/sep31.js";
 import {
@@ -81,6 +83,25 @@ function decodeSep24Token(token?: string): {
       readJwtString(payload, "jti"),
     amount: readJwtDataString(payload, "amount"),
   };
+}
+
+function assertSep24MutatingAuth(token?: string): void {
+  const secret = sep24JwtSecret();
+  if (isPublicDeploy()) {
+    if (!secret) {
+      throw new ServiceUnavailableException({
+        success: false,
+        reason: "SEP24_INTERACTIVE_URL_JWT_SECRET unset",
+      });
+    }
+    if (!token || !verifyHs256Jwt(token, secret)) {
+      throw new UnauthorizedException("SEP-24 token required");
+    }
+    return;
+  }
+  if (token && secret && !verifyHs256Jwt(token, secret)) {
+    throw new UnauthorizedException("Invalid SEP-24 token");
+  }
 }
 
 /**
@@ -239,13 +260,7 @@ export class AnchorController {
       transaction_id?: string;
     },
   ) {
-    if (
-      body.token &&
-      sep24JwtSecret() &&
-      !verifyHs256Jwt(body.token, sep24JwtSecret())
-    ) {
-      throw new UnauthorizedException("Invalid SEP-24 token");
-    }
+    assertSep24MutatingAuth(body.token);
     const decoded = decodeSep24Token(body.token);
     const payoutId = decoded.transactionId ?? body.transaction_id ?? randomUUID();
     const lastMile = dispatchLastMile({
@@ -410,6 +425,7 @@ export class AnchorController {
       kind?: "deposit" | "withdraw";
     },
   ) {
+    assertSep24MutatingAuth();
     const resolved: LastMileRail =
       rail === "mtn" || rail === "spi" ? rail : "wave";
     return dispatchLastMile({

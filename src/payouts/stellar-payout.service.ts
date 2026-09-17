@@ -4,10 +4,13 @@ import {
   explorerTx,
 } from "../config.js";
 import {
+  claimPayout,
   findByPayoutId,
+  readLedger,
   type StellarSettlementRecord,
   upsertSettlement,
 } from "../ledger/store.js";
+import { PayoutCapError, PayoutInFlightError } from "./errors.js";
 import {
   getBridgeAdapter,
   type BridgeAdapter,
@@ -82,6 +85,39 @@ export async function defaultSettlementRuntime(): Promise<SettlementRuntime> {
     bridge: getBridgeAdapter(),
     now: () => Date.now(),
   };
+}
+
+function usdcToday(now: number): number {
+  const start = new Date(now);
+  start.setUTCHours(0, 0, 0, 0);
+  const from = start.getTime();
+  return readLedger()
+    .filter((row) => {
+      if (row.status !== "completed" && row.status !== "processing") return false;
+      const created = Date.parse(row.created_at);
+      return Number.isFinite(created) && created >= from;
+    })
+    .reduce((sum, row) => sum + (Number(row.amount_usdc) || 0), 0);
+}
+
+export function assertUsdcCaps(amountUsdc: number, now = Date.now()): void {
+  const per = Number(process.env.LAB_MAX_USDC_PER_PAYOUT ?? "100");
+  const daily = Number(process.env.LAB_MAX_USDC_PER_DAY ?? "500");
+  if (Number.isFinite(per) && per > 0 && amountUsdc > per) {
+    throw new PayoutCapError(
+      "per_payout",
+      `amount ${amountUsdc} USDC exceeds LAB_MAX_USDC_PER_PAYOUT ${per}`,
+    );
+  }
+  if (Number.isFinite(daily) && daily > 0) {
+    const spent = usdcToday(now);
+    if (spent + amountUsdc > daily) {
+      throw new PayoutCapError(
+        "daily",
+        `amount ${amountUsdc} USDC plus ${spent} already sent today exceeds LAB_MAX_USDC_PER_DAY ${daily}`,
+      );
+    }
+  }
 }
 
 function usdcAmountFromInput(input: SettleDemoInput): string {
@@ -249,8 +285,9 @@ export async function runSettlementDemo(
   const memo = stellarMemoFromPayoutId(payoutId);
 
   await resolved.assertReady(Number(amountUsdc) || 10);
+  assertUsdcCaps(Number(amountUsdc) || 0, resolved.now());
 
-  let record: StellarSettlementRecord = {
+  const draft: StellarSettlementRecord = {
     id: existing?.id ?? randomUUID(),
     organization_id: organizationId,
     environment: "test",
@@ -265,7 +302,27 @@ export async function runSettlementDemo(
     created_at: existing?.created_at ?? now,
     updated_at: now,
   };
-  upsertSettlement(record);
+  const claim = claimPayout(draft);
+  if (claim.kind === "replay") {
+    return recordToDemoResult(
+      claim.record,
+      buildOfframpFromRecord(claim.record),
+      true,
+    );
+  }
+  if (claim.kind === "recover") {
+    const recovered = await recoverProcessing(
+      claim.record,
+      resolved,
+      input.phone,
+    );
+    if (recovered) return recovered;
+  }
+  if (claim.kind === "busy") {
+    throw new PayoutInFlightError(payoutId);
+  }
+
+  let record = claim.record;
 
   const omnibus = resolved.loadOmnibusSigner();
   const merchantPk = resolved.merchantPublicKey();

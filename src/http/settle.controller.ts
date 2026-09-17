@@ -1,5 +1,6 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Headers, Post } from "@nestjs/common";
 import { runSettlementDemo } from "../settlement-demo.js";
+import { assertLabMutatingAuth } from "./lab-auth.js";
 
 @Controller("demo")
 export class SettleController {
@@ -17,7 +18,10 @@ export class SettleController {
       currency_code?: string;
       amount_number?: number;
     },
+    @Headers("x-lab-key") labKey?: string,
+    @Headers("authorization") authorization?: string,
   ) {
+    assertLabMutatingAuth(labKey, authorization);
     return runSettlementDemo({
       amount: body.amount,
       payoutId: body.payout_id,

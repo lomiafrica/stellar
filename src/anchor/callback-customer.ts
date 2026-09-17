@@ -1,3 +1,5 @@
+import { timingSafeEqual } from "node:crypto";
+import { isPublicDeploy } from "../http/lab-auth.js";
 import type { Sep12Customer } from "./merchant-verify.js";
 
 export type CallbackField = {
@@ -34,19 +36,24 @@ export function toCallbackCustomer(customer: Sep12Customer): CallbackCustomer {
   };
 }
 
+function secretsEqual(given: string, expected: string): boolean {
+  const a = Buffer.from(given);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
 export function callbackAuthOk(
   apiKeyHeader?: string,
   authorization?: string,
 ): boolean {
   const secret = process.env.CALLBACK_AUTH_SECRET?.trim();
-  if (!secret) return true;
-  if (apiKeyHeader === secret) return true;
-  if (authorization === secret) return true;
-  if (
-    authorization?.startsWith("Bearer ") &&
-    authorization.slice(7) === secret
-  ) {
-    return true;
+  if (!secret) return !isPublicDeploy();
+  if (apiKeyHeader && secretsEqual(apiKeyHeader, secret)) return true;
+  if (authorization && secretsEqual(authorization, secret)) return true;
+  if (authorization?.startsWith("Bearer ")) {
+    const token = authorization.slice(7);
+    if (secretsEqual(token, secret)) return true;
   }
   return false;
 }

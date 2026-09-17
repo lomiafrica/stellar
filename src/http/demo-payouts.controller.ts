@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Get,
   Header,
@@ -14,10 +15,14 @@ import {
 import type { Request, Response } from "express";
 import { SettleNotReadyError } from "../operator/ready.js";
 import {
-  getIdempotentResponse,
+  beginIdempotency,
   saveIdempotentResponse,
 } from "../ledger/idempotency.js";
-import { findByPayoutId, readLedger } from "../ledger/store.js";
+import {
+  findByPayoutId,
+  publicSettlement,
+  readLedger,
+} from "../ledger/store.js";
 import {
   reconcileThreeWay,
   reconcileTransaction,
@@ -26,6 +31,7 @@ import {
   createStellarPayout,
   notReadyBody,
 } from "../payouts/stellar-payout.service.js";
+import { PayoutCapError, PayoutInFlightError } from "../payouts/errors.js";
 import {
   renderPayoutListPage,
   renderPayoutPage,
@@ -33,6 +39,7 @@ import {
 import type { CreateStellarPayoutInput } from "../payouts/types.js";
 import type { JsonObject } from "../json.js";
 import { prefersHtml } from "./page-chrome.js";
+import { assertLabMutatingAuth } from "./lab-auth.js";
 
 @Controller("demo/payouts")
 export class DemoPayoutsController {
@@ -55,7 +62,10 @@ export class DemoPayoutsController {
       bridge_transfer_id?: string;
     },
     @Headers("idempotency-key") idempotencyKey?: string,
+    @Headers("x-lab-key") labKey?: string,
+    @Headers("authorization") authorization?: string,
   ) {
+    assertLabMutatingAuth(labKey, authorization);
     if (body.rail !== "stellar") {
       return {
         success: false,
@@ -64,8 +74,14 @@ export class DemoPayoutsController {
     }
 
     if (idempotencyKey) {
-      const cached = getIdempotentResponse(idempotencyKey);
-      if (cached) return cached;
+      const begun = beginIdempotency(idempotencyKey);
+      if (begun.kind === "hit") return begun.response;
+      if (begun.kind === "busy") {
+        throw new ConflictException({
+          success: false,
+          reason: "idempotency key in flight",
+        });
+      }
     }
 
     const input: CreateStellarPayoutInput = {
@@ -95,6 +111,20 @@ export class DemoPayoutsController {
       if (err instanceof SettleNotReadyError) {
         throw new BadRequestException(notReadyBody(err));
       }
+      if (err instanceof PayoutCapError) {
+        throw new BadRequestException({
+          success: false,
+          reason: err.reason,
+          message: err.message,
+        });
+      }
+      if (err instanceof PayoutInFlightError) {
+        throw new ConflictException({
+          success: false,
+          reason: "payout in flight",
+          message: err.message,
+        });
+      }
       throw err;
     }
   }
@@ -102,7 +132,7 @@ export class DemoPayoutsController {
   @Get()
   @Header("Content-Type", "text/html; charset=utf-8")
   list(): string {
-    return renderPayoutListPage(readLedger());
+    return renderPayoutListPage(readLedger().map(publicSettlement));
   }
 
   @Get(":payout_id")
@@ -111,12 +141,13 @@ export class DemoPayoutsController {
     @Res({ passthrough: true }) res: Response,
     @Param("payout_id") payoutId: string,
   ) {
-    const row = findByPayoutId(payoutId);
-    if (!row) {
+    const found = findByPayoutId(payoutId);
+    if (!found) {
       throw new NotFoundException(
         `No stellar settlement for payout_id ${payoutId}`,
       );
     }
+    const row = publicSettlement(found);
     let reconcile = null;
     if (row.stellar_tx_hash) {
       reconcile = await reconcileTransaction(row.stellar_tx_hash);

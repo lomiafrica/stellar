@@ -20,6 +20,9 @@ PLATFORM_API_URL=http://${{anchor.RAILWAY_PRIVATE_DOMAIN}}:8085
 STELLAR_NETWORK=testnet
 OMNIBUS_SECRET=S…
 MERCHANT_SECRET=S…
+LAB_API_KEY=
+LAB_MAX_USDC_PER_PAYOUT=100
+LAB_MAX_USDC_PER_DAY=500
 SEP10_SIGNING_SEED=S…
 SEP10_SIGNING_PUBLIC_KEY=G…
 SEP10_JWT_SECRET=
@@ -51,4 +54,4 @@ SECRET_SEP24_MORE_INFO_URL_JWT_SECRET=<same as interactive JWT secret>
 
 Lab `WEB_AUTH_ENDPOINT=https://<anchor-host>/auth` so SEP-1 points wallets at SEP-10. Toml `TRANSFER_SERVER_SEP0024` / `KYC_SERVER` point at the Anchor host `/sep24` and `/sep12`.
 
-Nest: sandbox `STELLAR_LAB_URL` + `STELLAR_RAIL_ORGANIZATION_IDS=*`. Live Nest: same lab URL, one org UUID, no `STELLAR_RAIL_ALLOW_LIVE`.
+Nest: sandbox `STELLAR_LAB_URL` + `STELLAR_LAB_KEY` + `STELLAR_RAIL_ORGANIZATION_IDS=*`. Live Nest: same lab URL and lab key, one org UUID, no `STELLAR_RAIL_ALLOW_LIVE`. Mutating lab routes (`POST /demo/payouts`, `POST /demo/settle`, `POST /mock/bridge/fund`) require `X-Lab-Key` when `PUBLIC_BASE_URL` is not localhost. If `LAB_API_KEY` is unset on the public lab, those routes return 503.

@@ -66,3 +66,32 @@ export function verifyBridgeSignature(
     return { ok: false, reason: "invalid signature" };
   }
 }
+
+/** Split concatenated SPKI PEMs for key rotation. */
+export function parsePemList(raw: string): string[] {
+  const pems: string[] = [];
+  const chunks = raw.split(/-----END PUBLIC KEY-----/);
+  for (const chunk of chunks) {
+    const start = chunk.indexOf("-----BEGIN");
+    if (start < 0) continue;
+    pems.push(`${chunk.slice(start).trim()}\n-----END PUBLIC KEY-----\n`);
+  }
+  return pems;
+}
+
+export function verifyBridgeSignatureAny(
+  rawBody: string,
+  header: string,
+  publicKeyPems: string[],
+  now = Date.now(),
+): VerifyResult {
+  if (publicKeyPems.length === 0) {
+    return { ok: false, reason: "missing public key" };
+  }
+  let last: VerifyResult = { ok: false, reason: "invalid signature" };
+  for (const pem of publicKeyPems) {
+    last = verifyBridgeSignature(rawBody, header, pem, now);
+    if (last.ok) return last;
+  }
+  return last;
+}

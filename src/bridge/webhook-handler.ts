@@ -1,6 +1,6 @@
 import { isJsonObject, parseJson, readString } from "../json.js";
-import { verifyBridgeSignature } from "./webhook.js";
-import { hasBridgeEvent, recordBridgeEvent } from "./webhook-store.js";
+import { parsePemList, verifyBridgeSignatureAny } from "./webhook.js";
+import { tryRecordBridgeEvent } from "./webhook-store.js";
 
 export interface WebhookHandleResult {
   status: 200 | 400 | 503;
@@ -9,26 +9,36 @@ export interface WebhookHandleResult {
 
 export interface WebhookHandleDeps {
   publicKeyPem?: string;
+  publicKeyPems?: string[];
   now?: number;
 }
 
-/** Verify, then record. Duplicate event ids return 200 and do nothing. */
+function pemsFromEnv(): string[] {
+  const raw = process.env.BRIDGE_WEBHOOK_PUBLIC_KEY?.trim() ?? "";
+  return parsePemList(raw);
+}
+
+/** Verify against any configured PEM, then insert-or-reject the event id. */
 export function handleBridgeWebhook(
   rawBody: string,
   header: string | undefined,
   deps: WebhookHandleDeps = {},
 ): WebhookHandleResult {
-  const pem = deps.publicKeyPem ?? process.env.BRIDGE_WEBHOOK_PUBLIC_KEY?.trim();
-  if (!pem) {
+  const pems =
+    deps.publicKeyPems ??
+    (deps.publicKeyPem !== undefined
+      ? parsePemList(deps.publicKeyPem)
+      : pemsFromEnv());
+  if (pems.length === 0) {
     return {
       status: 503,
       body: { ok: false, reason: "BRIDGE_WEBHOOK_PUBLIC_KEY unset" },
     };
   }
-  const verified = verifyBridgeSignature(
+  const verified = verifyBridgeSignatureAny(
     rawBody,
     header ?? "",
-    pem,
+    pems,
     deps.now,
   );
   if (!verified.ok) {
@@ -46,9 +56,8 @@ export function handleBridgeWebhook(
   if (!eventId) {
     return { status: 400, body: { ok: false, reason: "missing event id" } };
   }
-  if (hasBridgeEvent(eventId)) {
+  if (!tryRecordBridgeEvent(eventId)) {
     return { status: 200, body: { ok: true, duplicate: true } };
   }
-  recordBridgeEvent(eventId);
   return { status: 200, body: { ok: true } };
 }

@@ -102,6 +102,24 @@ test("settled payout links the explorer and shows the memo prefix", () => {
     /https:\/\/stellar\.expert\/explorer\/testnet\/tx\/49e2a131/,
   );
   assert.match(html, /83e4aa27-e619-4d13-963c-9b49</);
+  assert.match(html, /Wave Mobile Money/);
+  assert.match(html, /status-ok">Completed</);
+  assert.match(html, />Self</);
+  assert.match(html, /class="tag lomi">in lomi\. api</);
+  assert.match(html, /class="tag mock">mock</);
+  assert.match(html, /class="tag chain">on chain</);
+  assert.match(html, /class="tag pass">pass</);
+  assert.match(html, /tip-bubble/);
+  assert.match(html, /first 28 characters of the payout id/);
+  assert.doesNotMatch(html, /Why the memo matters/);
+});
+
+test("failed reconcile checks are tagged fail", () => {
+  const html = renderPayoutPage({
+    row: settlement(),
+    reconcile: reconcile({ memoMatch: false, ok: false }),
+  });
+  assert.match(html, /class="tag fail">fail</);
 });
 
 test("payout page escapes ledger values", () => {
@@ -126,4 +144,15 @@ test("ledger list links every payout", () => {
   assert.match(html, /href="\/demo\/payouts\/83e4aa27-e619-4d13-963c-9b49ce62a59f"/);
   assert.match(html, /href="\/demo\/payouts\/row-2"/);
   assert.match(html, /no hash/);
+  assert.match(html, /class="tag pass">Completed</);
+});
+
+test("raw settlement omits last-mile phone", () => {
+  const html = renderPayoutPage({
+    row: settlement({
+      mock_offramp: { rail: "wave", phone: "+2250700000000", status: "credited" },
+    }),
+    reconcile: null,
+  });
+  assert.doesNotMatch(html, /\+2250700000000/);
 });

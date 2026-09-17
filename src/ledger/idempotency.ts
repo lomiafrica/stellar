@@ -8,6 +8,7 @@ import {
 } from "../json.js";
 import { getDataDir } from "../paths.js";
 import type { CreateStellarPayoutResponse } from "../payouts/types.js";
+import { withNamedLock } from "./lock.js";
 import type { PayoutStatus } from "./store.js";
 
 function idempotencyPath(): string {
@@ -19,6 +20,7 @@ interface IdempotencyEntry {
   payout_id: string;
   response: CreateStellarPayoutResponse;
   created_at: string;
+  state: "in_flight" | "done";
 }
 
 function ensureDataDir(): void {
@@ -73,15 +75,64 @@ function readAll(): IdempotencyEntry[] {
       payout_id: readString(row, "payout_id") ?? response.payout_id,
       response,
       created_at: readString(row, "created_at") ?? "",
+      state: readString(row, "state") === "in_flight" ? "in_flight" : "done",
     };
   });
 }
 
+function writeAll(rows: IdempotencyEntry[]): void {
+  ensureDataDir();
+  writeFileSync(idempotencyPath(), `${JSON.stringify(rows, null, 2)}\n`);
+}
+
+const IN_FLIGHT_MS = 180_000;
+
+export type IdempotencyBegin =
+  | { kind: "hit"; response: CreateStellarPayoutResponse }
+  | { kind: "busy" }
+  | { kind: "fresh" };
+
 export function getIdempotentResponse(
   idempotencyKey: string,
 ): CreateStellarPayoutResponse | undefined {
-  const cached = readAll().find((e) => e.idempotency_key === idempotencyKey);
+  const cached = readAll().find(
+    (e) => e.idempotency_key === idempotencyKey && e.state === "done",
+  );
   return cached?.response;
+}
+
+/** Record the key as in_flight before work so a second caller cannot start a second hop. */
+export function beginIdempotency(idempotencyKey: string): IdempotencyBegin {
+  return withNamedLock("idempotency", () => {
+    const rows = readAll();
+    const existing = rows.find((e) => e.idempotency_key === idempotencyKey);
+    if (existing?.state === "done") {
+      return { kind: "hit", response: existing.response };
+    }
+    if (existing?.state === "in_flight") {
+      const age = Date.now() - Date.parse(existing.created_at);
+      if (Number.isFinite(age) && age < IN_FLIGHT_MS) {
+        return { kind: "busy" };
+      }
+    }
+    const next: IdempotencyEntry = {
+      idempotency_key: idempotencyKey,
+      payout_id: "",
+      response: {
+        success: false,
+        payout_id: "",
+        kind: "withdrawal",
+        status: "processing",
+      },
+      created_at: new Date().toISOString(),
+      state: "in_flight",
+    };
+    writeAll([
+      ...rows.filter((e) => e.idempotency_key !== idempotencyKey),
+      next,
+    ]);
+    return { kind: "fresh" };
+  });
 }
 
 export function saveIdempotentResponse(
@@ -89,13 +140,15 @@ export function saveIdempotentResponse(
   payoutId: string,
   response: CreateStellarPayoutResponse,
 ): void {
-  const rows = readAll().filter((e) => e.idempotency_key !== idempotencyKey);
-  rows.push({
-    idempotency_key: idempotencyKey,
-    payout_id: payoutId,
-    response,
-    created_at: new Date().toISOString(),
+  withNamedLock("idempotency", () => {
+    const rows = readAll().filter((e) => e.idempotency_key !== idempotencyKey);
+    rows.push({
+      idempotency_key: idempotencyKey,
+      payout_id: payoutId,
+      response,
+      created_at: new Date().toISOString(),
+      state: "done",
+    });
+    writeAll(rows);
   });
-  ensureDataDir();
-  writeFileSync(idempotencyPath(), `${JSON.stringify(rows, null, 2)}\n`);
 }

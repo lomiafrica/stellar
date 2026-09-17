@@ -20,11 +20,24 @@ export function recordLiveProof(patch: Record<string, unknown>): void {
   writeFileSync(PATH, `${JSON.stringify(proof, null, 2)}\n`);
 }
 
+export function liveLabKey(): string {
+  return process.env.LAB_API_KEY?.trim() ?? "";
+}
+
 export function liveLabUrl(): string {
   return (
     process.env.LIVE_LAB_URL?.replace(/\/$/, "") ??
     "https://lab-production-5fac.up.railway.app"
   );
+}
+
+export function labHeaders(
+  extra: Record<string, string> = {},
+): Record<string, string> {
+  const headers: Record<string, string> = { ...extra };
+  const key = liveLabKey();
+  if (key) headers["X-Lab-Key"] = key;
+  return headers;
 }
 
 export function liveAnchorUrl(): string {

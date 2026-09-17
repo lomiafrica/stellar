@@ -15,6 +15,13 @@ const base = (argValue("--base") ?? PUBLIC_BASE_URL).replace(/\/$/, "");
 const skipPayout = process.argv.includes("--skip-payout");
 const allowEmptySigning = process.argv.includes("--allow-empty-signing");
 const payoutIdArg = argValue("--payout-id");
+const labKey = process.env.LAB_API_KEY?.trim() ?? "";
+
+function mutatingHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const headers: Record<string, string> = { ...extra };
+  if (labKey) headers["X-Lab-Key"] = labKey;
+  return headers;
+}
 
 type Check = { name: string; ok: boolean; detail: string };
 
@@ -186,18 +193,18 @@ async function main() {
       };
       const first = await readJson("/demo/payouts", {
         method: "POST",
-        headers: {
+        headers: mutatingHeaders({
           "Content-Type": "application/json",
           "Idempotency-Key": `replay-${payoutId}`,
-        },
+        }),
         body: JSON.stringify(body),
       });
       const second = await readJson("/demo/payouts", {
         method: "POST",
-        headers: {
+        headers: mutatingHeaders({
           "Content-Type": "application/json",
           "Idempotency-Key": `replay-${payoutId}-b`,
-        },
+        }),
         body: JSON.stringify(body),
       });
       const firstHash = String(asRecord(first.body).stellar_tx_hash ?? "");

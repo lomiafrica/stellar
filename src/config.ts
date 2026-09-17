@@ -35,6 +35,19 @@ export function getStellarNetwork(): StellarNetworkName {
   return "testnet";
 }
 
+/** Boot check: public network cannot use Circle testnet USDC, and cannot skip confirm. */
+export function assertDeployNetwork(): void {
+  const raw = (process.env.STELLAR_NETWORK ?? "testnet").trim().toLowerCase();
+  if (raw !== "public" && raw !== "mainnet") return;
+  assertMainnetAllowed();
+  const issuer = process.env.STELLAR_USDC_ISSUER?.trim() || MAINNET_USDC_ISSUER;
+  if (issuer === TESTNET_USDC_ISSUER) {
+    throw new MainnetGuardError(
+      "Mainnet cannot use Circle testnet USDC issuer GBBD47IF…",
+    );
+  }
+}
+
 const network = (): StellarNetworkName => {
   try {
     return getStellarNetwork();

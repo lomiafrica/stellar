@@ -80,6 +80,23 @@ test("unset public key returns 503", () => {
   assert.equal(result.status, 503);
 });
 
+test("rotated PEM still verifies", () => {
+  isolate();
+  const first = pair();
+  const second = pair();
+  const pem1 = first.publicKey.export({ type: "spki", format: "pem" }).toString();
+  const pem2 = second.publicKey.export({ type: "spki", format: "pem" }).toString();
+  const body = JSON.stringify({ id: "evt_rotate", type: "transfer.updated" });
+  const now = Date.now();
+  const header = headerFor(body, second.privateKey, now);
+  const result = handleBridgeWebhook(body, header, {
+    publicKeyPems: [pem1, pem2],
+    now,
+  });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.ok, true);
+});
+
 test("duplicate event id is a no-op 200", () => {
   isolate();
   const { publicKey, privateKey } = pair();

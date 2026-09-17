@@ -12,6 +12,7 @@ import {
   asRecord,
   fetchJson,
   horizonUrl,
+  labHeaders,
   liveLabUrl,
   MERCHANT_PUBLIC,
   OMNIBUS_PUBLIC,
@@ -90,10 +91,10 @@ test("T1.2 live payout round trip: one chain payment, recycle, zero net USDC", a
 
   const first = await fetchJson(`${lab}/demo/payouts`, {
     method: "POST",
-    headers: {
+    headers: labHeaders({
       "Content-Type": "application/json",
       "Idempotency-Key": key1,
-    },
+    }),
     body: JSON.stringify(body),
   });
   const firstRow = asRecord(first.body);
@@ -124,18 +125,18 @@ test("T1.2 live payout round trip: one chain payment, recycle, zero net USDC", a
 
   const replaySame = await fetchJson(`${lab}/demo/payouts`, {
     method: "POST",
-    headers: {
+    headers: labHeaders({
       "Content-Type": "application/json",
       "Idempotency-Key": key1,
-    },
+    }),
     body: JSON.stringify(body),
   });
   const replayOther = await fetchJson(`${lab}/demo/payouts`, {
     method: "POST",
-    headers: {
+    headers: labHeaders({
       "Content-Type": "application/json",
       "Idempotency-Key": randomUUID(),
-    },
+    }),
     body: JSON.stringify(body),
   });
   assert.equal(asRecord(replaySame.body).stellar_tx_hash, hash);

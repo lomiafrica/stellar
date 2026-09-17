@@ -21,6 +21,7 @@ jobs:
       - name: Round trip on testnet
         env:
           MERCHANT_SECRET: ${{ secrets.MERCHANT_SECRET }}
+          LAB_API_KEY: ${{ secrets.LAB_API_KEY }}
           LIVE_LAB_URL: https://lab-production-5fac.up.railway.app
           LIVE_ANCHOR_URL: https://anchor-production-5059.up.railway.app
           LIVE_USDC_AMOUNT: "1"

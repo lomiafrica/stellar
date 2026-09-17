@@ -64,7 +64,7 @@ pnpm start:dev
 
 | Method | Path                        | Notes                                                                                                        |
 | ------ | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `POST` | `/demo/payouts`             | Payout-shaped body + `rail: "stellar"`; optional `Idempotency-Key`. Fails closed if the omnibus is unfunded. |
+| `POST` | `/demo/payouts`             | Payout-shaped body + `rail: "stellar"`; `X-Lab-Key` when public; optional `Idempotency-Key`. Caps and atomic claim. |
 | `GET`  | `/demo/payouts/:payout_id`  | Status + reconcile snapshot                                                                                  |
 | `POST` | `/demo/settle`              | Thin settle helper                                                                                           |
 | `POST` | `/mock/bridge/fund`         | Mock treasury credit                                                                                         |

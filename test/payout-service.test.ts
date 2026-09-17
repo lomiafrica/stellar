@@ -5,7 +5,8 @@ import { join } from "node:path";
 import test from "node:test";
 import { Account, Keypair, Transaction } from "@stellar/stellar-sdk";
 import { findByPayoutId, upsertSettlement } from "../src/ledger/store.js";
-import { notReadyBody, runSettlementDemo } from "../src/payouts/stellar-payout.service.js";
+import { notReadyBody, runSettlementDemo, assertUsdcCaps } from "../src/payouts/stellar-payout.service.js";
+import { PayoutCapError } from "../src/payouts/errors.js";
 import type { SettlementRuntime } from "../src/payouts/stellar-payout.service.js";
 import type { PaymentNetwork } from "../src/stellar/payment.js";
 import type { TransactionSigner } from "../src/stellar/signer.js";
@@ -196,4 +197,49 @@ test("same payout_id completed row still replays without a network call", async 
   assert.equal(result.idempotentReplay, true);
   assert.equal(result.stellarTxHash, "hash-replay");
   assert.equal(sends.length, 0);
+});
+
+test("per-payout cap rejects oversized USDC", () => {
+  isolate();
+  const previous = process.env.LAB_MAX_USDC_PER_PAYOUT;
+  process.env.LAB_MAX_USDC_PER_PAYOUT = "5";
+  try {
+    assert.throws(
+      () => assertUsdcCaps(10),
+      (err: unknown) => err instanceof PayoutCapError && err.reason === "per_payout",
+    );
+  } finally {
+    if (previous === undefined) delete process.env.LAB_MAX_USDC_PER_PAYOUT;
+    else process.env.LAB_MAX_USDC_PER_PAYOUT = previous;
+  }
+});
+
+test("parallel same payout_id submits once", async () => {
+  isolate();
+  const sends: string[] = [];
+  let release: (() => void) | undefined;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let firstSend = true;
+  const network = fakeNetwork({
+    sends,
+    send: async () => {
+      if (firstSend) {
+        firstSend = false;
+        await gate;
+      }
+      return { hash: sends[sends.length - 1] ?? "pending", status: "PENDING" };
+    },
+  });
+  const rt = runtime({ network });
+  const payoutId = "payout-parallel-claim-aaaaaaaa";
+  const first = runSettlementDemo({ payoutId, amount: "1" }, rt);
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  const second = runSettlementDemo({ payoutId, amount: "1" }, rt);
+  release?.();
+  const results = await Promise.allSettled([first, second]);
+  const fulfilled = results.filter((row) => row.status === "fulfilled");
+  assert.equal(sends.length, 1);
+  assert.ok(fulfilled.length >= 1);
 });

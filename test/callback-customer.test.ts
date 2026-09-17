@@ -45,6 +45,25 @@ test("readSep12PutEmail reads email, email_address, or fields.email", () => {
   assert.equal(readSep12PutEmail({}), undefined);
 });
 
+test("callbackAuthOk fails closed when public and secret is unset", () => {
+  const previousSecret = process.env.CALLBACK_AUTH_SECRET;
+  const previousUrl = process.env.PUBLIC_BASE_URL;
+  const previousEnv = process.env.NODE_ENV;
+  delete process.env.CALLBACK_AUTH_SECRET;
+  process.env.PUBLIC_BASE_URL = "https://lab.example.test";
+  process.env.NODE_ENV = "production";
+  try {
+    assert.equal(callbackAuthOk("anything"), false);
+  } finally {
+    if (previousSecret === undefined) delete process.env.CALLBACK_AUTH_SECRET;
+    else process.env.CALLBACK_AUTH_SECRET = previousSecret;
+    if (previousUrl === undefined) delete process.env.PUBLIC_BASE_URL;
+    else process.env.PUBLIC_BASE_URL = previousUrl;
+    if (previousEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousEnv;
+  }
+});
+
 test("callbackAuthOk accepts X-Api-Key or Bearer when secret is set", () => {
   const previous = process.env.CALLBACK_AUTH_SECRET;
   process.env.CALLBACK_AUTH_SECRET = "lab-secret";

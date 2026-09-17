@@ -42,7 +42,7 @@ Nest `StellarLabClient` POSTs `{STELLAR_LAB_URL}/demo/payouts` with:
 
 `destination`, `rail: 'stellar'`, `amount`, `currency_code`, `payout_id`, `organization_id`, `bridge_transfer_id`.
 
-The lab controller already accepts that body. Same `payout_id` twice returns the existing chain Payment (ledger replay). Header `Idempotency-Key` is an extra cache on top.
+The lab controller already accepts that body. Same `payout_id` twice returns the existing chain Payment (ledger replay). Header `Idempotency-Key` is an extra cache on top. Header `X-Lab-Key` is required on the public lab (`STELLAR_LAB_KEY` on Nest).
 
 | Lab endpoint                   | Nest analogue                                                  |
 | ------------------------------ | -------------------------------------------------------------- |
@@ -50,6 +50,7 @@ The lab controller already accepts that body. Same `payout_id` twice returns the
 | `GET /demo/payouts/:payout_id` | Payout status + reconcile snapshot                             |
 | `POST /demo/settle`            | Same orchestration as `/demo/payouts`                          |
 | Header `Idempotency-Key`       | `api_idempotency_records` (local `data/demo_idempotency.json`) |
+| Header `X-Lab-Key`             | Nest `STELLAR_LAB_KEY` / lab `LAB_API_KEY`                     |
 
 ### Orchestration
 
@@ -63,7 +64,7 @@ The lab controller already accepts that body. Same `payout_id` twice returns the
 
 ## Later connect (not this lab pass)
 
-Nest already has the rail, Bridge HMAC ingest, and reconcile cron. Connecting production is a flag flip: set `STELLAR_LAB_URL` and `STELLAR_RAIL_ORGANIZATION_IDS` on sandbox/live Nest. Do not set those on this isolated lab host.
+Nest already has the rail, Bridge HMAC ingest, and reconcile cron. Connecting Test is a flag flip: set `STELLAR_LAB_URL`, `STELLAR_LAB_KEY`, and `STELLAR_RAIL_ORGANIZATION_IDS` on sandbox Nest. Do not set those on this isolated lab host. Lab `LAB_API_KEY` must match Nest `STELLAR_LAB_KEY`.
 
 1. **Migration**: `stellar_settlements` plus Bridge event-id dedupe in `20250226000119_stellar.sql`.
 2. **Flags**: `STELLAR_RAIL_ORGANIZATION_IDS` allowlist; Test first; `STELLAR_RAIL_ALLOW_LIVE` stays off.
@@ -83,6 +84,7 @@ Nest already has the rail, Bridge HMAC ingest, and reconcile cron. Connecting pr
 curl -s -X POST http://localhost:3456/demo/payouts \
   -H 'Content-Type: application/json' \
   -H 'Idempotency-Key: demo-key-001' \
+  -H 'X-Lab-Key: local-only-if-set' \
   -d '{
     "destination": "self",
     "rail": "stellar",
