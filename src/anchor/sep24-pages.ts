@@ -1,7 +1,14 @@
+import {
+  definitionsHtml,
+  escapeHtml,
+  shell,
+  stepsHtml,
+  type PageStep,
+} from "../http/page-chrome.js";
 import type { LastMileRail, LastMileResult } from "./last-mile.js";
 
 export type Sep24Kind = "deposit" | "withdraw";
-export type PathMark = "done" | "idle" | "skip";
+export type PathMark = PageStep["mark"];
 
 interface Hop {
   title: string;
@@ -10,14 +17,6 @@ interface Hop {
   skip: string;
   /** True for the one hop this sandbox actually records. */
   live: boolean;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
 }
 
 function railLabel(rail: LastMileRail): string {
@@ -78,125 +77,20 @@ function hopsFor(kind: Sep24Kind, rail: LastMileRail): Hop[] {
   ];
 }
 
-function chromeCss(): string {
-  return `
-    :root { color-scheme: light; }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, sans-serif;
-      background: #f7f7f4;
-      color: #121317;
-      line-height: 1.5;
-    }
-    main { max-width: 32rem; margin: 0 auto; padding: 2rem 1rem 3rem; }
-    .kicker {
-      font-size: 0.72rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #6b6d73;
-      margin: 1.5rem 0 0.4rem;
-    }
-    .kicker:first-child { margin-top: 0; }
-    h1 { font-size: 1.3rem; letter-spacing: -0.02em; margin: 0 0 0.5rem; }
-    p { margin: 0 0 0.9rem; }
-    .lede { color: #5c5e66; font-size: 0.92rem; }
-    .note { color: #5c5e66; font-size: 0.82rem; }
-    code { font-size: 0.78rem; background: #ecece7; padding: 0.05rem 0.25rem; border-radius: 3px; }
-    .card {
-      padding: 1rem;
-      background: #fff;
-      border: 1px solid #e6e6e1;
-      border-radius: 4px;
-    }
-    label { display: block; margin: 0.8rem 0 0.25rem; font-size: 0.8rem; color: #5c5e66; }
-    input, select {
-      width: 100%;
-      height: 2.5rem;
-      padding: 0 0.7rem;
-      border: 1px solid #d6d6d0;
-      border-radius: 4px;
-      background: #fff;
-      font: inherit;
-    }
-    button {
-      margin-top: 1.1rem;
-      width: 100%;
-      height: 2.75rem;
-      border: 0;
-      border-radius: 4px;
-      background: #121317;
-      color: #fff;
-      font: inherit;
-      font-weight: 600;
-    }
-    .path { list-style: none; margin: 0; }
-    .path li { padding: 0.7rem 0; border-top: 1px solid #ecece7; }
-    .path li:first-child { border-top: 0; padding-top: 0; }
-    .path li:last-child { padding-bottom: 0; }
-    .step-head {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-    .step-title { font-size: 0.9rem; font-weight: 600; }
-    .step-copy { display: block; margin-top: 0.15rem; color: #6b6d73; font-size: 0.8rem; }
-    .path li.skip .step-title, .path li.skip .step-copy { color: #8a8c93; }
-    .tag {
-      flex: none;
-      font-size: 0.68rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      font-weight: 600;
-      color: #6b6d73;
-    }
-    .path li.done .tag { color: #1f7a58; }
-    dl { margin: 0; font-size: 0.9rem; }
-    dl div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; border-top: 1px solid #ecece7; }
-    dl div:first-child { border-top: 0; padding-top: 0; }
-    dt { color: #6b6d73; }
-    dd { margin: 0; text-align: right; word-break: break-all; }
-    pre {
-      margin: 0;
-      padding: 0.9rem;
-      background: #fff;
-      border: 1px solid #e6e6e1;
-      border-radius: 4px;
-      font-size: 0.72rem;
-      line-height: 1.45;
-      overflow: auto;
-      color: #3d3f46;
-    }
-  `;
-}
-
-function shell(title: string, body: string): string {
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtml(title)}</title>
-  <style>${chromeCss()}</style>
-</head>
-<body>
-  <main>
-    ${body}
-  </main>
-</body>
-</html>`;
-}
-
 function tagFor(mark: PathMark): string {
   if (mark === "done") return "sandbox";
   if (mark === "skip") return "did not run";
   return "would run";
 }
 
-function stepItem(mark: PathMark, hop: Hop): string {
+function toStep(mark: PathMark, hop: Hop): PageStep {
   const copy = mark === "done" ? hop.done : mark === "skip" ? hop.skip : hop.idle;
-  return `<li class="${mark}"><div class="step-head"><span class="step-title">${escapeHtml(hop.title)}</span><span class="tag">${tagFor(mark)}</span></div><span class="step-copy">${escapeHtml(copy || hop.idle)}</span></li>`;
+  return {
+    title: hop.title,
+    tag: tagFor(mark),
+    copy: copy || hop.idle,
+    mark,
+  };
 }
 
 /** Three hops the money would take. Only the mobile money hop is recorded here. */
@@ -205,13 +99,11 @@ export function moneyPathHtml(input: {
   rail: LastMileRail;
   mode: "form" | "receipt" | "map";
 }): string {
-  const items = hopsFor(input.kind, input.rail)
-    .map((hop) => {
-      if (input.mode !== "receipt") return stepItem("idle", hop);
-      return stepItem(hop.live ? "done" : "skip", hop);
-    })
-    .join("");
-  return `<ol class="path card" aria-label="How the money moves">${items}</ol>`;
+  const steps = hopsFor(input.kind, input.rail).map((hop) => {
+    if (input.mode !== "receipt") return toStep("idle", hop);
+    return toStep(hop.live ? "done" : "skip", hop);
+  });
+  return stepsHtml(steps, "How the money moves");
 }
 
 export function renderSep24FlowPage(): string {
@@ -284,32 +176,25 @@ export function renderSep24MoreInfo(transactionId: string): string {
 /** HTML receipt after a sandbox Wave / MTN / SPI last mile. */
 export function renderSep24CreditReceipt(credit: LastMileResult): string {
   const rail = railLabel(credit.rail);
-  const rows: [string, string][] = [
-    ["Status", credit.status],
-    ["Rail", rail],
-    ["Amount in CFA", credit.amountXof],
-    ["Phone", credit.phone],
-    ["Lab id", credit.payoutId],
-    ["SEP-24 direction", credit.kind],
-    ["Created", credit.createdAt],
-  ];
-  const list = rows
-    .map(
-      ([key, value]) =>
-        `<div><dt>${escapeHtml(key)}</dt><dd>${escapeHtml(value)}</dd></div>`,
-    )
-    .join("");
   return shell(
     `${rail} sandbox`,
     `
     <p class="kicker">Testnet · sandbox</p>
     <h1>Sandbox last mile recorded</h1>
     <p class="lede">${escapeHtml(credit.message)} This id is not a Stellar payment and has no row on a block explorer.</p>
-    <dl class="card">${list}</dl>
+    ${definitionsHtml([
+      ["Status", credit.status],
+      ["Rail", rail],
+      ["Amount in CFA", credit.amountXof],
+      ["Phone", credit.phone],
+      ["Lab id", credit.payoutId],
+      ["SEP-24 direction", credit.kind],
+      ["Created", credit.createdAt],
+    ])}
     <p class="kicker">What ran</p>
     ${moneyPathHtml({ kind: credit.kind, rail: credit.rail, mode: "receipt" })}
     <p class="kicker">Why this says deposit and not payout</p>
-    <p class="note">Deposit and withdraw are SEP-24 words for a wallet holder moving fiat in or out. That is the anchor direction. A lomi. payout is the other direction, lomi. paying a merchant, and it runs on <code>POST /payouts</code> with <code>rail=stellar</code>. This page is not that flow.</p>
+    <p class="note">Deposit and withdraw are SEP-24 words for a wallet holder moving fiat in or out. That is the anchor direction. A lomi. payout is the other direction, lomi. paying a merchant, and it runs on <code>POST /payouts</code> with <code>rail=stellar</code>. See <a href="/demo/payouts">the payout ledger</a>.</p>
     <p class="kicker">Receipt</p>
     <pre>${escapeHtml(JSON.stringify(credit, null, 2))}</pre>
     `,

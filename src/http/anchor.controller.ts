@@ -43,6 +43,7 @@ import {
   renderSep24Interactive,
   renderSep24MoreInfo,
 } from "../anchor/sep24-pages.js";
+import { prefersHtml } from "./page-chrome.js";
 import { createSep6Transfer } from "../anchor/sep6.js";
 import { recordSep31Inbound } from "../anchor/sep31.js";
 import {
@@ -62,10 +63,6 @@ function sep24JwtSecret(): string {
 function wantsJson(req: Request): boolean {
   const type = String(req.headers["content-type"] ?? "");
   return type.includes("application/json");
-}
-
-function prefersHtml(req: Request): boolean {
-  return String(req.headers.accept ?? "").includes("text/html");
 }
 
 function decodeSep24Token(token?: string): {

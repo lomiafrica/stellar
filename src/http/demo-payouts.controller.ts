@@ -3,21 +3,30 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   Headers,
   NotFoundException,
   Param,
   Post,
+  Req,
+  Res,
 } from "@nestjs/common";
+import type { Request, Response } from "express";
 import { SettleNotReadyError } from "../operator/ready.js";
 import {
   getIdempotentResponse,
   saveIdempotentResponse,
 } from "../ledger/idempotency.js";
-import { findByPayoutId } from "../ledger/store.js";
+import { findByPayoutId, readLedger } from "../ledger/store.js";
 import { reconcileTransaction } from "../ledger/reconcile.js";
 import { createStellarPayout } from "../payouts/stellar-payout.service.js";
+import {
+  renderPayoutListPage,
+  renderPayoutPage,
+} from "../payouts/payout-pages.js";
 import type { CreateStellarPayoutInput } from "../payouts/types.js";
 import type { JsonObject } from "../json.js";
+import { prefersHtml } from "./page-chrome.js";
 
 @Controller("demo/payouts")
 export class DemoPayoutsController {
@@ -89,8 +98,18 @@ export class DemoPayoutsController {
     }
   }
 
+  @Get()
+  @Header("Content-Type", "text/html; charset=utf-8")
+  list(): string {
+    return renderPayoutListPage(readLedger());
+  }
+
   @Get(":payout_id")
-  async get(@Param("payout_id") payoutId: string) {
+  async get(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Param("payout_id") payoutId: string,
+  ) {
     const row = findByPayoutId(payoutId);
     if (!row) {
       throw new NotFoundException(
@@ -100,6 +119,10 @@ export class DemoPayoutsController {
     let reconcile = null;
     if (row.stellar_tx_hash) {
       reconcile = await reconcileTransaction(row.stellar_tx_hash);
+    }
+    if (prefersHtml(req)) {
+      res.type("html");
+      return renderPayoutPage({ row, reconcile });
     }
     return {
       payout_id: row.payout_id,
