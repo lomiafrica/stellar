@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertMainnetAllowed, assertDeployNetwork, getStellarNetwork } from "../src/config.js";
+import {
+  assertMainnetAllowed,
+  assertDeployNetwork,
+  getStellarNetwork,
+} from "../src/config.js";
 
 test("getStellarNetwork defaults to testnet", () => {
   const previous = process.env.STELLAR_NETWORK;

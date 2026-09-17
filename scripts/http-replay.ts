@@ -17,7 +17,9 @@ const allowEmptySigning = process.argv.includes("--allow-empty-signing");
 const payoutIdArg = argValue("--payout-id");
 const labKey = process.env.LAB_API_KEY?.trim() ?? "";
 
-function mutatingHeaders(extra: Record<string, string> = {}): Record<string, string> {
+function mutatingHeaders(
+  extra: Record<string, string> = {},
+): Record<string, string> {
   const headers: Record<string, string> = { ...extra };
   if (labKey) headers["X-Lab-Key"] = labKey;
   return headers;
@@ -182,7 +184,11 @@ async function main() {
         .filter((row) => row.stellar_tx_hash)
         .at(-1)?.payout_id;
     if (!payoutId) {
-      record("demo-payout-replay", false, "no payout_id; pass --payout-id or run pnpm settle:10");
+      record(
+        "demo-payout-replay",
+        false,
+        "no payout_id; pass --payout-id or run pnpm settle:10",
+      );
     } else {
       const body = {
         destination: "self",
@@ -224,7 +230,9 @@ async function main() {
 
   const failed = checks.filter((check) => !check.ok);
   if (failed.length > 0) {
-    console.error(`http-replay failed ${failed.length}/${checks.length} against ${base}`);
+    console.error(
+      `http-replay failed ${failed.length}/${checks.length} against ${base}`,
+    );
     process.exit(1);
   }
   console.log(`http-replay passed ${checks.length} checks against ${base}`);

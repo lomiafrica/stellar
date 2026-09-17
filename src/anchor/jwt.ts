@@ -43,7 +43,8 @@ export function readJwtDataString(
   key: string,
 ): string | undefined {
   const data = payload.data;
-  if (!data || typeof data !== "object" || Array.isArray(data)) return undefined;
+  if (!data || typeof data !== "object" || Array.isArray(data))
+    return undefined;
   const value = (data as Record<string, unknown>)[key];
   return typeof value === "string" && value.length > 0 ? value : undefined;
 }

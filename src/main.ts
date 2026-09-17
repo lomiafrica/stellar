@@ -1,5 +1,11 @@
 import "reflect-metadata";
-import { json, urlencoded, type NextFunction, type Request, type Response } from "express";
+import {
+  json,
+  urlencoded,
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import { NestFactory } from "@nestjs/core";
 import { assertDeployNetwork, PORT } from "./config.js";
 import { AppModule } from "./http/app.module.js";
@@ -29,9 +35,7 @@ async function bootstrap() {
       res.setHeader(key, value);
     }
     const mutating =
-      req.method !== "GET" &&
-      req.method !== "HEAD" &&
-      req.method !== "OPTIONS";
+      req.method !== "GET" && req.method !== "HEAD" && req.method !== "OPTIONS";
     if (mutating && !rateLimitOk(req.ip ?? "unknown")) {
       res.status(429).json({ success: false, reason: "rate limit" });
       return;

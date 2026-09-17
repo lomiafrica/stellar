@@ -7,8 +7,7 @@ import {
 import type { ReconcileResult } from "../src/ledger/reconcile.js";
 import type { StellarSettlementRecord } from "../src/ledger/store.js";
 
-const HASH =
-  "49e2a131c61d7b3e41e0b53b6a22cb98fe98fbf0fdeadfa2b1e4342ccf328ffe";
+const HASH = "49e2a131c61d7b3e41e0b53b6a22cb98fe98fbf0fdeadfa2b1e4342ccf328ffe";
 
 function settlement(
   patch: Partial<StellarSettlementRecord> = {},
@@ -141,7 +140,10 @@ test("ledger list links every payout", () => {
     settlement(),
     settlement({ payout_id: "row-2", stellar_tx_hash: undefined }),
   ]);
-  assert.match(html, /href="\/demo\/payouts\/83e4aa27-e619-4d13-963c-9b49ce62a59f"/);
+  assert.match(
+    html,
+    /href="\/demo\/payouts\/83e4aa27-e619-4d13-963c-9b49ce62a59f"/,
+  );
   assert.match(html, /href="\/demo\/payouts\/row-2"/);
   assert.match(html, /no hash/);
   assert.match(html, /class="tag pass">Completed</);
@@ -150,7 +152,11 @@ test("ledger list links every payout", () => {
 test("raw settlement omits last-mile phone", () => {
   const html = renderPayoutPage({
     row: settlement({
-      mock_offramp: { rail: "wave", phone: "+2250700000000", status: "credited" },
+      mock_offramp: {
+        rail: "wave",
+        phone: "+2250700000000",
+        status: "credited",
+      },
     }),
     reconcile: null,
   });

@@ -135,13 +135,13 @@ Idempotency: same `payout_id` means at most one on-chain Payment (same idea as `
 
 ## 9. Dependencies
 
-| Dependency            | Role             | Here vs later                                               |
-| --------------------- | ---------------- | ----------------------------------------------------------- |
-| Circle USDC           | Settlement asset | Testnet; consume only, never issue                          |
+| Dependency            | Role             | Here vs later                                                                                                    |
+| --------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Circle USDC           | Settlement asset | Testnet; consume only, never issue                                                                               |
 | Bridge                | USD <-> USDC     | Mock adapter now; RSA-signed webhook receiver is in this lab (`POST /bridge/webhook`). Real Bridge client is T2. |
-| Anchor Platform (SDF) | SEP stack        | `anchor/docker-compose.yml`                                 |
-| Wave / MTN / SPI      | Last mile        | Live in lomi.; mocked here                                  |
-| BCEAO                 | Regulatory       | PI licence application in progress; MoR under partner banks |
+| Anchor Platform (SDF) | SEP stack        | `anchor/docker-compose.yml`                                                                                      |
+| Wave / MTN / SPI      | Last mile        | Live in lomi.; mocked here                                                                                       |
+| BCEAO                 | Regulatory       | PI licence application in progress; MoR under partner banks                                                      |
 
 ## 10. If we take this live
 

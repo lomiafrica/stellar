@@ -5,7 +5,11 @@ import { join } from "node:path";
 import test from "node:test";
 import { Account, Keypair, Transaction } from "@stellar/stellar-sdk";
 import { findByPayoutId, upsertSettlement } from "../src/ledger/store.js";
-import { notReadyBody, runSettlementDemo, assertUsdcCaps } from "../src/payouts/stellar-payout.service.js";
+import {
+  notReadyBody,
+  runSettlementDemo,
+  assertUsdcCaps,
+} from "../src/payouts/stellar-payout.service.js";
 import { PayoutCapError } from "../src/payouts/errors.js";
 import type { SettlementRuntime } from "../src/payouts/stellar-payout.service.js";
 import type { PaymentNetwork } from "../src/stellar/payment.js";
@@ -36,11 +40,13 @@ function runtime(patch: {
   const omnibus = Keypair.random();
   const merchant = Keypair.random();
   return {
-    assertReady: patch.assertReady ?? (async () => ({
-      omnibusPublicKey: omnibus.publicKey(),
-      merchantPublicKey: merchant.publicKey(),
-      usdc: 10,
-    })),
+    assertReady:
+      patch.assertReady ??
+      (async () => ({
+        omnibusPublicKey: omnibus.publicKey(),
+        merchantPublicKey: merchant.publicKey(),
+        usdc: 10,
+      })),
     loadOmnibusSigner: () => signerFor(omnibus),
     merchantPublicKey: () => merchant.publicKey(),
     network: patch.network,
@@ -134,9 +140,18 @@ test("poll timeout leaves processing so a retry can poll the hash", async () => 
 });
 
 test("each SettleNotReadyError reason maps to a 400 body", () => {
-  const reasons = ["no_keys", "no_account", "no_trustline", "underfunded"] as const;
+  const reasons = [
+    "no_keys",
+    "no_account",
+    "no_trustline",
+    "underfunded",
+  ] as const;
   for (const reason of reasons) {
-    const err = new SettleNotReadyError(reason, { next: "pnpm bootstrap" }, reason);
+    const err = new SettleNotReadyError(
+      reason,
+      { next: "pnpm bootstrap" },
+      reason,
+    );
     const body = notReadyBody(err);
     assert.equal(body.success, false);
     assert.equal(body.reason, reason);
@@ -206,7 +221,8 @@ test("per-payout cap rejects oversized USDC", () => {
   try {
     assert.throws(
       () => assertUsdcCaps(10),
-      (err: unknown) => err instanceof PayoutCapError && err.reason === "per_payout",
+      (err: unknown) =>
+        err instanceof PayoutCapError && err.reason === "per_payout",
     );
   } finally {
     if (previous === undefined) delete process.env.LAB_MAX_USDC_PER_PAYOUT;

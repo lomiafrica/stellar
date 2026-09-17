@@ -28,7 +28,9 @@ const memory = new Map<string, BridgeTransfer>();
 
 function persist(transfer: BridgeTransfer): void {
   memory.set(transfer.id, transfer);
-  const rows = readJsonArray(STORE).filter((row) => readString(row, "id") !== transfer.id);
+  const rows = readJsonArray(STORE).filter(
+    (row) => readString(row, "id") !== transfer.id,
+  );
   const next: JsonObject = {
     id: transfer.id,
     usd_amount: transfer.usdAmount,
@@ -86,7 +88,9 @@ export class MockBridgeAdapter implements BridgeAdapter {
   async getTransfer(id: string): Promise<BridgeTransfer | undefined> {
     const hit = memory.get(id);
     if (hit) return hit;
-    const row = readJsonArray(STORE).find((entry) => readString(entry, "id") === id);
+    const row = readJsonArray(STORE).find(
+      (entry) => readString(entry, "id") === id,
+    );
     return row ? fromRow(row) : undefined;
   }
 }

@@ -45,5 +45,8 @@ test("LocalKeypairSigner exposes only the public key", () => {
   const kp = Keypair.random();
   const signer = new LocalKeypairSigner(kp);
   assert.equal(signer.publicKey(), kp.publicKey());
-  assert.equal(typeof (signer as unknown as { secret?: unknown }).secret, "undefined");
+  assert.equal(
+    typeof (signer as unknown as { secret?: unknown }).secret,
+    "undefined",
+  );
 });

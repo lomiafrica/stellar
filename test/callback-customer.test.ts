@@ -34,10 +34,7 @@ test("toCallbackCustomer omits fields when ACCEPTED", () => {
 
 test("readSep12PutEmail reads email, email_address, or fields.email", () => {
   assert.equal(readSep12PutEmail({ email: "a@b.test" }), "a@b.test");
-  assert.equal(
-    readSep12PutEmail({ email_address: "c@d.test" }),
-    "c@d.test",
-  );
+  assert.equal(readSep12PutEmail({ email_address: "c@d.test" }), "c@d.test");
   assert.equal(
     readSep12PutEmail({ fields: { email: "e@f.test" } }),
     "e@f.test",

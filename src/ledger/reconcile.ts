@@ -113,7 +113,8 @@ export function evaluateThreeWay(input: {
   if (ledger) {
     const memoOk = memoMatchesPayoutId(ledger.memo, ledger.payout_id);
     const chainMemoOk =
-      !input.chainMemo || memoMatchesPayoutId(input.chainMemo, ledger.payout_id);
+      !input.chainMemo ||
+      memoMatchesPayoutId(input.chainMemo, ledger.payout_id);
     if (!memoOk || !chainMemoOk) {
       breaks.push("memo_mismatch");
     }

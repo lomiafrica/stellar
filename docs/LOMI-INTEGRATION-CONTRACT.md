@@ -4,15 +4,15 @@ How this lab mirrors lomi. payout and ledger fields without writing to Supabase 
 
 ## Production reference
 
-| Concept            | Location                   | Notes                                                                                                 |
-| ------------------ | -------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Merchant balances  | `accounts`                 | `organization_id`, `currency_code` in `XOF`, `USD`, `EUR`, `balance`                                  |
-| Self withdrawals   | `payouts`                  | `payout_id` UUID, `status` `pending` / `processing` / `completed` / `failed`                          |
-| Beneficiary sends  | `beneficiary_payouts`      | Same status model                                                                                     |
+| Concept            | Location                   | Notes                                                                                                             |
+| ------------------ | -------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Merchant balances  | `accounts`                 | `organization_id`, `currency_code` in `XOF`, `USD`, `EUR`, `balance`                                              |
+| Self withdrawals   | `payouts`                  | `payout_id` UUID, `status` `pending` / `processing` / `completed` / `failed`                                      |
+| Beneficiary sends  | `beneficiary_payouts`      | Same status model                                                                                                 |
 | Create payout API  | `apps/api` `POST /payouts` | `CreatePayoutDto`: `destination`, `rail` (`wave` / `mtn` / `spi` / `bank` / `stellar`), `amount`, `currency_code` |
-| Response           | `CreatePayoutResponseDto`  | `success`, `payout_id`, `kind`, `status`                                                                         |
-| HTTP idempotency   | `api_idempotency_records`  | Header `Idempotency-Key` scoped per org + route                                                                  |
-| Settlement periods | `GET /settlements`         | Virtual `settlement_id` = `{currency}:{YYYY-MM-DD}` from `transactions.available_at`                             |
+| Response           | `CreatePayoutResponseDto`  | `success`, `payout_id`, `kind`, `status`                                                                          |
+| HTTP idempotency   | `api_idempotency_records`  | Header `Idempotency-Key` scoped per org + route                                                                   |
+| Settlement periods | `GET /settlements`         | Virtual `settlement_id` = `{currency}:{YYYY-MM-DD}` from `transactions.available_at`                              |
 
 USDC is not a merchant `currency_code`. Nest already implements `rail: 'stellar'` in `apps/api/src/core/stellar` (allowlisted orgs, Test-only until `STELLAR_RAIL_ALLOW_LIVE=1`). It is **not deployed** on `api.lomi.africa` / `sandbox.api.lomi.africa` until a later connect. This lab never calls Nest.
 

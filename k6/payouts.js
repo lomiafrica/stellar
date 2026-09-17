@@ -21,7 +21,7 @@ export default function stellarPayouts() {
   const toml = http.get(`${BASE}/.well-known/stellar.toml`);
   check(toml, {
     "toml 200": (res) => res.status === 200,
-    "toml has XOF": (res) => String(res.body).includes("code = \"XOF\""),
+    "toml has XOF": (res) => String(res.body).includes('code = "XOF"'),
   });
 
   const payoutId = `k6-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -53,7 +53,8 @@ export default function stellarPayouts() {
     { headers: { ...mutatingHeaders, "Idempotency-Key": payoutId } },
   );
   check(replay, {
-    "idempotent replay": (res) => res.status === 200 || res.status === 201 || res.status === 400,
+    "idempotent replay": (res) =>
+      res.status === 200 || res.status === 201 || res.status === 400,
   });
   sleep(1);
 }

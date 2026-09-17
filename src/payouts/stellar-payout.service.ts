@@ -1,8 +1,5 @@
 import { randomUUID } from "node:crypto";
-import {
-  explorerAccount,
-  explorerTx,
-} from "../config.js";
+import { explorerAccount, explorerTx } from "../config.js";
 import {
   claimPayout,
   findByPayoutId,
@@ -17,10 +14,7 @@ import {
   type BridgeTransfer,
 } from "../bridge/adapter.js";
 import { mockMobileMoneyOfframp } from "../mock/offramp.js";
-import {
-  assertReadyToSettle,
-  type ReadyState,
-} from "../operator/ready.js";
+import { assertReadyToSettle, type ReadyState } from "../operator/ready.js";
 import { loadSigner, type TransactionSigner } from "../stellar/signer.js";
 import { stellarMemoFromPayoutId } from "../stellar/memo.js";
 import {
@@ -93,7 +87,8 @@ function usdcToday(now: number): number {
   const from = start.getTime();
   return readLedger()
     .filter((row) => {
-      if (row.status !== "completed" && row.status !== "processing") return false;
+      if (row.status !== "completed" && row.status !== "processing")
+        return false;
       const created = Date.parse(row.created_at);
       return Number.isFinite(created) && created >= from;
     })
@@ -227,9 +222,7 @@ async function recoverProcessing(
       upsertSettlement({ ...record, status: "failed" });
       return undefined;
     }
-    throw new Error(
-      `payment ${hash} is still pending; retry after timebounds`,
-    );
+    throw new Error(`payment ${hash} is still pending; retry after timebounds`);
   }
   upsertSettlement({ ...record, status: "failed" });
   throw new Error(`payment not successful: ${found.status}`);
@@ -264,11 +257,7 @@ export async function runSettlementDemo(
   const existing = findByPayoutId(payoutId);
 
   if (existing?.stellar_tx_hash && existing.status === "completed") {
-    return recordToDemoResult(
-      existing,
-      buildOfframpFromRecord(existing),
-      true,
-    );
+    return recordToDemoResult(existing, buildOfframpFromRecord(existing), true);
   }
 
   if (existing?.status === "processing") {

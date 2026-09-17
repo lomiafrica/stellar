@@ -84,7 +84,8 @@ function tagFor(mark: PathMark): string {
 }
 
 function toStep(mark: PathMark, hop: Hop): PageStep {
-  const copy = mark === "done" ? hop.done : mark === "skip" ? hop.skip : hop.idle;
+  const copy =
+    mark === "done" ? hop.done : mark === "skip" ? hop.skip : hop.idle;
   return {
     title: hop.title,
     tag: tagFor(mark),

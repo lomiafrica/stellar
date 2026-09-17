@@ -62,19 +62,19 @@ Do not send mainnet USDC to these addresses.
 pnpm start:dev
 ```
 
-| Method | Path                        | Notes                                                                                                        |
-| ------ | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Method | Path                        | Notes                                                                                                               |
+| ------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `POST` | `/demo/payouts`             | Payout-shaped body + `rail: "stellar"`; `X-Lab-Key` when public; optional `Idempotency-Key`. Caps and atomic claim. |
-| `GET`  | `/demo/payouts/:payout_id`  | Status + reconcile snapshot                                                                                  |
-| `POST` | `/demo/settle`              | Thin settle helper                                                                                           |
-| `POST` | `/mock/bridge/fund`         | Mock treasury credit                                                                                         |
-| `GET`  | `/.well-known/stellar.toml` | SEP-1 (CORS open; set `PUBLIC_BASE_URL` when hosted)                                                         |
-| `POST` | `/anchor/sep12/customer`    | Merchant verification callback (not a blanket ACCEPTED stub)                                                 |
-| `GET`  | `/anchor/sep24/:kind`       | Interactive SEP-24 sandbox page                                                                              |
-| `POST` | `/anchor/sep6/:kind`        | Programmatic deposit/withdraw                                                                                |
-| `POST` | `/anchor/sep38/quote`       | Firm XOF/USDC quote with TTL                                                                                 |
-| `POST` | `/anchor/sep31/receive`     | Inbound from an external sending anchor                                                                      |
-| `POST` | `/anchor/last-mile/:rail`   | Sandbox Wave / MTN / SPI last mile                                                                           |
+| `GET`  | `/demo/payouts/:payout_id`  | Status + reconcile snapshot                                                                                         |
+| `POST` | `/demo/settle`              | Thin settle helper                                                                                                  |
+| `POST` | `/mock/bridge/fund`         | Mock treasury credit                                                                                                |
+| `GET`  | `/.well-known/stellar.toml` | SEP-1 (CORS open; set `PUBLIC_BASE_URL` when hosted)                                                                |
+| `POST` | `/anchor/sep12/customer`    | Merchant verification callback (not a blanket ACCEPTED stub)                                                        |
+| `GET`  | `/anchor/sep24/:kind`       | Interactive SEP-24 sandbox page                                                                                     |
+| `POST` | `/anchor/sep6/:kind`        | Programmatic deposit/withdraw                                                                                       |
+| `POST` | `/anchor/sep38/quote`       | Firm XOF/USDC quote with TTL                                                                                        |
+| `POST` | `/anchor/sep31/receive`     | Inbound from an external sending anchor                                                                             |
+| `POST` | `/anchor/last-mile/:rail`   | Sandbox Wave / MTN / SPI last mile                                                                                  |
 
 ```json
 {

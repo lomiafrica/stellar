@@ -11,8 +11,7 @@ const ANCHOR =
   "https://anchor-production-5059.up.railway.app";
 const HOME_DOMAIN = new URL(LAB).host;
 const MERCHANT = "GAOHXCYCLGQDETU33F4AB5DZUSEPRHHEROJ3FCZ6I4S6MDV7FZQVVW2Y";
-const UNKNOWN =
-  "GUNKNOWNACCOUNT00000000000000000000000000000000000000";
+const UNKNOWN = "GUNKNOWNACCOUNT00000000000000000000000000000000000000";
 const NEST_EXPLORER =
   "https://stellar.expert/explorer/testnet/tx/49e2a131c61d7b3e41e0b53b6a22cb98fe98fbf0fdeadfa2b1e4342ccf328ffe";
 const NEST_PAYOUT = "83e4aa27-e619-4d13-963c-9b49ce62a59f";
@@ -20,7 +19,9 @@ const NEST_PAYOUT = "83e4aa27-e619-4d13-963c-9b49ce62a59f";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const logDir = join(root, ".scf", "t1-logs");
 
-async function fetchText(url: string): Promise<{ status: number; text: string }> {
+async function fetchText(
+  url: string,
+): Promise<{ status: number; text: string }> {
   const response = await fetch(url);
   return { status: response.status, text: await response.text() };
 }

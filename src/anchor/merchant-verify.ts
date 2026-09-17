@@ -70,7 +70,9 @@ export function readSep12PutEmail(body: {
   const fields = body.fields;
   if (!fields || typeof fields !== "object") return undefined;
   const nested = fields.email ?? fields.email_address;
-  return typeof nested === "string" && nested.trim() ? nested.trim() : undefined;
+  return typeof nested === "string" && nested.trim()
+    ? nested.trim()
+    : undefined;
 }
 
 function persist(customer: Sep12Customer): void {

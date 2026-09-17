@@ -33,10 +33,7 @@ export function labApiKey(): string {
   return process.env.LAB_API_KEY?.trim() ?? "";
 }
 
-export function readLabKey(
-  xLabKey?: string,
-  authorization?: string,
-): string {
+export function readLabKey(xLabKey?: string, authorization?: string): string {
   const direct = xLabKey?.trim() ?? "";
   if (direct) return direct;
   const auth = authorization?.trim() ?? "";

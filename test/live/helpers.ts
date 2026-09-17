@@ -16,7 +16,11 @@ function readProof(): Record<string, unknown> {
 }
 
 export function recordLiveProof(patch: Record<string, unknown>): void {
-  const proof = { ...readProof(), ...patch, updatedAt: new Date().toISOString() };
+  const proof = {
+    ...readProof(),
+    ...patch,
+    updatedAt: new Date().toISOString(),
+  };
   writeFileSync(PATH, `${JSON.stringify(proof, null, 2)}\n`);
 }
 

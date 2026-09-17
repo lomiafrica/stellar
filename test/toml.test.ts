@@ -36,14 +36,8 @@ test("renderStellarToml substitutes base URL, signing key, and accounts", () => 
     anchorPublicUrl: "https://anchor.example.test",
     sep10SigningPublicKey: "GSIGN",
   });
-  assert.match(
-    body,
-    /TRANSFER_SERVER="https:\/\/anchor.example.test\/sep6"/,
-  );
-  assert.match(
-    body,
-    /WEB_AUTH_ENDPOINT="https:\/\/anchor.example.test\/auth"/,
-  );
+  assert.match(body, /TRANSFER_SERVER="https:\/\/anchor.example.test\/sep6"/);
+  assert.match(body, /WEB_AUTH_ENDPOINT="https:\/\/anchor.example.test\/auth"/);
   assert.match(body, /issuer = "GOMNI"/);
   assert.match(body, /ACCOUNTS=\["GOMNI", "GMERCH"\]/);
   assert.match(body, /SIGNING_KEY="GSIGN"/);

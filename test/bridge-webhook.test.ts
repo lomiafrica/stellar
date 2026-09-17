@@ -5,7 +5,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { handleBridgeWebhook } from "../src/bridge/webhook-handler.js";
-import { parseSignatureHeader, verifyBridgeSignature } from "../src/bridge/webhook.js";
+import {
+  parseSignatureHeader,
+  verifyBridgeSignature,
+} from "../src/bridge/webhook.js";
 
 function isolate(): string {
   const dir = mkdtempSync(join(tmpdir(), "stellar-bridge-"));
@@ -17,15 +20,24 @@ function pair() {
   return generateKeyPairSync("rsa", { modulusLength: 2048 });
 }
 
-function headerFor(rawBody: string, privateKey: ReturnType<typeof pair>["privateKey"], timestamp: number): string {
-  const digest = createHash("sha256").update(`${timestamp}.${rawBody}`).digest();
+function headerFor(
+  rawBody: string,
+  privateKey: ReturnType<typeof pair>["privateKey"],
+  timestamp: number,
+): string {
+  const digest = createHash("sha256")
+    .update(`${timestamp}.${rawBody}`)
+    .digest();
   const signature = sign("sha256", digest, privateKey).toString("base64");
   return `t=${timestamp},v0=${signature}`;
 }
 
 test("parseSignatureHeader reads t and v0", () => {
   const parsed = parseSignatureHeader("t=1700000000000,v0=abc+def==");
-  assert.deepEqual(parsed, { timestamp: "1700000000000", signature: "abc+def==" });
+  assert.deepEqual(parsed, {
+    timestamp: "1700000000000",
+    signature: "abc+def==",
+  });
 });
 
 test("valid signature is accepted", () => {
@@ -84,8 +96,12 @@ test("rotated PEM still verifies", () => {
   isolate();
   const first = pair();
   const second = pair();
-  const pem1 = first.publicKey.export({ type: "spki", format: "pem" }).toString();
-  const pem2 = second.publicKey.export({ type: "spki", format: "pem" }).toString();
+  const pem1 = first.publicKey
+    .export({ type: "spki", format: "pem" })
+    .toString();
+  const pem2 = second.publicKey
+    .export({ type: "spki", format: "pem" })
+    .toString();
   const body = JSON.stringify({ id: "evt_rotate", type: "transfer.updated" });
   const now = Date.now();
   const header = headerFor(body, second.privateKey, now);

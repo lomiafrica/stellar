@@ -14,7 +14,10 @@ import type {
   PayoutStatus,
   StellarSettlementRecord,
 } from "../ledger/store.js";
-import { memoMatchesPayoutId, stellarMemoFromPayoutId } from "../stellar/memo.js";
+import {
+  memoMatchesPayoutId,
+  stellarMemoFromPayoutId,
+} from "../stellar/memo.js";
 
 const LAST_MILE: Record<LastMileRail, string> = {
   wave: "Wave Mobile Money",
@@ -233,9 +236,7 @@ export function renderPayoutPage(input: {
       { key: "Amount", value: `${row.amount} ${row.currency_code}` },
       { key: "USDC sent", value: `${row.amount_usdc} USDC` },
       { key: "Created", value: formatWhen(row.created_at) },
-      ...(hash
-        ? [{ key: "Hash", value: hashHtml(hash), html: true }]
-        : []),
+      ...(hash ? [{ key: "Hash", value: hashHtml(hash), html: true }] : []),
       ...(row.stellar_from
         ? [{ key: "From", value: shortAccount(row.stellar_from) }]
         : []),

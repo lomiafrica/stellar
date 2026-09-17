@@ -262,7 +262,8 @@ export class AnchorController {
   ) {
     assertSep24MutatingAuth(body.token);
     const decoded = decodeSep24Token(body.token);
-    const payoutId = decoded.transactionId ?? body.transaction_id ?? randomUUID();
+    const payoutId =
+      decoded.transactionId ?? body.transaction_id ?? randomUUID();
     const lastMile = dispatchLastMile({
       rail: body.rail ?? "wave",
       amountXof: body.amount ?? decoded.amount ?? "1000",

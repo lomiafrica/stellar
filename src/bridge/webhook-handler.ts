@@ -48,7 +48,8 @@ export function handleBridgeWebhook(
   try {
     const parsed = parseJson(rawBody);
     if (isJsonObject(parsed)) {
-      eventId = readString(parsed, "id") ?? readString(parsed, "event_id") ?? "";
+      eventId =
+        readString(parsed, "id") ?? readString(parsed, "event_id") ?? "";
     }
   } catch {
     return { status: 400, body: { ok: false, reason: "invalid json" } };

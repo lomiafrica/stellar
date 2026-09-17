@@ -34,7 +34,9 @@ interface HorizonAccount {
 }
 
 async function account(publicKey: string) {
-  const { status, body } = await fetchJson(`${horizonUrl()}/accounts/${publicKey}`);
+  const { status, body } = await fetchJson(
+    `${horizonUrl()}/accounts/${publicKey}`,
+  );
   assert.equal(status, 200, `Horizon account ${publicKey} HTTP ${status}`);
   const amounts = amountsFromHorizonBalances(
     ((body as HorizonAccount).balances ?? []) as Parameters<
@@ -109,9 +111,12 @@ test("T1.2 live payout round trip: one chain payment, recycle, zero net USDC", a
   assert.equal(txRow.memo, memo);
   assert.equal(txRow.memo_type, "text");
 
-  const payments = await fetchJson(`${horizonUrl()}/transactions/${hash}/payments`);
-  const records = (asRecord(payments.body)._embedded as { records?: unknown[] } | undefined)
-    ?.records ?? [];
+  const payments = await fetchJson(
+    `${horizonUrl()}/transactions/${hash}/payments`,
+  );
+  const records =
+    (asRecord(payments.body)._embedded as { records?: unknown[] } | undefined)
+      ?.records ?? [];
   const payment = records
     .map((row) => asRecord(row))
     .find((row) => row.type === "payment");
