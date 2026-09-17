@@ -25,21 +25,34 @@ test("withdraw path lists the wallet before Wave", () => {
   assert.ok(wallet >= 0 && wave > wallet);
 });
 
+/** [mark, title] for each hop, in page order. */
+function hops(html: string): [string, string][] {
+  return html
+    .split("<li ")
+    .slice(1)
+    .map((chunk) => [
+      /class="(\w+)"/.exec(chunk)?.[1] ?? "",
+      /step-title">([^<]*)/.exec(chunk)?.[1] ?? "",
+    ]);
+}
+
 test("receipt marks the mobile money hop, not the wallet hop", () => {
-  const withdraw = moneyPathHtml({
-    kind: "withdraw",
-    rail: "wave",
-    mode: "receipt",
-  });
-  assert.match(withdraw, /class="skip"><span class="step-title">Wallet sends/);
-  assert.match(withdraw, /class="done"><span class="step-title">Wave pays/);
-  const deposit = moneyPathHtml({
-    kind: "deposit",
-    rail: "wave",
-    mode: "receipt",
-  });
-  assert.match(deposit, /class="done"><span class="step-title">Wave takes/);
-  assert.match(deposit, /class="skip"><span class="step-title">Wallet receives/);
+  assert.deepEqual(
+    hops(moneyPathHtml({ kind: "withdraw", rail: "wave", mode: "receipt" })),
+    [
+      ["skip", "Wallet sends USDC"],
+      ["skip", "Anchor converts"],
+      ["done", "Wave pays the phone"],
+    ],
+  );
+  assert.deepEqual(
+    hops(moneyPathHtml({ kind: "deposit", rail: "mtn", mode: "receipt" })),
+    [
+      ["done", "MTN takes CFA"],
+      ["skip", "Anchor converts"],
+      ["skip", "Wallet receives USDC"],
+    ],
+  );
 });
 
 test("flow page keeps Wave last mile apart from Stellar payments", () => {

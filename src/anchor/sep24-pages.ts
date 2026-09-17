@@ -102,6 +102,7 @@ function chromeCss(): string {
     p { margin: 0 0 0.9rem; }
     .lede { color: #5c5e66; font-size: 0.92rem; }
     .note { color: #5c5e66; font-size: 0.82rem; }
+    code { font-size: 0.78rem; background: #ecece7; padding: 0.05rem 0.25rem; border-radius: 3px; }
     .card {
       padding: 1rem;
       background: #fff;
@@ -129,16 +130,21 @@ function chromeCss(): string {
       font: inherit;
       font-weight: 600;
     }
-    .path { list-style: none; margin: 0; padding: 0; }
-    .path li { padding: 0.55rem 0; border-top: 1px solid #ecece7; }
+    .path { list-style: none; margin: 0; }
+    .path li { padding: 0.7rem 0; border-top: 1px solid #ecece7; }
     .path li:first-child { border-top: 0; padding-top: 0; }
     .path li:last-child { padding-bottom: 0; }
+    .step-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+    }
     .step-title { font-size: 0.9rem; font-weight: 600; }
-    .step-copy { display: block; color: #6b6d73; font-size: 0.8rem; }
+    .step-copy { display: block; margin-top: 0.15rem; color: #6b6d73; font-size: 0.8rem; }
     .path li.skip .step-title, .path li.skip .step-copy { color: #8a8c93; }
     .tag {
-      display: inline-block;
-      margin-left: 0.4rem;
+      flex: none;
       font-size: 0.68rem;
       letter-spacing: 0.04em;
       text-transform: uppercase;
@@ -190,7 +196,7 @@ function tagFor(mark: PathMark): string {
 
 function stepItem(mark: PathMark, hop: Hop): string {
   const copy = mark === "done" ? hop.done : mark === "skip" ? hop.skip : hop.idle;
-  return `<li class="${mark}"><span class="step-title">${escapeHtml(hop.title)}</span><span class="tag">${tagFor(mark)}</span><span class="step-copy">${escapeHtml(copy || hop.idle)}</span></li>`;
+  return `<li class="${mark}"><div class="step-head"><span class="step-title">${escapeHtml(hop.title)}</span><span class="tag">${tagFor(mark)}</span></div><span class="step-copy">${escapeHtml(copy || hop.idle)}</span></li>`;
 }
 
 /** Three hops the money would take. Only the mobile money hop is recorded here. */
@@ -284,7 +290,7 @@ export function renderSep24CreditReceipt(credit: LastMileResult): string {
     ["Amount in CFA", credit.amountXof],
     ["Phone", credit.phone],
     ["Lab id", credit.payoutId],
-    ["Direction", credit.kind],
+    ["SEP-24 direction", credit.kind],
     ["Created", credit.createdAt],
   ];
   const list = rows
@@ -302,6 +308,8 @@ export function renderSep24CreditReceipt(credit: LastMileResult): string {
     <dl class="card">${list}</dl>
     <p class="kicker">What ran</p>
     ${moneyPathHtml({ kind: credit.kind, rail: credit.rail, mode: "receipt" })}
+    <p class="kicker">Why this says deposit and not payout</p>
+    <p class="note">Deposit and withdraw are SEP-24 words for a wallet holder moving fiat in or out. That is the anchor direction. A lomi. payout is the other direction, lomi. paying a merchant, and it runs on <code>POST /payouts</code> with <code>rail=stellar</code>. This page is not that flow.</p>
     <p class="kicker">Receipt</p>
     <pre>${escapeHtml(JSON.stringify(credit, null, 2))}</pre>
     `,
