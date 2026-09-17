@@ -65,7 +65,7 @@ The lab controller already accepts that body. Same `payout_id` twice returns the
 
 Nest already has the rail, Bridge HMAC ingest, and reconcile cron. Connecting production is a flag flip: set `STELLAR_LAB_URL` and `STELLAR_RAIL_ORGANIZATION_IDS` on sandbox/live Nest. Do not set those on this isolated lab host.
 
-1. **Migration**: `stellar_settlements` (`20250226000119_stellar.sql`) plus TEST `stellar_t1_ops`.
+1. **Migration**: `stellar_settlements` plus Bridge event-id dedupe in `20250226000119_stellar.sql`.
 2. **Flags**: `STELLAR_RAIL_ORGANIZATION_IDS` allowlist; Test first; `STELLAR_RAIL_ALLOW_LIVE` stays off.
 3. **Ledger**: do not add USDC to merchant `accounts`; treasury USDC stays off that ledger.
 4. **Webhooks**: `stellar_transaction_id` and `bridge_transfer_id` on payout events.
