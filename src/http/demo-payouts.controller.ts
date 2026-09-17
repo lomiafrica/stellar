@@ -18,8 +18,14 @@ import {
   saveIdempotentResponse,
 } from "../ledger/idempotency.js";
 import { findByPayoutId, readLedger } from "../ledger/store.js";
-import { reconcileTransaction } from "../ledger/reconcile.js";
-import { createStellarPayout } from "../payouts/stellar-payout.service.js";
+import {
+  reconcileThreeWay,
+  reconcileTransaction,
+} from "../ledger/reconcile.js";
+import {
+  createStellarPayout,
+  notReadyBody,
+} from "../payouts/stellar-payout.service.js";
 import {
   renderPayoutListPage,
   renderPayoutPage,
@@ -87,12 +93,7 @@ export class DemoPayoutsController {
       return response;
     } catch (err) {
       if (err instanceof SettleNotReadyError) {
-        throw new BadRequestException({
-          success: false,
-          message: err.message,
-          reason: err.reason,
-          hint: err.hint,
-        });
+        throw new BadRequestException(notReadyBody(err));
       }
       throw err;
     }
@@ -120,9 +121,10 @@ export class DemoPayoutsController {
     if (row.stellar_tx_hash) {
       reconcile = await reconcileTransaction(row.stellar_tx_hash);
     }
+    const threeWay = await reconcileThreeWay(payoutId);
     if (prefersHtml(req)) {
       res.type("html");
-      return renderPayoutPage({ row, reconcile });
+      return renderPayoutPage({ row, reconcile, threeWay });
     }
     return {
       payout_id: row.payout_id,
@@ -140,6 +142,7 @@ export class DemoPayoutsController {
       created_at: row.created_at,
       updated_at: row.updated_at,
       reconcile,
+      three_way: threeWay,
       settlement: row,
     };
   }

@@ -51,22 +51,23 @@ function writeLog(name: string, value: unknown): void {
 function walkthroughMarkdown(): string {
   return `# SEP-24 sandbox walkthrough
 
-Two proofs. Do not mix them in one clip.
+Two proofs. Do not mix them.
 
-## Wave last mile (this clip)
+## Wave last mile
 
 Money path on the page: Wave CFA, then Anchor, then the wallet. Only the Wave hop runs. It writes a sandbox receipt. It does not create a Stellar payment. Do not open StellarExpert here.
 
+Machine proof: \`pnpm test:live\` (\`test/live/anchor-sep24.test.ts\`). It signs SEP-10, PUTs SEP-12, starts SEP-24, posts the lab form, and asserts the platform tx is completed with no Stellar payment.
+
 1. Open \`https://${HOME_DOMAIN}/anchor/sep24/flow\`. Read cash in vs cash out.
-2. Open the interactive form (Freighter, or lab \`/anchor/sep24/interactive\`). Last mile = Wave sandbox. Submit.
+2. Open the interactive form (or let the live test drive it). Last mile = Wave sandbox. Submit.
 3. Receipt shows a sandbox Wave hop and says this lab id is not a Stellar transaction.
-4. Optional: \`https://${HOME_DOMAIN}/anchor/sep24/credit/<id>\` in a browser (same receipt).
 
-Freighter/LOBSTR on Testnet still needs home domain \`${HOME_DOMAIN}\` for a wallet-signed SEP-10. Toml and \`/sep24/info\` stay protocol pages, not the human story.
+## Nest USDC hop
 
-## Nest USDC hop (separate clip)
+Different money. Merchant \`POST /payouts\` \`rail=stellar\`. Machine proof: \`test/live/payout-roundtrip.test.ts\` (1 USDC, Horizon memo check, recycle). Nightly artifact: \`live-proof.json\`.
 
-Different money. Merchant \`POST /payouts\` \`rail=stellar\`. Payout \`${NEST_PAYOUT}\`. Explorer ${NEST_EXPLORER}
+Earlier Nest Test payout \`${NEST_PAYOUT}\`. Explorer ${NEST_EXPLORER}
 
 Logs from \`pnpm t1:walkthrough\` live in gitignored \`.scf/t1-logs/\`. Do not commit JWT secrets or seeds.
 
@@ -74,6 +75,7 @@ Logs from \`pnpm t1:walkthrough\` live in gitignored \`.scf/t1-logs/\`. Do not c
 
 \`\`\`bash
 pnpm t1:walkthrough
+pnpm test:live
 pnpm http:replay -- --base ${LAB}
 \`\`\`
 `;
@@ -136,11 +138,12 @@ async function main(): Promise<void> {
   console.log("updated docs/WALKTHROUGH.md");
 
   console.log(`
-Wave clip (no explorer)
-  1. Flow  ${LAB}/anchor/sep24/flow
-  2. Form  ${LAB}/anchor/sep24/interactive
-  3. Receipt after Wave sandbox submit
-Nest hop is a separate clip  ${NEST_EXPLORER}
+Wave last mile (no explorer)
+  pnpm test:live  (anchor-sep24)
+  ${LAB}/anchor/sep24/flow
+Nest hop
+  pnpm test:live  (payout-roundtrip)
+  ${NEST_EXPLORER}
 `);
 }
 

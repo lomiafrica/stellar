@@ -28,7 +28,8 @@
     "volume": "tsx scripts/volume.ts",
     "lint": "eslint \"src/**/*.ts\" \"scripts/**/*.ts\" \"test/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" \"scripts/**/*.ts\" \"test/**/*.ts\" --fix",
-    "test": "tsx --test --test-concurrency=1 test/json.test.ts test/ledger.test.ts test/balances.test.ts test/memo.test.ts test/reconcile.test.ts test/toml.test.ts test/mainnet-guard.test.ts test/last-mile.test.ts test/sep12.test.ts test/sep38.test.ts test/sep6.test.ts test/jwt.test.ts test/callback-customer.test.ts test/sep24-receipt.test.ts test/payout-pages.test.ts",
+    "test": "tsx --test --test-concurrency=1 test/json.test.ts test/ledger.test.ts test/balances.test.ts test/memo.test.ts test/reconcile.test.ts test/toml.test.ts test/mainnet-guard.test.ts test/last-mile.test.ts test/sep12.test.ts test/sep38.test.ts test/sep6.test.ts test/jwt.test.ts test/callback-customer.test.ts test/sep24-receipt.test.ts test/payout-pages.test.ts test/signer.test.ts test/payout-service.test.ts test/bridge-webhook.test.ts",
+    "test:live": "tsx --test --test-concurrency=1 test/live/payout-roundtrip.test.ts test/live/anchor-sep24.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "knip": "knip --no-config-hints"
   },

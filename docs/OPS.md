@@ -26,9 +26,9 @@ A clean window is 14 days of matching hashes, no extra ledger credit on duplicat
 3. Do not replay with a new memo. Reuse `payout_id` (idempotent).
 4. If Bridge completed but Stellar did not, do not credit last mile.
 
-## If Bridge HMAC fails
+## If a Bridge webhook signature fails
 
-Reject the webhook. Do not call `complete_stellar_settlement`. Tampered and missing signatures are unit-tested in the private API.
+Reject the webhook. Do not credit a settlement. Bridge signs `X-Webhook-Signature` with RSA-SHA256 against a per-endpoint public key (not HMAC). Tampered, stale, and missing signatures are unit-tested in this lab. Duplicate event ids return 200 and do nothing.
 
 ## Keys
 

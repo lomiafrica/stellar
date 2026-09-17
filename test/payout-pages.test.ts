@@ -91,6 +91,7 @@ test("reconcile checks render per check, not as one verdict", () => {
     ["done", "Payment succeeded on the network"],
     ["skip", "Memo matches the payout id"],
     ["done", "Ledger row exists for this hash"],
+    ["done", "Bridge transfer completed"],
   ]);
 });
 

@@ -2,6 +2,7 @@ import { CIRCLE_FAUCET_URL, SETTLE_USDC } from "../cli/talk.js";
 import { loadAccountBalances } from "../cli/balances.js";
 import { loadKeypair, readStoredKeys } from "../stellar/keys.js";
 import { sendUsdcPayment } from "../stellar/payment.js";
+import { LocalKeypairSigner } from "../stellar/signer.js";
 import { SettleNotReadyError } from "./ready.js";
 
 export interface FundResult {
@@ -57,7 +58,7 @@ export async function fundOmnibusFromMerchant(
   }
 
   const paid = await sendUsdcPayment(
-    merchant,
+    new LocalKeypairSigner(merchant),
     omnibus.publicKey(),
     String(need),
     "lab-recycle-usdc",

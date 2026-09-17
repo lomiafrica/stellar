@@ -3,7 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { evaluateReconcile } from "../src/ledger/reconcile.js";
+import { evaluateReconcile, evaluateThreeWay } from "../src/ledger/reconcile.js";
 import {
   upsertSettlement,
   type StellarSettlementRecord,
@@ -105,4 +105,75 @@ test("same payout_id replays the completed ledger row", async () => {
   assert.equal(second.idempotentReplay, true);
   assert.equal(first.stellarTxHash, "hash-replay");
   assert.equal(second.stellarTxHash, "hash-replay");
+});
+
+test("three-way ok when ledger, chain, and completed Bridge match", () => {
+  const ledgerRow = row({ bridge_transfer_id: "bridge_mock_ok" });
+  const result = evaluateThreeWay({
+    ledger: ledgerRow,
+    chainSuccess: true,
+    chainHash: "hash-ok",
+    chainMemo: ledgerRow.memo,
+    chainAmount: "10",
+    bridge: { status: "completed", usdcAmount: "10" },
+  });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.breaks, []);
+});
+
+test("three-way ledger_without_chain", () => {
+  const result = evaluateThreeWay({
+    ledger: row(),
+    chainSuccess: false,
+    bridge: { status: "completed", usdcAmount: "10" },
+  });
+  assert.equal(result.ok, false);
+  assert.ok(result.breaks.includes("ledger_without_chain"));
+});
+
+test("three-way chain_without_ledger", () => {
+  const result = evaluateThreeWay({
+    chainSuccess: true,
+    chainHash: "hash-ok",
+    bridge: { status: "completed", usdcAmount: "10" },
+  });
+  assert.equal(result.ok, false);
+  assert.ok(result.breaks.includes("chain_without_ledger"));
+});
+
+test("three-way bridge_incomplete", () => {
+  const result = evaluateThreeWay({
+    ledger: row(),
+    chainSuccess: true,
+    chainMemo: row().memo,
+    chainAmount: "10",
+  });
+  assert.equal(result.ok, false);
+  assert.ok(result.breaks.includes("bridge_incomplete"));
+});
+
+test("three-way amount_mismatch", () => {
+  const ledgerRow = row();
+  const result = evaluateThreeWay({
+    ledger: ledgerRow,
+    chainSuccess: true,
+    chainMemo: ledgerRow.memo,
+    chainAmount: "9",
+    bridge: { status: "completed", usdcAmount: "10" },
+  });
+  assert.equal(result.ok, false);
+  assert.ok(result.breaks.includes("amount_mismatch"));
+});
+
+test("three-way memo_mismatch", () => {
+  const ledgerRow = row();
+  const result = evaluateThreeWay({
+    ledger: ledgerRow,
+    chainSuccess: true,
+    chainMemo: "wrong-memo",
+    chainAmount: "10",
+    bridge: { status: "completed", usdcAmount: "10" },
+  });
+  assert.equal(result.ok, false);
+  assert.ok(result.breaks.includes("memo_mismatch"));
 });

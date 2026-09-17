@@ -90,11 +90,11 @@ Merchants never see wallets or keys.
 | ------ | ----------------------------- | ------------------------------------------ |
 | SEP-1  | `stellar.toml` + XOF metadata | Hosted toml with XOF fiat metadata         |
 | SEP-10 | Official platform `/auth`     | Wallet / anchor auth                       |
-| SEP-12 | Not here                      | KYC/KYB via existing merchant verification |
-| SEP-24 | Not here                      | Interactive deposit/withdraw to Wave/MTN   |
-| SEP-6  | Not here                      | Programmatic deposit/withdraw              |
-| SEP-38 | Not here                      | XOF/USDC quotes (XOF pegged to EUR)        |
-| SEP-31 | Not here                      | UEMOA receiving corridor                   |
+| SEP-12 | Lab callback + sandbox PUT    | KYC/KYB via existing merchant verification |
+| SEP-24 | Interactive sandbox last mile | Interactive deposit/withdraw to Wave/MTN   |
+| SEP-6  | Lab programmatic withdraw     | Platform-enabled deposit/withdraw          |
+| SEP-38 | Lab quotes with TTL           | XOF/USDC quotes (XOF pegged to EUR)        |
+| SEP-31 | Lab inbound stub              | UEMOA receiving corridor                   |
 
 No Soroban. Classic payments, then Anchor Platform if we take the rail live.
 
@@ -138,7 +138,7 @@ Idempotency: same `payout_id` means at most one on-chain Payment (same idea as `
 | Dependency            | Role             | Here vs later                                               |
 | --------------------- | ---------------- | ----------------------------------------------------------- |
 | Circle USDC           | Settlement asset | Testnet; consume only, never issue                          |
-| Bridge                | USD <-> USDC     | Mock now; later HMAC webhooks + dedupe                      |
+| Bridge                | USD <-> USDC     | Mock adapter now; RSA-signed webhook receiver is in this lab (`POST /bridge/webhook`). Real Bridge client is T2. |
 | Anchor Platform (SDF) | SEP stack        | `anchor/docker-compose.yml`                                 |
 | Wave / MTN / SPI      | Last mile        | Live in lomi.; mocked here                                  |
 | BCEAO                 | Regulatory       | PI licence application in progress; MoR under partner banks |
@@ -150,7 +150,7 @@ See [BUILD-PHASES.md](./BUILD-PHASES.md). Short version:
 1. Keep this repo public: memo-keyed payments, ledger, reconcile, SEP-1.
 2. XOF Anchor on testnet: official Anchor Platform (SEP-1/10/12/24), last mile adapters here.
 3. `rail: stellar` on POST /payouts in the private API: same DTO, org allowlist, Test first.
-4. Bridge HMAC + signing interface + three-way reconcile (private).
+4. Bridge adapter + RSA webhook verification + signing interface + three-way reconcile (this lab has the seams; live Bridge is private).
 5. Mainnet, merchant pilot, optional SEP-31 receiving corridor. Still custodial. Still no merchant wallets.
 
 ## 11. Regulatory

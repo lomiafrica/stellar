@@ -193,8 +193,6 @@ export function renderSep24CreditReceipt(credit: LastMileResult): string {
     ])}
     <p class="kicker">What ran</p>
     ${moneyPathHtml({ kind: credit.kind, rail: credit.rail, mode: "receipt" })}
-    <p class="kicker">Why this says deposit and not payout</p>
-    <p class="note">Deposit and withdraw are SEP-24 words for a wallet holder moving fiat in or out. That is the anchor direction. A lomi. payout is the other direction, lomi. paying a merchant, and it runs on <code>POST /payouts</code> with <code>rail=stellar</code>. See <a href="/demo/payouts">the payout ledger</a>.</p>
     <p class="kicker">Receipt</p>
     <pre>${escapeHtml(JSON.stringify(credit, null, 2))}</pre>
     `,

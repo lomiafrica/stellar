@@ -6,7 +6,7 @@ import {
   stepsHtml,
   type PageStep,
 } from "../http/page-chrome.js";
-import type { ReconcileResult } from "../ledger/reconcile.js";
+import type { ReconcileResult, ThreeWayResult } from "../ledger/reconcile.js";
 import type { StellarSettlementRecord } from "../ledger/store.js";
 import { memoMatchesPayoutId, stellarMemoFromPayoutId } from "../stellar/memo.js";
 
@@ -51,9 +51,13 @@ function payoutSteps(row: StellarSettlementRecord): PageStep[] {
 function reconcileSteps(
   row: StellarSettlementRecord,
   reconcile: ReconcileResult,
+  threeWay?: ThreeWayResult | null,
 ): PageStep[] {
   const memoOk = memoMatchesPayoutId(row.memo, row.payout_id);
-  return [
+  const bridgeOk = threeWay
+    ? !threeWay.breaks.includes("bridge_incomplete")
+    : Boolean(row.bridge_transfer_id);
+  const steps: PageStep[] = [
     {
       title: "Payment succeeded on the network",
       tag: reconcile.onChainSuccess ? "pass" : "fail",
@@ -76,7 +80,16 @@ function reconcileSteps(
         : "No ledger row claims this hash.",
       mark: reconcile.ledgerFound ? "done" : "skip",
     },
+    {
+      title: "Bridge transfer completed",
+      tag: bridgeOk ? "mock" : "fail",
+      copy: bridgeOk
+        ? "Treasury hop is a mock adapter here. The id is on the settlement row."
+        : "No completed Bridge transfer on this payout.",
+      mark: bridgeOk ? "done" : "skip",
+    },
   ];
+  return steps;
 }
 
 function headline(row: StellarSettlementRecord): string {
@@ -89,8 +102,9 @@ function headline(row: StellarSettlementRecord): string {
 export function renderPayoutPage(input: {
   row: StellarSettlementRecord;
   reconcile: ReconcileResult | null;
+  threeWay?: ThreeWayResult | null;
 }): string {
-  const { row, reconcile } = input;
+  const { row, reconcile, threeWay } = input;
   const hash = row.stellar_tx_hash ?? "";
   const explorer = hash
     ? `<p class="kicker">On chain</p>
@@ -99,7 +113,7 @@ export function renderPayoutPage(input: {
   const verdict = reconcile
     ? `<p class="kicker">Reconcile</p>
     <p class="note">${escapeHtml(reconcile.details)}</p>
-    ${stepsHtml(reconcileSteps(row, reconcile), "Reconcile checks")}`
+    ${stepsHtml(reconcileSteps(row, reconcile, threeWay), "Reconcile checks")}`
     : "";
   return shell(
     `Payout ${row.payout_id}`,

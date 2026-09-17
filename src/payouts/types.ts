@@ -19,7 +19,7 @@ export type CreateStellarPayoutInput = {
   /** USDC hop size; defaults from amount when currency is USD */
   amount_usdc?: string;
   phone?: string;
-  /** Real Bridge transfer id from Nest. When set, the lab skips mockBridgeUsdToUsdc. */
+  /** Real Bridge transfer id from Nest. When set, the lab reuses it instead of creating a mock transfer. */
   bridge_transfer_id?: string;
 };
 

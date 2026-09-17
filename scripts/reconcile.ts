@@ -1,5 +1,5 @@
 import { readLedger } from "../src/ledger/store.js";
-import { reconcileTransaction } from "../src/ledger/reconcile.js";
+import { reconcileThreeWay } from "../src/ledger/reconcile.js";
 
 async function main() {
   const rows = readLedger();
@@ -7,20 +7,27 @@ async function main() {
     console.log("No settlements in ledger.");
     return;
   }
+  let failed = 0;
   for (const row of rows) {
-    if (!row.stellar_tx_hash) {
-      console.log(
-        JSON.stringify({
-          payout_id: row.payout_id,
-          skipped: "no stellar_tx_hash",
-        }),
-      );
-      continue;
-    }
-    const result = await reconcileTransaction(row.stellar_tx_hash);
+    const result = await reconcileThreeWay(row.payout_id);
     console.log(
-      JSON.stringify({ payout_id: row.payout_id, ...result }, null, 2),
+      JSON.stringify(
+        {
+          payout_id: row.payout_id,
+          ok: result.ok,
+          breaks: result.breaks,
+          chain: result.chain,
+          bridge: result.bridge,
+        },
+        null,
+        2,
+      ),
     );
+    if (!result.ok) failed += 1;
+  }
+  if (failed > 0) {
+    console.error(`reconcile failed ${failed}/${rows.length}`);
+    process.exit(1);
   }
 }
 

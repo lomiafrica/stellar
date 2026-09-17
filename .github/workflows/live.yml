@@ -1,0 +1,44 @@
+name: Live
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Round trip on testnet
+        env:
+          MERCHANT_SECRET: ${{ secrets.MERCHANT_SECRET }}
+          LIVE_LAB_URL: https://lab-production-5fac.up.railway.app
+          LIVE_ANCHOR_URL: https://anchor-production-5059.up.railway.app
+          LIVE_USDC_AMOUNT: "1"
+        run: pnpm test:live
+      - name: Job summary
+        if: always()
+        run: |
+          if [ -f live-proof.json ]; then
+            echo "## T1 live proof" >> "$GITHUB_STEP_SUMMARY"
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat live-proof.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No live-proof.json (test failed before writing)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-proof
+          path: live-proof.json
+          if-no-files-found: ignore

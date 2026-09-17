@@ -16,9 +16,12 @@ data/last-mile.json
 data/sep12-customers.json
 data/sep38-quotes.json
 data/sep31-inbound.json
+data/bridge_events.json
+data/bridge_transfers.json
 
 # Logs
 *.log
 
 # Local
 .scf/
+live-proof.json
