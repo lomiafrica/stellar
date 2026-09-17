@@ -1,6 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { renderStellarToml } from "../src/http/stellar-toml.js";
+
+test("public stellar.toml lists XOF and Circle testnet USDC", () => {
+  const toml = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../public/stellar.toml"),
+    "utf8",
+  );
+  assert.match(toml, /code = "XOF"/);
+  assert.match(
+    toml,
+    /issuer = "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5"/,
+  );
+  assert.match(toml, /code = "USDC"/);
+});
 
 const TEMPLATE = `NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
 ACCOUNTS=[]

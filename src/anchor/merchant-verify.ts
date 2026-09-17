@@ -50,6 +50,29 @@ function localLookup(account: string | undefined): Sep12Customer | undefined {
   };
 }
 
+function isTestnetKyc(): boolean {
+  const raw = (process.env.STELLAR_NETWORK ?? "testnet").trim().toLowerCase();
+  return raw !== "public" && raw !== "mainnet";
+}
+
+function looksLikeEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+/** Read email from a SEP-12 / Callback API PUT body. */
+export function readSep12PutEmail(body: {
+  email?: string;
+  email_address?: string;
+  fields?: Record<string, unknown>;
+}): string | undefined {
+  const direct = body.email?.trim() || body.email_address?.trim();
+  if (direct) return direct;
+  const fields = body.fields;
+  if (!fields || typeof fields !== "object") return undefined;
+  const nested = fields.email ?? fields.email_address;
+  return typeof nested === "string" && nested.trim() ? nested.trim() : undefined;
+}
+
 function persist(customer: Sep12Customer): void {
   const rows = readJsonArray(STORE).filter(
     (row) => readString(row, "account") !== customer.account,
@@ -157,4 +180,33 @@ export async function verifySep12Customer(input: {
       email: "Merchant email on lomi.",
     },
   };
+}
+
+/**
+ * Callback PUT. On testnet, account + email persists ACCEPTED so Freighter
+ * can finish SEP-12 without a lomi. merchant-verify URL.
+ */
+export async function upsertSep12Customer(input: {
+  account?: string;
+  type?: string;
+  email?: string;
+}): Promise<Sep12Customer> {
+  const existing = await verifySep12Customer({
+    account: input.account,
+    type: input.type,
+  });
+  if (existing.status === "ACCEPTED") return existing;
+  const email = input.email?.trim() ?? "";
+  if (!isTestnetKyc() || !existing.account || !looksLikeEmail(email)) {
+    return existing;
+  }
+  const accepted: Sep12Customer = {
+    id: existing.account,
+    account: existing.account,
+    status: "ACCEPTED",
+    message: "Sandbox KYC for SEP-24. No live merchant verification.",
+    type: existing.type,
+  };
+  persist(accepted);
+  return accepted;
 }

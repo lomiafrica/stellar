@@ -3,7 +3,11 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { dispatchLastMile, listLastMileCredits } from "../src/anchor/last-mile.js";
+import {
+  dispatchLastMile,
+  getLastMileCredit,
+  listLastMileCredits,
+} from "../src/anchor/last-mile.js";
 
 test("dispatchLastMile keeps Wave / MTN / SPI shape", () => {
   process.env.STELLAR_DATA_DIR = mkdtempSync(join(tmpdir(), "stellar-lm-"));
@@ -28,4 +32,7 @@ test("dispatchLastMile keeps Wave / MTN / SPI shape", () => {
   assert.equal(mtn.rail, "mtn");
   assert.equal(mtn.kind, "deposit");
   assert.equal(listLastMileCredits("p1").length, 1);
+  const credit = getLastMileCredit("p1");
+  assert.equal(credit?.rail, "wave");
+  assert.equal(credit?.status, "sandbox");
 });

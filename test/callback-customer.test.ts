@@ -4,6 +4,7 @@ import {
   callbackAuthOk,
   toCallbackCustomer,
 } from "../src/anchor/callback-customer.js";
+import { readSep12PutEmail } from "../src/anchor/merchant-verify.js";
 
 test("toCallbackCustomer nests NEEDS_INFO fields for the platform callback API", () => {
   const body = toCallbackCustomer({
@@ -29,6 +30,19 @@ test("toCallbackCustomer omits fields when ACCEPTED", () => {
   });
   assert.equal(body.status, "ACCEPTED");
   assert.equal(body.fields, undefined);
+});
+
+test("readSep12PutEmail reads email, email_address, or fields.email", () => {
+  assert.equal(readSep12PutEmail({ email: "a@b.test" }), "a@b.test");
+  assert.equal(
+    readSep12PutEmail({ email_address: "c@d.test" }),
+    "c@d.test",
+  );
+  assert.equal(
+    readSep12PutEmail({ fields: { email: "e@f.test" } }),
+    "e@f.test",
+  );
+  assert.equal(readSep12PutEmail({}), undefined);
 });
 
 test("callbackAuthOk accepts X-Api-Key or Bearer when secret is set", () => {

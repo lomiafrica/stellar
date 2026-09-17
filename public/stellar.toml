@@ -22,3 +22,14 @@ is_asset_anchored = true
 anchor_asset_type = "fiat"
 anchor_asset = "XOF"
 status = "test"
+
+[[CURRENCIES]]
+code = "USDC"
+issuer = "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5"
+display_decimals = 2
+name = "USD Coin"
+desc = "Circle USDC on Stellar Testnet. Freighter/LOBSTR SEP-24 deposit and withdraw. Last mile is Wave/MTN/SPI sandbox."
+is_asset_anchored = true
+anchor_asset_type = "fiat"
+anchor_asset = "USD"
+status = "test"

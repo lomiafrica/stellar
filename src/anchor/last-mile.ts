@@ -23,8 +23,10 @@ export interface LastMileResult {
 }
 
 const STORE = "last-mile.json";
+const memory = new Map<string, LastMileResult>();
 
 function persist(result: LastMileResult): void {
+  memory.set(result.payoutId, result);
   const rows = readJsonArray(STORE);
   const next: JsonObject = {
     rail: result.rail,
@@ -44,6 +46,29 @@ export function listLastMileCredits(payoutId?: string): JsonObject[] {
   const rows = readJsonArray(STORE);
   if (!payoutId) return rows;
   return rows.filter((row) => readString(row, "payout_id") === payoutId);
+}
+
+/** Latest sandbox credit for a SEP-24 / last-mile id (memory, then file). */
+export function getLastMileCredit(
+  payoutId: string,
+): LastMileResult | undefined {
+  const hit = memory.get(payoutId);
+  if (hit) return hit;
+  const rows = listLastMileCredits(payoutId);
+  const row = rows[rows.length - 1];
+  if (!row) return undefined;
+  const rail = readString(row, "rail");
+  const kind = readString(row, "kind");
+  return {
+    rail: rail === "mtn" || rail === "spi" ? rail : "wave",
+    amountXof: readString(row, "amount_xof") ?? "",
+    phone: readString(row, "phone") ?? "",
+    payoutId: readString(row, "payout_id") ?? payoutId,
+    kind: kind === "deposit" ? "deposit" : "withdraw",
+    status: "sandbox",
+    message: readString(row, "message") ?? "",
+    createdAt: readString(row, "created_at") ?? "",
+  };
 }
 
 export function dispatchLastMile(input: LastMileRequest): LastMileResult {

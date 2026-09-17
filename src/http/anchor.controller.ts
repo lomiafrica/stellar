@@ -5,13 +5,17 @@ import {
   Get,
   Header,
   Headers,
+  NotFoundException,
   Param,
   Post,
   Put,
   Query,
+  Req,
+  Res,
   UnauthorizedException,
 } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
+import type { Request, Response } from "express";
 import { PUBLIC_BASE_URL } from "../config.js";
 import {
   callbackAuthOk,
@@ -22,9 +26,18 @@ import {
   readJwtString,
   verifyHs256Jwt,
 } from "../anchor/jwt.js";
-import { dispatchLastMile, type LastMileRail } from "../anchor/last-mile.js";
-import { verifySep12Customer } from "../anchor/merchant-verify.js";
+import {
+  dispatchLastMile,
+  getLastMileCredit,
+  type LastMileRail,
+} from "../anchor/last-mile.js";
+import {
+  readSep12PutEmail,
+  upsertSep12Customer,
+  verifySep12Customer,
+} from "../anchor/merchant-verify.js";
 import { patchPlatformTransaction } from "../anchor/platform-patch.js";
+import { renderSep24CreditReceipt } from "../anchor/sep24-receipt.js";
 import { createSep6Transfer } from "../anchor/sep6.js";
 import { recordSep31Inbound } from "../anchor/sep31.js";
 import {
@@ -39,6 +52,11 @@ function sep24JwtSecret(): string {
     process.env.SECRET_SEP24_INTERACTIVE_URL_JWT_SECRET?.trim() ??
     ""
   );
+}
+
+function wantsJson(req: Request): boolean {
+  const type = String(req.headers["content-type"] ?? "");
+  return type.includes("application/json");
 }
 
 function decodeSep24Token(token?: string): {
@@ -109,14 +127,18 @@ export class AnchorController {
       account?: string;
       id?: string;
       type?: string;
+      email?: string;
+      email_address?: string;
+      fields?: Record<string, unknown>;
     },
   ) {
     if (!callbackAuthOk(apiKey, authorization)) {
       throw new UnauthorizedException("Callback API key required");
     }
-    const customer = await verifySep12Customer({
+    const customer = await upsertSep12Customer({
       account: body.account ?? body.id,
       type: body.type ?? "sep24",
+      email: readSep12PutEmail(body),
     });
     return toCallbackCustomer(customer);
   }
@@ -138,6 +160,16 @@ export class AnchorController {
   @Get("sep12/customer")
   async sep12Get(@Query("account") account?: string) {
     return verifySep12Customer({ account, type: "sep24" });
+  }
+
+  @Get("sep24/credit/:id")
+  sep24Credit(@Param("id") id: string) {
+    const safeId = id.replace(/[^\w-]/g, "");
+    const credit = getLastMileCredit(safeId);
+    if (!credit) {
+      throw new NotFoundException("Sandbox credit not found");
+    }
+    return credit;
   }
 
   @Get("sep24/:kind")
@@ -211,6 +243,8 @@ export class AnchorController {
 
   @Post("sep24/:kind")
   async sep24Complete(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
     @Param("kind") kind: string,
     @Body()
     body: {
@@ -245,13 +279,17 @@ export class AnchorController {
         message: lastMile.message,
       });
     }
-    return {
-      id: payoutId,
-      status: "pending_user_transfer_start",
-      kind: lastMile.kind,
-      last_mile: lastMile,
-      platform,
-    };
+    if (wantsJson(req)) {
+      return {
+        id: payoutId,
+        status: lastMile.status,
+        kind: lastMile.kind,
+        last_mile: lastMile,
+        platform,
+      };
+    }
+    res.type("html");
+    return renderSep24CreditReceipt(lastMile);
   }
 
   @Post("sep6/:kind")
