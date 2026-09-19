@@ -2,6 +2,12 @@ import { Keypair } from "@stellar/stellar-sdk";
 import "../src/env.js";
 import { PUBLIC_BASE_URL } from "../src/config.js";
 import { findByPayoutId, readLedger } from "../src/ledger/store.js";
+import {
+  isJsonObject,
+  parseJson,
+  type JsonObject,
+  type JsonValue,
+} from "../src/json.js";
 
 function argValue(flag: string): string | undefined {
   const prefixed = process.argv.find((arg) => arg.startsWith(`${flag}=`));
@@ -17,10 +23,14 @@ const allowEmptySigning = process.argv.includes("--allow-empty-signing");
 const payoutIdArg = argValue("--payout-id");
 const labKey = process.env.LAB_API_KEY?.trim() ?? "";
 
-function mutatingHeaders(
-  extra: Record<string, string> = {},
-): Record<string, string> {
-  const headers: Record<string, string> = { ...extra };
+type ReplayHeaderMap = {
+  "Content-Type"?: string;
+  "X-Lab-Key"?: string;
+  "Idempotency-Key"?: string;
+};
+
+function mutatingHeaders(extra: ReplayHeaderMap = {}): ReplayHeaderMap {
+  const headers: ReplayHeaderMap = { ...extra };
   if (labKey) headers["X-Lab-Key"] = labKey;
   return headers;
 }
@@ -43,24 +53,27 @@ async function readBody(
   return { status: response.status, text: await response.text() };
 }
 
+type ReplayJsonResult = {
+  status: number;
+  body: JsonValue;
+};
+
 async function readJson(
   path: string,
   init?: RequestInit,
-): Promise<{ status: number; body: unknown }> {
+): Promise<ReplayJsonResult> {
   const { status, text } = await readBody(path, init);
-  let body: unknown = text;
+  let body: JsonValue = text;
   try {
-    body = JSON.parse(text) as unknown;
+    body = parseJson(text);
   } catch {
     body = { raw: text };
   }
   return { status, body };
 }
 
-function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
+function asRecord(value: JsonValue): JsonObject {
+  return isJsonObject(value) ? value : {};
 }
 
 async function main() {

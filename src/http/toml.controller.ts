@@ -7,10 +7,12 @@ import { readStoredKeys } from "../stellar/keys.js";
 import { readTestnetProof } from "../testnet-proof.js";
 import { renderStellarToml } from "./stellar-toml.js";
 
+type HealthResponse = { ok: true };
+
 @Controller()
 export class TomlController {
   @Get("health")
-  health(): { ok: true } {
+  health(): HealthResponse {
     return { ok: true };
   }
 

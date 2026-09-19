@@ -12,7 +12,11 @@ export async function patchPlatformTransaction(input: {
     return { ok: false, detail: "PLATFORM_API_URL unset" };
   }
   const secret = process.env.CALLBACK_AUTH_SECRET?.trim() ?? "";
-  const headers: Record<string, string> = {
+  type PlatformPatchHeaders = {
+    "Content-Type": string;
+    "X-Api-Key"?: string;
+  };
+  const headers: PlatformPatchHeaders = {
     "Content-Type": "application/json",
   };
   if (secret) headers["X-Api-Key"] = secret;

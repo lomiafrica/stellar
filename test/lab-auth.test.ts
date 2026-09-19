@@ -10,6 +10,14 @@ import {
   secretsEqual,
 } from "../src/http/lab-auth.js";
 
+function isServiceUnavailable(error: Error): boolean {
+  return error instanceof ServiceUnavailableException;
+}
+
+function isUnauthorized(error: Error): boolean {
+  return error instanceof UnauthorizedException;
+}
+
 test("isPublicDeploy is false for localhost", () => {
   assert.equal(isPublicDeploy("http://localhost:3456", "development"), false);
   assert.equal(isPublicDeploy("http://127.0.0.1:3456", "production"), false);
@@ -35,10 +43,7 @@ test("assertLabMutatingAuth is 503 when the public lab has no key", () => {
   process.env.NODE_ENV = "production";
   delete process.env.LAB_API_KEY;
   try {
-    assert.throws(
-      () => assertLabMutatingAuth(),
-      (err: unknown) => err instanceof ServiceUnavailableException,
-    );
+    assert.throws(() => assertLabMutatingAuth(), isServiceUnavailable);
   } finally {
     if (previousUrl === undefined) delete process.env.PUBLIC_BASE_URL;
     else process.env.PUBLIC_BASE_URL = previousUrl;
@@ -53,10 +58,7 @@ test("assertLabMutatingAuth is 401 on a bad key", () => {
   const previousKey = process.env.LAB_API_KEY;
   process.env.LAB_API_KEY = "expected-lab-key";
   try {
-    assert.throws(
-      () => assertLabMutatingAuth("wrong"),
-      (err: unknown) => err instanceof UnauthorizedException,
-    );
+    assert.throws(() => assertLabMutatingAuth("wrong"), isUnauthorized);
     assert.doesNotThrow(() => assertLabMutatingAuth("expected-lab-key"));
   } finally {
     if (previousKey === undefined) delete process.env.LAB_API_KEY;

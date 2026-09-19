@@ -4,7 +4,16 @@ import test from "node:test";
 import { Keypair } from "@stellar/stellar-sdk";
 import "../../src/env.js";
 import { explorerTx, STELLAR_USDC_ISSUER } from "../../src/config.js";
-import { amountsFromHorizonBalances } from "../../src/cli/balances.js";
+import {
+  amountsFromHorizonBalances,
+  type HorizonBalanceLine,
+} from "../../src/cli/balances.js";
+import {
+  isJsonObject,
+  readString,
+  type JsonObject,
+  type JsonValue,
+} from "../../src/json.js";
 import { sendUsdcPayment } from "../../src/stellar/payment.js";
 import { LocalKeypairSigner } from "../../src/stellar/signer.js";
 import { stellarMemoFromPayoutId } from "../../src/stellar/memo.js";
@@ -24,13 +33,36 @@ const AMOUNT = process.env.LIVE_USDC_AMOUNT?.trim() || "1";
 const OMNIBUS_XLM_FLOOR = 20;
 const MERCHANT_XLM_FLOOR = 2;
 
-interface HorizonAccount {
-  balances?: Array<{
-    asset_type: string;
-    balance: string;
-    asset_code?: string;
-    asset_issuer?: string;
-  }>;
+function parseHorizonBalances(value: JsonValue): HorizonBalanceLine[] {
+  if (!isJsonObject(value)) return [];
+  const balances = value.balances;
+  if (!Array.isArray(balances)) return [];
+  const lines: HorizonBalanceLine[] = [];
+  for (const row of balances) {
+    if (!isJsonObject(row)) continue;
+    const assetType = readString(row, "asset_type");
+    const balance = readString(row, "balance");
+    if (!assetType || !balance) continue;
+    const line: HorizonBalanceLine = {
+      asset_type: assetType,
+      balance,
+    };
+    const code = readString(row, "asset_code");
+    const issuer = readString(row, "asset_issuer");
+    if (code) line.asset_code = code;
+    if (issuer) line.asset_issuer = issuer;
+    lines.push(line);
+  }
+  return lines;
+}
+
+function readEmbeddedRecords(value: JsonValue): JsonObject[] {
+  if (!isJsonObject(value)) return [];
+  const embedded = value._embedded;
+  if (!isJsonObject(embedded)) return [];
+  const records = embedded.records;
+  if (!Array.isArray(records)) return [];
+  return records.filter(isJsonObject);
 }
 
 async function account(publicKey: string) {
@@ -38,12 +70,7 @@ async function account(publicKey: string) {
     `${horizonUrl()}/accounts/${publicKey}`,
   );
   assert.equal(status, 200, `Horizon account ${publicKey} HTTP ${status}`);
-  const amounts = amountsFromHorizonBalances(
-    ((body as HorizonAccount).balances ?? []) as Parameters<
-      typeof amountsFromHorizonBalances
-    >[0],
-  );
-  return amounts;
+  return amountsFromHorizonBalances(parseHorizonBalances(body));
 }
 
 test("T1.2 live payout round trip: one chain payment, recycle, zero net USDC", async () => {
@@ -114,12 +141,8 @@ test("T1.2 live payout round trip: one chain payment, recycle, zero net USDC", a
   const payments = await fetchJson(
     `${horizonUrl()}/transactions/${hash}/payments`,
   );
-  const records =
-    (asRecord(payments.body)._embedded as { records?: unknown[] } | undefined)
-      ?.records ?? [];
-  const payment = records
-    .map((row) => asRecord(row))
-    .find((row) => row.type === "payment");
+  const records = readEmbeddedRecords(payments.body);
+  const payment = records.find((row) => row.type === "payment");
   assert.ok(payment, "expected a payment operation");
   assert.equal(payment.asset_code, "USDC");
   assert.equal(payment.asset_issuer, TESTNET_USDC_ISSUER);
@@ -150,12 +173,8 @@ test("T1.2 live payout round trip: one chain payment, recycle, zero net USDC", a
   const history = await fetchJson(
     `${horizonUrl()}/accounts/${OMNIBUS_PUBLIC}/transactions?order=desc&limit=50`,
   );
-  const txs =
-    (asRecord(history.body)._embedded as { records?: unknown[] } | undefined)
-      ?.records ?? [];
-  const matching = txs
-    .map((row) => asRecord(row))
-    .filter((row) => row.memo === memo);
+  const txs = readEmbeddedRecords(history.body);
+  const matching = txs.filter((row) => row.memo === memo);
   assert.equal(
     matching.length,
     1,

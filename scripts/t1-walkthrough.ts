@@ -2,6 +2,11 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import "../src/env.js";
+import { parseJson, type JsonValue } from "../src/json.js";
+
+function isString<Value>(value: Value): value is Value & string {
+  return typeof value === "string";
+}
 
 const LAB =
   process.env.T1_LAB_URL?.replace(/\/$/, "") ??
@@ -26,25 +31,29 @@ async function fetchText(
   return { status: response.status, text: await response.text() };
 }
 
+type WalkthroughJsonResult = {
+  status: number;
+  body: JsonValue;
+};
+
 async function fetchJson(
   url: string,
   init?: RequestInit,
-): Promise<{ status: number; body: unknown }> {
+): Promise<WalkthroughJsonResult> {
   const response = await fetch(url, init);
   const text = await response.text();
-  let body: unknown = text;
+  let body: JsonValue = text;
   try {
-    body = JSON.parse(text) as unknown;
+    body = parseJson(text);
   } catch {
     body = { raw: text.slice(0, 800) };
   }
   return { status: response.status, body };
 }
 
-function writeLog(name: string, value: unknown): void {
+function writeLog(name: string, value: JsonValue): void {
   const path = join(logDir, name);
-  const text =
-    typeof value === "string" ? value : `${JSON.stringify(value, null, 2)}\n`;
+  const text = isString(value) ? value : `${JSON.stringify(value, null, 2)}\n`;
   writeFileSync(path, text.endsWith("\n") ? text : `${text}\n`);
   console.log(`wrote ${name}`);
 }
@@ -98,7 +107,7 @@ async function main(): Promise<void> {
     status: challenge.status,
     body: (() => {
       try {
-        return JSON.parse(challenge.text) as unknown;
+        return parseJson(challenge.text);
       } catch {
         return { raw: challenge.text.slice(0, 800) };
       }

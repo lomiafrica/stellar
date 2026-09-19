@@ -1,4 +1,10 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import {
+  isJsonObject,
+  parseJson,
+  readString,
+  type JsonObject,
+} from "../json.js";
 
 /**
  * Verify a compact HS256 JWT. Returns the payload object or null.
@@ -6,7 +12,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 export function verifyHs256Jwt(
   token: string,
   secret: string,
-): Record<string, unknown> | null {
+): JsonObject | null {
   const parts = token.split(".");
   if (parts.length !== 3 || !secret) return null;
   const [header, payload, signature] = parts;
@@ -20,31 +26,27 @@ export function verifyHs256Jwt(
   }
   try {
     const json = Buffer.from(payload, "base64url").toString("utf8");
-    const parsed: unknown = JSON.parse(json);
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return null;
-    }
-    return parsed as Record<string, unknown>;
+    const parsed = parseJson(json);
+    return isJsonObject(parsed) ? parsed : null;
   } catch {
     return null;
   }
 }
 
 export function readJwtString(
-  payload: Record<string, unknown>,
+  payload: JsonObject,
   key: string,
 ): string | undefined {
-  const value = payload[key];
-  return typeof value === "string" && value.length > 0 ? value : undefined;
+  const value = readString(payload, key);
+  return value && value.length > 0 ? value : undefined;
 }
 
 export function readJwtDataString(
-  payload: Record<string, unknown>,
+  payload: JsonObject,
   key: string,
 ): string | undefined {
   const data = payload.data;
-  if (!data || typeof data !== "object" || Array.isArray(data))
-    return undefined;
-  const value = (data as Record<string, unknown>)[key];
-  return typeof value === "string" && value.length > 0 ? value : undefined;
+  if (!isJsonObject(data)) return undefined;
+  const value = readString(data, key);
+  return value && value.length > 0 ? value : undefined;
 }

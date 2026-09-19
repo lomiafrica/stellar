@@ -6,8 +6,9 @@ import {
   readJwtString,
   verifyHs256Jwt,
 } from "../src/anchor/jwt.js";
+import type { JsonObject } from "../src/json.js";
 
-function sign(payload: Record<string, unknown>, secret: string): string {
+function sign(payload: JsonObject, secret: string): string {
   const header = Buffer.from(
     JSON.stringify({ alg: "HS256", typ: "JWT" }),
   ).toString("base64url");

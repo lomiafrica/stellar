@@ -18,6 +18,14 @@ import { MockBridgeAdapter } from "../src/bridge/adapter.js";
 import { SettleNotReadyError } from "../src/operator/ready.js";
 import { stellarMemoFromPayoutId } from "../src/stellar/memo.js";
 
+function isUnderfundedNotReady(error: Error): boolean {
+  return error instanceof SettleNotReadyError && error.reason === "underfunded";
+}
+
+function isPerPayoutCap(error: Error): boolean {
+  return error instanceof PayoutCapError && error.reason === "per_payout";
+}
+
 function isolate(): void {
   process.env.STELLAR_DATA_DIR = mkdtempSync(join(tmpdir(), "stellar-payout-"));
 }
@@ -178,8 +186,7 @@ test("runSettlementDemo does not pay when not ready", async () => {
           },
         }),
       ),
-    (err: unknown) =>
-      err instanceof SettleNotReadyError && err.reason === "underfunded",
+    isUnderfundedNotReady,
   );
   assert.equal(sends.length, 0);
 });
@@ -219,11 +226,7 @@ test("per-payout cap rejects oversized USDC", () => {
   const previous = process.env.LAB_MAX_USDC_PER_PAYOUT;
   process.env.LAB_MAX_USDC_PER_PAYOUT = "5";
   try {
-    assert.throws(
-      () => assertUsdcCaps(10),
-      (err: unknown) =>
-        err instanceof PayoutCapError && err.reason === "per_payout",
-    );
+    assert.throws(() => assertUsdcCaps(10), isPerPayoutCap);
   } finally {
     if (previous === undefined) delete process.env.LAB_MAX_USDC_PER_PAYOUT;
     else process.env.LAB_MAX_USDC_PER_PAYOUT = previous;

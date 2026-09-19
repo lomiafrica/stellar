@@ -28,12 +28,15 @@ export function toCallbackCustomer(customer: Sep12Customer): CallbackCustomer {
           ]),
         )
       : undefined;
-  return {
+  const customerOut: CallbackCustomer = {
     id: customer.id,
     status: customer.status,
     message: customer.message,
-    ...(fields && Object.keys(fields).length > 0 ? { fields } : {}),
   };
+  if (fields && Object.keys(fields).length > 0) {
+    customerOut.fields = fields;
+  }
+  return customerOut;
 }
 
 function secretsEqual(given: string, expected: string): boolean {

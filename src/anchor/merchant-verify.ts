@@ -59,20 +59,21 @@ function looksLikeEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-/** Read email from a SEP-12 / Callback API PUT body. */
-export function readSep12PutEmail(body: {
+export type Sep12PutBody = {
   email?: string;
   email_address?: string;
-  fields?: Record<string, unknown>;
-}): string | undefined {
+  fields?: JsonObject;
+};
+
+/** Read email from a SEP-12 / Callback API PUT body. */
+export function readSep12PutEmail(body: Sep12PutBody): string | undefined {
   const direct = body.email?.trim() || body.email_address?.trim();
   if (direct) return direct;
   const fields = body.fields;
-  if (!fields || typeof fields !== "object") return undefined;
-  const nested = fields.email ?? fields.email_address;
-  return typeof nested === "string" && nested.trim()
-    ? nested.trim()
-    : undefined;
+  if (!fields || !isJsonObject(fields)) return undefined;
+  const nested =
+    readString(fields, "email") ?? readString(fields, "email_address");
+  return nested?.trim() ? nested.trim() : undefined;
 }
 
 function persist(customer: Sep12Customer): void {

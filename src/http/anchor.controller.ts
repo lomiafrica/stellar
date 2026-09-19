@@ -36,6 +36,7 @@ import {
   readSep12PutEmail,
   upsertSep12Customer,
   verifySep12Customer,
+  type Sep12PutBody,
 } from "../anchor/merchant-verify.js";
 import { patchPlatformTransaction } from "../anchor/platform-patch.js";
 import {
@@ -67,11 +68,13 @@ function wantsJson(req: Request): boolean {
   return type.includes("application/json");
 }
 
-function decodeSep24Token(token?: string): {
+type Sep24TokenClaims = {
   account?: string;
   transactionId?: string;
   amount?: string;
-} {
+};
+
+function decodeSep24Token(token?: string): Sep24TokenClaims {
   const secret = sep24JwtSecret();
   if (!token || !secret) return {};
   const payload = verifyHs256Jwt(token, secret);
@@ -150,13 +153,10 @@ export class AnchorController {
     @Headers("x-api-key") apiKey: string | undefined,
     @Headers("authorization") authorization: string | undefined,
     @Body()
-    body: {
+    body: Sep12PutBody & {
       account?: string;
       id?: string;
       type?: string;
-      email?: string;
-      email_address?: string;
-      fields?: Record<string, unknown>;
     },
   ) {
     if (!callbackAuthOk(apiKey, authorization)) {

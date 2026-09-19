@@ -1,21 +1,25 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  isJsonObject,
+  parseJson,
+  type JsonObject,
+  type JsonValue,
+} from "../../src/json.js";
 
 const PATH = join(process.cwd(), "live-proof.json");
 
-function readProof(): Record<string, unknown> {
+function readProof(): JsonObject {
   if (!existsSync(PATH)) return {};
   try {
-    const parsed = JSON.parse(readFileSync(PATH, "utf8")) as unknown;
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : {};
+    const parsed = parseJson(readFileSync(PATH, "utf8"));
+    return isJsonObject(parsed) ? parsed : {};
   } catch {
     return {};
   }
 }
 
-export function recordLiveProof(patch: Record<string, unknown>): void {
+export function recordLiveProof(patch: JsonObject): void {
   const proof = {
     ...readProof(),
     ...patch,
@@ -35,10 +39,14 @@ export function liveLabUrl(): string {
   );
 }
 
-export function labHeaders(
-  extra: Record<string, string> = {},
-): Record<string, string> {
-  const headers: Record<string, string> = { ...extra };
+type LabHeaderMap = {
+  "Content-Type"?: string;
+  "X-Lab-Key"?: string;
+  "Idempotency-Key"?: string;
+};
+
+export function labHeaders(extra: LabHeaderMap = {}): LabHeaderMap {
+  const headers: LabHeaderMap = { ...extra };
   const key = liveLabKey();
   if (key) headers["X-Lab-Key"] = key;
   return headers;
@@ -65,23 +73,27 @@ export const MERCHANT_PUBLIC =
 export const TESTNET_USDC_ISSUER =
   "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5";
 
+type FetchJsonResult = {
+  status: number;
+  body: JsonValue;
+  text: string;
+};
+
 export async function fetchJson(
   url: string,
   init?: RequestInit,
-): Promise<{ status: number; body: unknown; text: string }> {
+): Promise<FetchJsonResult> {
   const response = await fetch(url, init);
   const text = await response.text();
-  let body: unknown = text;
+  let body: JsonValue = text;
   try {
-    body = JSON.parse(text) as unknown;
+    body = parseJson(text);
   } catch {
     body = { raw: text.slice(0, 2000) };
   }
   return { status: response.status, body, text };
 }
 
-export function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
+export function asRecord(value: JsonValue): JsonObject {
+  return isJsonObject(value) ? value : {};
 }

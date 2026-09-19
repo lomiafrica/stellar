@@ -16,8 +16,8 @@ export const options = {
 export default function stellarPayouts() {
   const mutatingHeaders = {
     "Content-Type": "application/json",
-    ...(LAB_KEY ? { "X-Lab-Key": LAB_KEY } : {}),
   };
+  if (LAB_KEY) mutatingHeaders["X-Lab-Key"] = LAB_KEY;
   const toml = http.get(`${BASE}/.well-known/stellar.toml`);
   check(toml, {
     "toml 200": (res) => res.status === 200,

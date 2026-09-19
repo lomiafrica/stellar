@@ -19,24 +19,24 @@ import {
   stellarMemoFromPayoutId,
 } from "../stellar/memo.js";
 
-const LAST_MILE: Record<LastMileRail, string> = {
+const LAST_MILE = {
   wave: "Wave Mobile Money",
   mtn: "MTN Mobile Money",
   spi: "SPI",
   bank: "Bank",
-};
+} as const satisfies Record<LastMileRail, string>;
 
-const DESTINATION: Record<PayoutDestination, string> = {
+const DESTINATION = {
   self: "Self",
   beneficiary: "Beneficiary",
-};
+} as const satisfies Record<PayoutDestination, string>;
 
-const STATUS: Record<PayoutStatus, string> = {
+const STATUS = {
   pending: "Pending",
   processing: "Processing",
   completed: "Completed",
   failed: "Failed",
-};
+} as const satisfies Record<PayoutStatus, string>;
 
 function humanLastMile(rail: LastMileRail): string {
   return LAST_MILE[rail] ?? titleCase(rail);

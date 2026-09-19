@@ -3,7 +3,14 @@ const MAX_MUTATING = 60;
 
 const hits = new Map<string, number[]>();
 
-export function securityHeaders(): Record<string, string> {
+type SecurityHeaderMap = {
+  "X-Content-Type-Options": string;
+  "X-Frame-Options": string;
+  "Referrer-Policy": string;
+  "Content-Security-Policy": string;
+};
+
+export function securityHeaders(): SecurityHeaderMap {
   return {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",

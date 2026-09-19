@@ -412,16 +412,26 @@ export async function createStellarPayout(
   };
 }
 
-export function notReadyBody(err: {
+type NotReadyHint = {
+  faucet?: string;
+  publicKey?: string;
+  next?: string;
+};
+
+type NotReadyError = {
   message: string;
   reason: string;
-  hint: { faucet?: string; publicKey?: string; next?: string };
-}): {
+  hint: NotReadyHint;
+};
+
+type NotReadyBody = {
   success: false;
   message: string;
   reason: string;
-  hint: { faucet?: string; publicKey?: string; next?: string };
-} {
+  hint: NotReadyHint;
+};
+
+export function notReadyBody(err: NotReadyError): NotReadyBody {
   return {
     success: false,
     message: err.message,

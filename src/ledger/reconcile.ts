@@ -6,6 +6,15 @@ import {
   findByTxHash,
   type StellarSettlementRecord,
 } from "./store.js";
+import { isJsonObject } from "../json.js";
+
+function isString<Value>(value: Value): value is Value & string {
+  return typeof value === "string";
+}
+
+function hasPaymentAmount<Row>(row: Row): row is Row & { amount: string } {
+  return isJsonObject(row) && isString(row.amount);
+}
 
 export interface ReconcileResult {
   ok: boolean;
@@ -186,10 +195,8 @@ export async function reconcileThreeWay(
       const tx = await horizon.transactions().transaction(hash).call();
       if (tx.memo_type === "text" && tx.memo) chainMemo = tx.memo;
       const ops = await horizon.payments().forTransaction(hash).call();
-      const payment = ops.records.find(
-        (row) => "amount" in row && typeof row.amount === "string",
-      );
-      if (payment && "amount" in payment) {
+      const payment = ops.records.find(hasPaymentAmount);
+      if (payment) {
         chainAmount = payment.amount;
       }
     } catch {

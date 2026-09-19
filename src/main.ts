@@ -23,7 +23,12 @@ async function bootstrap() {
     json({
       limit: "32kb",
       verify: (req: Request, _res, buf) => {
-        (req as Request & { rawBody?: Buffer }).rawBody = buf;
+        Object.defineProperty(req, "rawBody", {
+          value: buf,
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        });
       },
     }),
   );
