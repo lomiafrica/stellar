@@ -3,10 +3,7 @@ import { loadAccountBalances } from "../cli/balances.js";
 import { loadKeypair, readStoredKeys } from "../stellar/keys.js";
 
 export type SettleNotReadyReason =
-  | "no_keys"
-  | "no_account"
-  | "no_trustline"
-  | "underfunded";
+  "no_keys" | "no_account" | "no_trustline" | "underfunded";
 
 export class SettleNotReadyError extends Error {
   readonly code = "SETTLE_NOT_READY";
