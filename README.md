@@ -4,28 +4,30 @@ Testnet lab from [lomi.](https://lomi.africa) for custodial USDC settlement on S
 
 lomi. is a payment processor for francophone West Africa. Merchants collect XOF over Wave, MTN, cards, and bank rails. This repo is a standalone NestJS app that tries the correspondent-banking hop as Circle USDC on Stellar Testnet: omnibus account, memo-keyed `Payment`, local ledger, payout-shaped HTTP.
 
-It is not wired to lomi. live systems. Merchants never hold keys. We do not issue a stablecoin.
+It is not wired to live merchant processing. Merchants never hold keys. We do not issue a stablecoin.
 
 **Architecture:** [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)  
 **Payout mapping:** [docs/LOMI-INTEGRATION-CONTRACT.md](./docs/LOMI-INTEGRATION-CONTRACT.md)  
 **Anchor:** [docs/ANCHOR.md](./docs/ANCHOR.md) · [docs/WALKTHROUGH.md](./docs/WALKTHROUGH.md)  
 **Adapter:** [docs/MIT-ADAPTER.md](./docs/MIT-ADAPTER.md)  
-**Hosting:** [docs/HOSTING.md](./docs/HOSTING.md) (standalone Railway project, not lomi.)
+**Hosting:** [docs/HOSTING.md](./docs/HOSTING.md) (standalone Railway project)
+
+Public GitHub repos are listed in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
 ## What is in here
 
 - Friendbot-funded testnet accounts and Circle testnet USDC trustlines
 - Omnibus to merchant USDC `Payment` with `memo` = payout id
 - Local JSON ledger (`data/`, gitignored) for reconcile
-- Nest demo on `:3456` shaped like `POST /payouts` with `rail: "stellar"`
+- Demo HTTP on `:3456` shaped like `POST /payouts` with `rail: "stellar"`
 - Mock Bridge treasury and mock last-mile (Wave / MTN / SPI)
 - SEP-1 `stellar.toml` at `/.well-known/stellar.toml` (set `PUBLIC_BASE_URL` / `HOME_DOMAIN` when hosted)
 - Official Anchor Platform under `anchor/` (SEP-10/12/24; SEP-6/38/31 callbacks in this app)
 - Sandbox last-mile adapters (Wave / MTN / SPI)
 
-Not in this repo: HSM/KMS, mainnet keys, or calls into `apps/api`. Anchor Platform is the official SDF image under `anchor/`.
+Not in this repo: HSM/KMS, mainnet keys, or the hosted payouts API. Anchor Platform is the official SDF image under `anchor/`.
 
-`pnpm install` does not need the lomi. monorepo.
+`pnpm install` does not need any other lomi. repository.
 
 ## Requirements
 
@@ -111,9 +113,9 @@ Committed public keys and explorer tx ids (no secrets): `data/testnet-proof.json
 
 - Custodial: demo keys stay on the operator machine.
 - Memo is the payout id, truncated to Stellar memo limits.
-- HTTP body matches lomi. `CreatePayoutDto` so a later `rail: "stellar"` can reuse the same shape.
+- HTTP body matches public `POST /payouts` so `rail: "stellar"` can reuse the same shape.
 - Bridge and last-mile adapters here are stubs.
-- Build order after KYC / kickoff: [docs/BUILD-PHASES.md](./docs/BUILD-PHASES.md). Anchor Platform config lives in this repo (`anchor/`). Real Bridge, HSM, and `POST /payouts` `rail: stellar` stay in the private API.
+- Build order after KYC / kickoff: [docs/BUILD-PHASES.md](./docs/BUILD-PHASES.md). Anchor Platform config lives in this repo (`anchor/`). Hosted `POST /payouts` with `rail: "stellar"` is not this lab.
 
 ## License
 

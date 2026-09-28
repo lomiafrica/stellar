@@ -1,14 +1,11 @@
 # Incident runbook
 
-Three-way reconcile: Postgres `stellar_settlements` vs Stellar RPC vs Bridge.
+Reconcile the lab JSON ledger against Stellar RPC (and the mock Bridge id when present).
 
 ## Daily
 
 ```bash
 pnpm reconcile
-# Private API (cron):
-curl -sS -X POST "$API_URL/internal/stellar/reconcile" \
-  -H "x-cron-secret: $CRON_SECRET"
 ```
 
 Load:
@@ -21,7 +18,7 @@ A clean window is 14 days of matching hashes, no extra ledger credit on duplicat
 
 ## If a hop is missing on chain
 
-1. Look up `payout_id` in the local ledger or `get_stellar_settlement`.
+1. Look up `payout_id` in `data/stellar_settlements.json`.
 2. Horizon: memo must equal the first 28 chars of `payout_id`.
 3. Do not replay with a new memo. Reuse `payout_id` (idempotent).
 4. If Bridge completed but Stellar did not, do not credit last mile.

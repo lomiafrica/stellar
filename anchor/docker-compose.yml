@@ -1,5 +1,5 @@
-# Official Anchor Platform next to the lab. Not inside apps/api.
-# From apps/tools/stellar: docker compose -f anchor/docker-compose.yml up
+# Official Anchor Platform next to the lab.
+# docker compose -f anchor/docker-compose.yml up
 # SEP10_SIGNING_SEED must come from the environment. Never commit a dummy seed.
 services:
   lab:

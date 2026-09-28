@@ -1,16 +1,16 @@
 # Host the lab
 
-The Nest lab serves SEP-1 at `/.well-known/stellar.toml`. Anchor Platform is a second container (`stellar/anchor-platform:4.8.0`) with SEP-10, SEP-12, and SEP-24.
+This lab serves SEP-1 at `/.well-known/stellar.toml`. Anchor Platform is a second container (`stellar/anchor-platform:4.8.0`) with SEP-10, SEP-12, and SEP-24.
 
-This lab lives on its own Railway project named **Stellar**. Nest hops via `POST {STELLAR_LAB_URL}/demo/payouts` when `STELLAR_LAB_URL` is set on sandbox and live API (Test-only until `STELLAR_RAIL_ALLOW_LIVE=1`).
+This lab lives on its own Railway project named **Stellar**. Mutating demo routes require `X-Lab-Key` when the lab is hosted.
 
 ## Railway (standalone project)
 
-1. Private project **Stellar** in the same workspace as the other products.
+1. Private Railway project **Stellar**.
 2. Service **lab** from `lomiafrica/stellar` (`main`), Dockerfile at repo root.
 3. Health check: `/health` (SEP-1 remains `/.well-known/stellar.toml`).
 4. Generate a `*.up.railway.app` domain. Do not wait on `stellar.lomi.africa`.
-5. Lab env only (no lomi. `SUPABASE_*`, live Stripe, or Wave keys; leave `LOMI_MERCHANT_VERIFY_URL` empty):
+5. Lab env only (no production payment-processor secrets; leave `LOMI_MERCHANT_VERIFY_URL` empty):
 
 ```
 PORT=3456
@@ -54,4 +54,4 @@ SECRET_SEP24_MORE_INFO_URL_JWT_SECRET=<same as interactive JWT secret>
 
 Lab `WEB_AUTH_ENDPOINT=https://<anchor-host>/auth` so SEP-1 points wallets at SEP-10. Toml `TRANSFER_SERVER_SEP0024` / `KYC_SERVER` point at the Anchor host `/sep24` and `/sep12`.
 
-Nest: sandbox `STELLAR_LAB_URL` + `STELLAR_LAB_KEY` + `STELLAR_RAIL_ORGANIZATION_IDS=*`. Live Nest: same lab URL and lab key, one org UUID, no `STELLAR_RAIL_ALLOW_LIVE`. Mutating lab routes (`POST /demo/payouts`, `POST /demo/settle`, `POST /mock/bridge/fund`) require `X-Lab-Key` when `PUBLIC_BASE_URL` is not localhost. If `LAB_API_KEY` is unset on the public lab, those routes return 503.
+Mutating lab routes (`POST /demo/payouts`, `POST /demo/settle`, `POST /mock/bridge/fund`) require `X-Lab-Key` when `PUBLIC_BASE_URL` is not localhost. If `LAB_API_KEY` is unset on the public lab, those routes return 503.

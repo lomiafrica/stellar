@@ -17,9 +17,9 @@ const ANCHOR =
 const HOME_DOMAIN = new URL(LAB).host;
 const MERCHANT = "GAOHXCYCLGQDETU33F4AB5DZUSEPRHHEROJ3FCZ6I4S6MDV7FZQVVW2Y";
 const UNKNOWN = "GUNKNOWNACCOUNT00000000000000000000000000000000000000";
-const NEST_EXPLORER =
+const PAYOUT_EXPLORER =
   "https://stellar.expert/explorer/testnet/tx/49e2a131c61d7b3e41e0b53b6a22cb98fe98fbf0fdeadfa2b1e4342ccf328ffe";
-const NEST_PAYOUT = "83e4aa27-e619-4d13-963c-9b49ce62a59f";
+const SAMPLE_PAYOUT = "83e4aa27-e619-4d13-963c-9b49ce62a59f";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const logDir = join(root, ".scf", "t1-logs");
@@ -73,11 +73,11 @@ Machine proof: \`pnpm test:live\` (\`test/live/anchor-sep24.test.ts\`). It signs
 2. Open the interactive form (or let the live test drive it). Last mile = Wave sandbox. Submit.
 3. Receipt shows a sandbox Wave hop and says this lab id is not a Stellar transaction.
 
-## Nest USDC hop
+## USDC payout hop
 
-Different money. Merchant \`POST /payouts\` \`rail=stellar\`. Machine proof: \`test/live/payout-roundtrip.test.ts\` (1 USDC, Horizon memo check, recycle). Nightly artifact: \`live-proof.json\`.
+Different money. Merchant \`POST /payouts\` with \`rail=stellar\`. Machine proof: \`test/live/payout-roundtrip.test.ts\` (1 USDC, Horizon memo check, recycle). Nightly artifact: \`live-proof.json\`.
 
-Earlier Nest Test payout \`${NEST_PAYOUT}\`. Explorer ${NEST_EXPLORER}
+Earlier test payout \`${SAMPLE_PAYOUT}\`. Explorer ${PAYOUT_EXPLORER}
 
 Logs from \`pnpm t1:walkthrough\` live in gitignored \`.scf/t1-logs/\`. Do not commit JWT secrets or seeds.
 
@@ -151,9 +151,9 @@ async function main(): Promise<void> {
 Wave last mile (no explorer)
   pnpm test:live  (anchor-sep24)
   ${LAB}/anchor/sep24/flow
-Nest hop
+USDC hop
   pnpm test:live  (payout-roundtrip)
-  ${NEST_EXPLORER}
+  ${PAYOUT_EXPLORER}
 `);
 }
 

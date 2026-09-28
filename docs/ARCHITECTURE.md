@@ -4,30 +4,63 @@
 **Company:** LOMI. TECHNOLOGIES AFRICA SA (Abidjan)  
 **Network:** Stellar Testnet
 
-lomi. processes merchant payments in UEMOA (XOF). This repo is a standalone NestJS lab for a custodial Circle USDC hop on Stellar: same payout model we already run, merchants never hold keys.
+lomi. processes merchant payments in UEMOA (XOF). This repo is a standalone lab for a custodial Circle USDC hop on Stellar: same public payout model (`POST /payouts`), merchants never hold keys.
 
 A later rail would use Bridge for USD/USDC treasury and Stellar Anchor Platform for the XOF SEP stack. Anchor Platform config is in `anchor/`. Bridge stays mocked here.
+
+## Public repositories
+
+Open-core integrator surface on GitHub. Merchant API reference: [docs.lomi.africa](https://docs.lomi.africa).
+
+| Repo | What |
+| ---- | ---- |
+| [lomiafrica/lomi.](https://github.com/lomiafrica/lomi.) | Umbrella: docs, CLI, MCP, TypeScript SDK, Go SDK |
+| [lomiafrica/lomi-python-sdk](https://github.com/lomiafrica/lomi-python-sdk) | Python SDK (`lomi-sdk`) |
+| [lomiafrica/lomi-php-sdk](https://github.com/lomiafrica/lomi-php-sdk) | PHP SDK |
+| [lomiafrica/plugins](https://github.com/lomiafrica/plugins) | Plugin collection |
+| [lomiafrica/woo](https://github.com/lomiafrica/woo) | WooCommerce plugin |
+| [lomiafrica/magento](https://github.com/lomiafrica/magento) | Magento extension |
+| [lomiafrica/prestashop](https://github.com/lomiafrica/prestashop) | PrestaShop module |
+| [lomiafrica/bubble](https://github.com/lomiafrica/bubble) | Bubble.io plugin |
+| [lomiafrica/agent-plugin](https://github.com/lomiafrica/agent-plugin) | Agent marketplace plugin |
+| [lomiafrica/pi-spi-sdk](https://github.com/lomiafrica/pi-spi-sdk) | π-SPI QR SDK |
+| [lomiafrica/payment-integration-reference](https://github.com/lomiafrica/payment-integration-reference) | Integration reference app |
+| [lomiafrica/payment-integration-sdk-reference](https://github.com/lomiafrica/payment-integration-sdk-reference) | SDK reference app |
+| [lomiafrica/commerce](https://github.com/lomiafrica/commerce) | E-commerce boilerplate |
+| [lomiafrica/events](https://github.com/lomiafrica/events) | Events boilerplate |
+| [lomiafrica/wallet](https://github.com/lomiafrica/wallet) | Wallet sandbox |
+| [lomiafrica/crm](https://github.com/lomiafrica/crm) | CRM |
+| [lomiafrica/stellar](https://github.com/lomiafrica/stellar) | This testnet lab |
+| [lomiafrica/arc](https://github.com/lomiafrica/arc) | Circle Arc USDC lab |
+| [lomiafrica/xrpl](https://github.com/lomiafrica/xrpl) | XRPL DestinationTag lab |
+| [lomiafrica/anti-slop](https://github.com/lomiafrica/anti-slop) | Oxlint plugin |
+| [lomiafrica/geolook](https://github.com/lomiafrica/geolook) | GEO audit tool |
+| [lomiafrica/payterm](https://github.com/lomiafrica/payterm) | ESP32 PromptPay terminal |
+| [lomiafrica/gsc-mcp](https://github.com/lomiafrica/gsc-mcp) | Search Console MCP |
+| [lomiafrica/doctool](https://github.com/lomiafrica/doctool) | Docs CLI |
+
+Published SDKs: npm `@lomi./sdk`, PyPI `lomi-sdk`. The Go SDK lives in the umbrella repo.
 
 ## 1. Goal
 
 Replace the correspondent-banking XOF to USD leg with Circle USDC on Stellar, while:
 
 - merchants keep Wave / MTN / SPI / card UX
-- the merchant ledger stays XOF | USD | EUR (USDC is treasury, not a wallet currency)
+- merchant balances stay XOF | USD | EUR (USDC is treasury, not a wallet currency)
 - every on-chain `Payment` is reconcilable via `memo = payout_id`
 - the HTTP surface matches `POST /payouts` so `rail: "stellar"` does not invent a second API
 
-This app is isolated from `apps/api` and Supabase on purpose.
+Clone and run this repo on its own.
 
 ## 2. System overview
 
 ```
-Merchant UX (unchanged)
-  checkout / dashboard / API / MCP: Wave, MTN, SPI, cards
+Merchant products (docs, CLI, MCP, plugins, hosted checkout)
+  Wave, MTN, SPI, cards
                  |
                  v
-lomi. NestJS API + Postgres ledger
-  accounts (XOF|USD|EUR) · payouts · idempotency · webhooks
+Public payouts API
+  POST /payouts   rail = wave | mtn | spi | bank | stellar
 
 This lab (testnet)
   POST /demo/payouts  rail = stellar
@@ -39,7 +72,7 @@ This lab (testnet)
                                   SEP-1 toml in-repo
 ```
 
-If we wire this into the live API later: feature-flagged `rail: stellar`, real Bridge, Anchor Platform for XOF SEPs. Field map: [LOMI-INTEGRATION-CONTRACT.md](./LOMI-INTEGRATION-CONTRACT.md).
+If `rail: "stellar"` is enabled on the hosted API later: allowlisted organizations, test first, real Bridge, Anchor Platform for XOF SEPs. Field map: [LOMI-INTEGRATION-CONTRACT.md](./LOMI-INTEGRATION-CONTRACT.md).
 
 | Building block           | Role                                     | In this repo                |
 | ------------------------ | ---------------------------------------- | --------------------------- |
@@ -50,17 +83,17 @@ If we wire this into the live API later: feature-flagged `rail: stellar`, real B
 
 ## 3. What runs today
 
-Isolated NestJS app. Clone and run without the lomi. monorepo.
+Standalone app. No other lomi. repo is required to install or run it.
 
-| Capability                                    | Status                                       |
-| --------------------------------------------- | -------------------------------------------- |
-| Friendbot XLM + Circle USDC trustlines        | On testnet                                   |
-| Memo-keyed USDC Payment (omnibus to merchant) | `pnpm settle:10`                             |
-| Local `stellar_settlements.json` ledger       | Snake_case fields for a later Postgres table |
-| `POST /demo/payouts` (`rail: stellar`)        | Mirrors `CreatePayoutDto`                    |
-| Mock Bridge + mock Wave off-ramp              | Stubs                                        |
-| SEP-1 `stellar.toml`                          | Hosted at `/.well-known/stellar.toml`        |
-| SEP-12 / SEP-24 sandbox                       | Merchant verify callback + last-mile sandbox |
+| Capability                                    | Status                                |
+| --------------------------------------------- | ------------------------------------- |
+| Friendbot XLM + Circle USDC trustlines        | On testnet                            |
+| Memo-keyed USDC Payment (omnibus to merchant) | `pnpm settle:10`                      |
+| Local `stellar_settlements.json` ledger       | Lab-only JSON                         |
+| `POST /demo/payouts` (`rail: stellar`)        | Same body as public `POST /payouts`   |
+| Mock Bridge + mock Wave off-ramp              | Stubs                                 |
+| SEP-1 `stellar.toml`                          | Hosted at `/.well-known/stellar.toml` |
+| SEP-12 / SEP-24 sandbox                       | Merchant verify callback + last-mile  |
 
 **Testnet accounts**
 
@@ -74,13 +107,13 @@ Public keys and tx ids: [`data/testnet-proof.json`](../data/testnet-proof.json).
 
 ## 4. Settlement flow
 
-1. Merchant earns XOF via Wave / MTN / PI-SPI, credit `accounts` (XOF or USD).
-2. Payout with `rail: stellar` (org feature flag). In this lab: `POST /demo/payouts`.
+1. Merchant earns XOF via Wave / MTN / PI-SPI.
+2. Payout with `rail: "stellar"` (allowlisted). In this lab: `POST /demo/payouts`.
 3. Treasury holds Circle USDC on Stellar (Bridge mocked here).
 4. Omnibus signs USDC `Payment` to the destination custodial account. Memo is the first 28 chars of `payout_id`.
 5. Last mile stays Wave / MTN / SPI / bank (mocked here).
-6. Webhooks would carry `stellar_transaction_id` and `bridge_transfer_id`.
-7. Reconcile: Postgres <-> Stellar RPC <-> bank/MM. Lab: JSON ledger <-> RPC/Horizon.
+6. Webhooks may carry `stellar_transaction_id` and `bridge_transfer_id`.
+7. Reconcile: lab JSON ledger <-> RPC/Horizon.
 
 Merchants never see wallets or keys.
 
@@ -110,9 +143,9 @@ Prefer Stellar RPC (Horizon is in maintenance for new features):
 Testnet USDC issuer: `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`  
 Mainnet USDC issuer: `GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN`
 
-## 7. Data model
+## 7. Lab ledger
 
-Lab file `data/stellar_settlements.json` uses the same fields we would put on a `stellar_settlements` table:
+Lab file `data/stellar_settlements.json` (this repo only):
 
 ```
 id, organization_id, environment,
@@ -123,9 +156,9 @@ status (pending|processing|completed|failed),
 created_at, updated_at
 ```
 
-Merchant ledger currencies stay XOF | USD | EUR. USDC is the treasury hop.
+Merchant currencies stay XOF | USD | EUR. USDC is the treasury hop.
 
-Idempotency: same `payout_id` means at most one on-chain Payment (same idea as `api_idempotency_records`).
+Idempotency: same `payout_id` means at most one on-chain Payment.
 
 ## 8. Custody
 
@@ -138,9 +171,9 @@ Idempotency: same `payout_id` means at most one on-chain Payment (same idea as `
 | Dependency            | Role             | Here vs later                                                                                                    |
 | --------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Circle USDC           | Settlement asset | Testnet; consume only, never issue                                                                               |
-| Bridge                | USD <-> USDC     | Mock adapter now; RSA-signed webhook receiver is in this lab (`POST /bridge/webhook`). Real Bridge client is T2. |
+| Bridge                | USD <-> USDC     | Mock adapter now; RSA-signed webhook receiver is in this lab (`POST /bridge/webhook`). Real Bridge client later. |
 | Anchor Platform (SDF) | SEP stack        | `anchor/docker-compose.yml`                                                                                      |
-| Wave / MTN / SPI      | Last mile        | Live in lomi.; mocked here                                                                                       |
+| Wave / MTN / SPI      | Last mile        | Live on lomi.; mocked here                                                                                       |
 | BCEAO                 | Regulatory       | PI licence application in progress; MoR under partner banks                                                      |
 
 ## 10. If we take this live
@@ -149,8 +182,8 @@ See [BUILD-PHASES.md](./BUILD-PHASES.md). Short version:
 
 1. Keep this repo public: memo-keyed payments, ledger, reconcile, SEP-1.
 2. XOF Anchor on testnet: official Anchor Platform (SEP-1/10/12/24), last mile adapters here.
-3. `rail: stellar` on POST /payouts in the private API: same DTO, org allowlist, Test first.
-4. Bridge adapter + RSA webhook verification + signing interface + three-way reconcile (this lab has the seams; live Bridge is private).
+3. `rail: "stellar"` on public `POST /payouts`: same JSON body, org allowlist, test first.
+4. Bridge adapter + RSA webhook verification + signing interface + three-way reconcile (this lab has the seams).
 5. Mainnet, merchant pilot, optional SEP-31 receiving corridor. Still custodial. Still no merchant wallets.
 
 ## 11. Regulatory

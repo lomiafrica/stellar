@@ -108,14 +108,14 @@ function memoTip(payoutId: string): string {
 
 /**
  * Hops a payout takes. Only the Stellar hop happens in this lab: collection and
- * last mile live in the private lomi. API, and Bridge is a mock adapter.
+ * last mile stay on the hosted payouts API, and Bridge is a mock adapter.
  */
 function payoutSteps(row: StellarSettlementRecord): PageStep[] {
   const settled = Boolean(row.stellar_tx_hash);
   return [
     {
       title: "Merchant earns XOF",
-      tag: "in lomi. api",
+      tag: "on lomi.",
       tone: "lomi",
       copy: "Collected by Wave, MTN, SPI or card, then credited to the merchant ledger. Not in this lab.",
       mark: "skip",
@@ -140,7 +140,7 @@ function payoutSteps(row: StellarSettlementRecord): PageStep[] {
     },
     {
       title: "Last mile to the merchant",
-      tag: "in lomi. api",
+      tag: "on lomi.",
       tone: "lomi",
       copy: `Would land via ${humanLastMile(row.last_mile_rail)}. Not in this lab.`,
       mark: "skip",

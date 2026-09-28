@@ -1,80 +1,77 @@
-# lomi. payout mapping
+# Payout contract
 
-How this lab mirrors lomi. payout and ledger fields without writing to Supabase or calling `apps/api`. A later `rail: 'stellar'` on `POST /payouts` should follow this.
+How this lab’s HTTP matches the public lomi. payout API. This repo is a standalone testnet lab. It does not implement the hosted platform.
 
-## Production reference
+Public API reference: [docs.lomi.africa](https://docs.lomi.africa).
 
-| Concept            | Location                   | Notes                                                                                                             |
-| ------------------ | -------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Merchant balances  | `accounts`                 | `organization_id`, `currency_code` in `XOF`, `USD`, `EUR`, `balance`                                              |
-| Self withdrawals   | `payouts`                  | `payout_id` UUID, `status` `pending` / `processing` / `completed` / `failed`                                      |
-| Beneficiary sends  | `beneficiary_payouts`      | Same status model                                                                                                 |
-| Create payout API  | `apps/api` `POST /payouts` | `CreatePayoutDto`: `destination`, `rail` (`wave` / `mtn` / `spi` / `bank` / `stellar`), `amount`, `currency_code` |
-| Response           | `CreatePayoutResponseDto`  | `success`, `payout_id`, `kind`, `status`                                                                          |
-| HTTP idempotency   | `api_idempotency_records`  | Header `Idempotency-Key` scoped per org + route                                                                   |
-| Settlement periods | `GET /settlements`         | Virtual `settlement_id` = `{currency}:{YYYY-MM-DD}` from `transactions.available_at`                              |
+## Public payouts
 
-USDC is not a merchant `currency_code`. Nest already implements `rail: 'stellar'` in `apps/api/src/core/stellar` (allowlisted orgs, Test-only until `STELLAR_RAIL_ALLOW_LIVE=1`). It is **not deployed** on `api.lomi.africa` / `sandbox.api.lomi.africa` until a later connect. This lab never calls Nest.
+Merchants create payouts with `POST /payouts`. Body fields this lab accepts:
+
+| Field           | Notes                                                              |
+| --------------- | ------------------------------------------------------------------ |
+| `destination`   | `self` or `beneficiary`                                            |
+| `rail`          | `stellar` in this lab (`wave` / `mtn` / `spi` / `bank` elsewhere)  |
+| `amount`        | Merchant-facing amount                                             |
+| `currency_code` | Merchant ledger: `XOF`, `USD`, or `EUR`. Not USDC.                 |
+| `payout_id`     | Optional. Same id twice replays the existing on-chain Payment      |
+
+Response: `success`, `payout_id`, `kind`, `status` (`pending` / `processing` / `completed` / `failed`), plus `stellar_tx_hash` and explorer URLs when a payment lands.
+
+Header `Idempotency-Key` is scoped per caller. Header `X-Lab-Key` is required on the public lab (`LAB_API_KEY`).
+
+USDC is the treasury hop on Stellar, not a merchant wallet currency.
 
 ## Lab mapping
 
-### Local table: `data/stellar_settlements.json`
+### Local ledger: `data/stellar_settlements.json`
 
-Each row is the proposed `stellar_settlements` table plus payout join keys:
+Lab-only JSON (gitignored). Fields the demo stores:
 
-| Lab field                  | Production / future                                           |
-| -------------------------- | ------------------------------------------------------------- |
-| `organization_id`          | `accounts.organization_id`                                    |
-| `environment`              | Always `test` in the lab                                      |
-| `payout_id`                | `payouts.payout_id`                                           |
-| `destination`              | `self` / `beneficiary`                                        |
-| `last_mile_rail`           | Mock last mile: `wave` / `mtn` / `spi` / `bank`               |
-| `amount` + `currency_code` | Merchant-facing payout amount                                 |
-| `amount_usdc`              | On-chain hop size (Circle testnet USDC)                       |
-| `stellar_tx_hash`          | Future webhook field `stellar_transaction_id`                 |
-| `bridge_transfer_id`       | Future Bridge treasury leg                                    |
-| `memo`                     | `payout_id.slice(0, 28)` (same idea as SPI `SPI-{payout_id}`) |
-| `status`                   | Same lifecycle as `payouts.status`                            |
+| Lab field                  | Meaning                                           |
+| -------------------------- | ------------------------------------------------- |
+| `organization_id`          | Caller organization                               |
+| `environment`              | Always `test` in the lab                          |
+| `payout_id`                | Public payout id                                  |
+| `destination`              | `self` / `beneficiary`                            |
+| `last_mile_rail`           | Mock last mile: `wave` / `mtn` / `spi` / `bank`   |
+| `amount` + `currency_code` | Merchant-facing payout amount                     |
+| `amount_usdc`              | On-chain hop size (Circle testnet USDC)           |
+| `stellar_tx_hash`          | On-chain transaction id                           |
+| `bridge_transfer_id`       | Mock Bridge treasury leg                          |
+| `memo`                     | First 28 characters of `payout_id`                |
+| `status`                   | Same lifecycle as the public payout status        |
 
 ### HTTP
 
-Nest `StellarLabClient` POSTs `{STELLAR_LAB_URL}/demo/payouts` with:
-
-`destination`, `rail: 'stellar'`, `amount`, `currency_code`, `payout_id`, `organization_id`, `bridge_transfer_id`.
-
-The lab controller already accepts that body. Same `payout_id` twice returns the existing chain Payment (ledger replay). Header `Idempotency-Key` is an extra cache on top. Header `X-Lab-Key` is required on the public lab (`STELLAR_LAB_KEY` on Nest).
-
-| Lab endpoint                   | Nest analogue                                                  |
-| ------------------------------ | -------------------------------------------------------------- |
-| `POST /demo/payouts`           | `POST /payouts` with `rail: 'stellar'` (un-deployed)           |
-| `GET /demo/payouts/:payout_id` | Payout status + reconcile snapshot                             |
-| `POST /demo/settle`            | Same orchestration as `/demo/payouts`                          |
-| Header `Idempotency-Key`       | `api_idempotency_records` (local `data/demo_idempotency.json`) |
-| Header `X-Lab-Key`             | Nest `STELLAR_LAB_KEY` / lab `LAB_API_KEY`                     |
+| Lab endpoint                   | Public analogue                                      |
+| ------------------------------ | ---------------------------------------------------- |
+| `POST /demo/payouts`           | `POST /payouts` with `rail: "stellar"`               |
+| `GET /demo/payouts/:payout_id` | Payout status + reconcile snapshot                   |
+| `POST /demo/settle`            | Same orchestration as `/demo/payouts`                |
+| Header `Idempotency-Key`       | Public API idempotency                               |
+| Header `X-Lab-Key`             | Lab `LAB_API_KEY`                                    |
 
 ### Orchestration
 
-1. **pending**: create row with `payout_id` (skip if already completed on-chain).
+1. **pending**: create a row with `payout_id` (skip if already completed on-chain).
 2. **processing**: mock Bridge `bridge_transfer_id`.
-3. **On-chain**: USDC `Payment` omnibus to merchant; memo = payout ID.
+3. **On-chain**: USDC `Payment` omnibus to merchant; memo = payout id.
 4. **completed**: mock Wave/MTN off-ramp; store `stellar_tx_hash`.
-5. **failed**: mark failed if RPC payment fails (retry allowed).
+5. **failed**: mark failed if the payment fails (retry allowed).
 
-`pnpm reconcile` checks Horizon/RPC success and memo against the ledger row.
+`pnpm reconcile` checks Horizon/RPC success and memo against the local ledger.
 
-## Later connect (not this lab pass)
+## Later connect (not this lab)
 
-Nest already has the rail, Bridge HMAC ingest, and reconcile cron. Connecting Test is a flag flip: set `STELLAR_LAB_URL`, `STELLAR_LAB_KEY`, and `STELLAR_RAIL_ORGANIZATION_IDS` on sandbox Nest. Do not set those on this isolated lab host. Lab `LAB_API_KEY` must match Nest `STELLAR_LAB_KEY`.
-
-1. **Migration**: `stellar_settlements` plus Bridge event-id dedupe in `20250226000119_stellar.sql`.
-2. **Flags**: `STELLAR_RAIL_ORGANIZATION_IDS` allowlist; Test first; `STELLAR_RAIL_ALLOW_LIVE` stays off.
-3. **Ledger**: do not add USDC to merchant `accounts`; treasury USDC stays off that ledger.
-4. **Webhooks**: `stellar_transaction_id` and `bridge_transfer_id` on payout events.
-5. **Signing / Bridge**: private `apps/api` module. Lab `keys/` stay here.
+1. Hosted `POST /payouts` with `rail: "stellar"` (allowlisted organizations, test first).
+2. Do not add USDC as a merchant wallet currency.
+3. Payout webhooks may include `stellar_transaction_id` and `bridge_transfer_id`.
+4. Signing keys for the lab stay in this repo’s gitignored `keys/`.
 
 ## Non-goals (this lab repo)
 
-- This public lab does not import `apps/api`, the dashboard, or Supabase
+- This lab does not call the hosted lomi. API
 - No merchant key custody
 - No mainnet or real Bridge / mobile-money calls
 
@@ -93,5 +90,3 @@ curl -s -X POST http://localhost:3456/demo/payouts \
     "last_mile_rail": "wave"
   }'
 ```
-
-Response fields match `CreatePayoutResponseDto` plus `stellar_tx_hash` and explorer URLs when a payment lands.

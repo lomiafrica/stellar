@@ -13,4 +13,4 @@ pnpm volume
 
 `pnpm reconcile` walks `data/stellar_settlements.json` against Horizon. `pnpm volume` prints completed USDC hops and SEP-31 inbound counts.
 
-Do not put merchant USDC on an `accounts` row. Memo is the payout id. Last mile stays Wave / MTN / SPI (sandbox in this lab).
+Do not treat USDC as a merchant wallet currency. Memo is the payout id. Last mile stays Wave / MTN / SPI (sandbox in this lab).

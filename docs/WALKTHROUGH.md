@@ -12,11 +12,11 @@ Machine proof: `pnpm test:live` (`test/live/anchor-sep24.test.ts`). It signs SEP
 2. Open the interactive form (or let the live test drive it). Last mile = Wave sandbox. Submit.
 3. Receipt shows a sandbox Wave hop and says this lab id is not a Stellar transaction.
 
-## Nest USDC hop
+## USDC payout hop
 
-Different money. Merchant `POST /payouts` `rail=stellar`. Machine proof: `test/live/payout-roundtrip.test.ts` (1 USDC, Horizon memo check, recycle). Nightly artifact: `live-proof.json`.
+Different money. Merchant `POST /payouts` with `rail=stellar`. Machine proof: `test/live/payout-roundtrip.test.ts` (1 USDC, Horizon memo check, recycle). Nightly artifact: `live-proof.json`.
 
-Earlier Nest Test payout `83e4aa27-e619-4d13-963c-9b49ce62a59f`. Explorer https://stellar.expert/explorer/testnet/tx/49e2a131c61d7b3e41e0b53b6a22cb98fe98fbf0fdeadfa2b1e4342ccf328ffe
+Earlier test payout `83e4aa27-e619-4d13-963c-9b49ce62a59f`. Explorer https://stellar.expert/explorer/testnet/tx/49e2a131c61d7b3e41e0b53b6a22cb98fe98fbf0fdeadfa2b1e4342ccf328ffe
 
 Logs from `pnpm t1:walkthrough` live in gitignored `.scf/t1-logs/`. Do not commit JWT secrets or seeds.
 
