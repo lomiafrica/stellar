@@ -104,7 +104,7 @@ test("settled payout links the explorer and shows the memo prefix", () => {
   assert.match(html, /Wave Mobile Money/);
   assert.match(html, /status-ok">Completed</);
   assert.match(html, />Self</);
-  assert.match(html, /class="tag lomi">in lomi\. api</);
+  assert.match(html, /class="tag lomi">on lomi\.</);
   assert.match(html, /class="tag mock">mock</);
   assert.match(html, /class="tag chain">on chain</);
   assert.match(html, /class="tag pass">pass</);
