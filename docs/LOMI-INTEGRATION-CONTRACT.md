@@ -8,13 +8,13 @@ Public API reference: [docs.lomi.africa](https://docs.lomi.africa).
 
 Merchants create payouts with `POST /payouts`. Body fields this lab accepts:
 
-| Field           | Notes                                                              |
-| --------------- | ------------------------------------------------------------------ |
-| `destination`   | `self` or `beneficiary`                                            |
-| `rail`          | `stellar` in this lab (`wave` / `mtn` / `spi` / `bank` elsewhere)  |
-| `amount`        | Merchant-facing amount                                             |
-| `currency_code` | Merchant ledger: `XOF`, `USD`, or `EUR`. Not USDC.                 |
-| `payout_id`     | Optional. Same id twice replays the existing on-chain Payment      |
+| Field           | Notes                                                             |
+| --------------- | ----------------------------------------------------------------- |
+| `destination`   | `self` or `beneficiary`                                           |
+| `rail`          | `stellar` in this lab (`wave` / `mtn` / `spi` / `bank` elsewhere) |
+| `amount`        | Merchant-facing amount                                            |
+| `currency_code` | Merchant ledger: `XOF`, `USD`, or `EUR`. Not USDC.                |
+| `payout_id`     | Optional. Same id twice replays the existing on-chain Payment     |
 
 Response: `success`, `payout_id`, `kind`, `status` (`pending` / `processing` / `completed` / `failed`), plus `stellar_tx_hash` and explorer URLs when a payment lands.
 
@@ -28,29 +28,29 @@ USDC is the treasury hop on Stellar, not a merchant wallet currency.
 
 Lab-only JSON (gitignored). Fields the demo stores:
 
-| Lab field                  | Meaning                                           |
-| -------------------------- | ------------------------------------------------- |
-| `organization_id`          | Caller organization                               |
-| `environment`              | Always `test` in the lab                          |
-| `payout_id`                | Public payout id                                  |
-| `destination`              | `self` / `beneficiary`                            |
-| `last_mile_rail`           | Mock last mile: `wave` / `mtn` / `spi` / `bank`   |
-| `amount` + `currency_code` | Merchant-facing payout amount                     |
-| `amount_usdc`              | On-chain hop size (Circle testnet USDC)           |
-| `stellar_tx_hash`          | On-chain transaction id                           |
-| `bridge_transfer_id`       | Mock Bridge treasury leg                          |
-| `memo`                     | First 28 characters of `payout_id`                |
-| `status`                   | Same lifecycle as the public payout status        |
+| Lab field                  | Meaning                                         |
+| -------------------------- | ----------------------------------------------- |
+| `organization_id`          | Caller organization                             |
+| `environment`              | Always `test` in the lab                        |
+| `payout_id`                | Public payout id                                |
+| `destination`              | `self` / `beneficiary`                          |
+| `last_mile_rail`           | Mock last mile: `wave` / `mtn` / `spi` / `bank` |
+| `amount` + `currency_code` | Merchant-facing payout amount                   |
+| `amount_usdc`              | On-chain hop size (Circle testnet USDC)         |
+| `stellar_tx_hash`          | On-chain transaction id                         |
+| `bridge_transfer_id`       | Mock Bridge treasury leg                        |
+| `memo`                     | First 28 characters of `payout_id`              |
+| `status`                   | Same lifecycle as the public payout status      |
 
 ### HTTP
 
-| Lab endpoint                   | Public analogue                                      |
-| ------------------------------ | ---------------------------------------------------- |
-| `POST /demo/payouts`           | `POST /payouts` with `rail: "stellar"`               |
-| `GET /demo/payouts/:payout_id` | Payout status + reconcile snapshot                   |
-| `POST /demo/settle`            | Same orchestration as `/demo/payouts`                |
-| Header `Idempotency-Key`       | Public API idempotency                               |
-| Header `X-Lab-Key`             | Lab `LAB_API_KEY`                                    |
+| Lab endpoint                   | Public analogue                        |
+| ------------------------------ | -------------------------------------- |
+| `POST /demo/payouts`           | `POST /payouts` with `rail: "stellar"` |
+| `GET /demo/payouts/:payout_id` | Payout status + reconcile snapshot     |
+| `POST /demo/settle`            | Same orchestration as `/demo/payouts`  |
+| Header `Idempotency-Key`       | Public API idempotency                 |
+| Header `X-Lab-Key`             | Lab `LAB_API_KEY`                      |
 
 ### Orchestration
 
