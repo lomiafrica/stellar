@@ -36,6 +36,7 @@ export interface StellarSettlementRecord {
   stellar_from?: string;
   stellar_to?: string;
   bridge_transfer_id?: string;
+  bridge_event_id?: string;
   memo: string;
   status: PayoutStatus;
   created_at: string;
@@ -85,6 +86,7 @@ function normalizeLegacyRow(raw: JsonObject): StellarSettlementRecord {
       "bridge_transfer_id",
       "bridgeTransferId",
     ),
+    bridge_event_id: readString(raw, "bridge_event_id"),
     memo: readString(raw, "memo") ?? payoutId.slice(0, 28),
     status: mapLegacyStatus(raw.status),
     created_at: firstString(raw, "created_at", "createdAt") ?? now,

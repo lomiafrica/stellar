@@ -16,7 +16,7 @@ Merchants create payouts with `POST /payouts`. Body fields this lab accepts:
 | `currency_code` | Merchant ledger: `XOF`, `USD`, or `EUR`. Not USDC.                |
 | `payout_id`     | Optional. Same id twice replays the existing on-chain Payment     |
 
-Response: `success`, `payout_id`, `kind`, `status` (`pending` / `processing` / `completed` / `failed`), plus `stellar_tx_hash` and explorer URLs when a payment lands.
+Response: `success`, `payout_id`, `kind`, `status` (`pending` / `processing` / `completed` / `failed`), plus `stellar_tx_hash`, `stellar_transaction_id` (the same hash), and explorer URLs when a payment lands. `Prefer: respond-async` returns 202 after the row is claimed. The worker finishes the hop.
 
 Header `Idempotency-Key` is scoped per caller. Header `X-Lab-Key` is required on the public lab (`LAB_API_KEY`).
 
@@ -38,6 +38,7 @@ Lab-only JSON (gitignored). Fields the demo stores:
 | `amount` + `currency_code` | Merchant-facing payout amount                   |
 | `amount_usdc`              | On-chain hop size (Circle testnet USDC)         |
 | `stellar_tx_hash`          | On-chain transaction id                         |
+| `stellar_transaction_id`   | Same hash, for merchant payout webhooks         |
 | `bridge_transfer_id`       | Mock Bridge treasury leg                        |
 | `memo`                     | First 28 characters of `payout_id`              |
 | `status`                   | Same lifecycle as the public payout status      |
@@ -47,7 +48,9 @@ Lab-only JSON (gitignored). Fields the demo stores:
 | Lab endpoint                   | Public analogue                        |
 | ------------------------------ | -------------------------------------- |
 | `POST /demo/payouts`           | `POST /payouts` with `rail: "stellar"` |
-| `GET /demo/payouts/:payout_id` | Payout status + reconcile snapshot     |
+| `GET /demo/payouts/:payout_id` | Payout status, `stellar_transaction_id`, reconcile |
+| `GET /ops/reconcile/latest` | Latest three-way run                          |
+| `POST /ops/reconcile/run`  | Run reconcile now (`X-Lab-Key`)                |
 | `POST /demo/settle`            | Same orchestration as `/demo/payouts`  |
 | Header `Idempotency-Key`       | Public API idempotency                 |
 | Header `X-Lab-Key`             | Lab `LAB_API_KEY`                      |

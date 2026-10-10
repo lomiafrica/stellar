@@ -1,14 +1,15 @@
+import { randomUUID } from "node:crypto";
 import {
   BadRequestException,
   Body,
   ConflictException,
   Controller,
   Get,
-  Header,
   Headers,
   NotFoundException,
   Param,
   Post,
+  Query,
   Req,
   Res,
 } from "@nestjs/common";
@@ -28,9 +29,11 @@ import {
   reconcileTransaction,
 } from "../ledger/reconcile.js";
 import {
+  acceptStellarPayout,
   createStellarPayout,
   notReadyBody,
 } from "../payouts/stellar-payout.service.js";
+import { enqueuePayout } from "../payouts/worker.js";
 import {
   DualControlError,
   PayoutCapError,
@@ -49,6 +52,8 @@ import { assertLabMutatingAuth } from "./lab-auth.js";
 export class DemoPayoutsController {
   @Post()
   async create(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
     @Body()
     body: {
       destination: "self" | "beneficiary";
@@ -64,6 +69,7 @@ export class DemoPayoutsController {
       metadata?: JsonObject;
       amount_usdc?: string;
       bridge_transfer_id?: string;
+      async?: boolean;
     },
     @Headers("idempotency-key") idempotencyKey?: string,
     @Headers("x-lab-key") labKey?: string,
@@ -107,7 +113,52 @@ export class DemoPayoutsController {
       approval: labApproval,
     };
 
+    const wantsAsync =
+      body.async === true ||
+      String(req.headers.prefer ?? "").toLowerCase().includes("respond-async");
+
     try {
+      if (wantsAsync) {
+        const payoutId = input.payout_id ?? randomUUID();
+        const accepted = await acceptStellarPayout({
+          payoutId,
+          amount: input.amount_usdc,
+          amount_number: input.amount,
+          currency_code: input.currency_code,
+          organization_id: input.organization_id,
+          destination: input.destination,
+          last_mile_rail: input.last_mile_rail ?? "wave",
+          phone: input.phone,
+          bridge_transfer_id: input.bridge_transfer_id,
+          approval: input.approval,
+        });
+        if (!accepted.replay) {
+          enqueuePayout({ ...input, payout_id: accepted.payoutId });
+        }
+        if (accepted.status !== "completed") res.status(202);
+        const acceptedBody = {
+          success: true,
+          payout_id: accepted.payoutId,
+          kind:
+            input.destination === "beneficiary"
+              ? ("beneficiary" as const)
+              : ("withdrawal" as const),
+          status: accepted.status,
+          message: accepted.replay
+            ? "Idempotent replay: existing stellar settlement."
+            : "Accepted. Settlement continues in the background.",
+          stellar_tx_hash: accepted.stellarTransactionId,
+          stellar_transaction_id: accepted.stellarTransactionId,
+        };
+        if (idempotencyKey) {
+          saveIdempotentResponse(
+            idempotencyKey,
+            accepted.payoutId,
+            acceptedBody,
+          );
+        }
+        return acceptedBody;
+      }
       const response = await createStellarPayout(input);
       if (idempotencyKey) {
         saveIdempotentResponse(idempotencyKey, response.payout_id, response);
@@ -143,9 +194,32 @@ export class DemoPayoutsController {
   }
 
   @Get()
-  @Header("Content-Type", "text/html; charset=utf-8")
-  list(): string {
-    return renderPayoutListPage(readLedger().map(publicSettlement));
+  list(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Query("since") since?: string,
+  ) {
+    const cutoff = since ? Date.parse(since) : Number.NaN;
+    const rows = readLedger()
+      .map(publicSettlement)
+      .filter((row) => {
+        if (!Number.isFinite(cutoff)) return true;
+        const created = Date.parse(row.created_at);
+        return Number.isFinite(created) && created >= cutoff;
+      });
+    if (prefersHtml(req)) {
+      res.type("html");
+      return renderPayoutListPage(rows);
+    }
+    return {
+      payouts: rows.map((row) => ({
+        payout_id: row.payout_id,
+        status: row.status,
+        stellar_tx_hash: row.stellar_tx_hash ?? "",
+        stellar_transaction_id: row.stellar_tx_hash ?? "",
+        created_at: row.created_at,
+      })),
+    };
   }
 
   @Get(":payout_id")
@@ -179,6 +253,7 @@ export class DemoPayoutsController {
       currency_code: row.currency_code,
       amount_usdc: row.amount_usdc,
       stellar_tx_hash: row.stellar_tx_hash,
+      stellar_transaction_id: row.stellar_tx_hash,
       bridge_transfer_id: row.bridge_transfer_id,
       last_mile_rail: row.last_mile_rail,
       destination: row.destination,

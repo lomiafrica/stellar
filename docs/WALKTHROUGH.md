@@ -16,6 +16,8 @@ Machine proof: `pnpm test:live` (`test/live/anchor-sep24.test.ts`). It signs SEP
 
 Different money. Merchant `POST /payouts` with `rail=stellar`. Machine proof: `test/live/payout-roundtrip.test.ts` (1 USDC, Horizon memo check, recycle). Nightly artifact: `live-proof.json`.
 
+10 Oct 2026 payout `5f3fb775-036e-4798-9a15-137428ac76e2`. Explorer https://stellar.expert/explorer/testnet/tx/2fcb2a2610cfbd040e0fa886d38ebf61424bb02c302379f244bc1f3c99d86035
+
 Earlier test payout `83e4aa27-e619-4d13-963c-9b49ce62a59f`. Explorer https://stellar.expert/explorer/testnet/tx/49e2a131c61d7b3e41e0b53b6a22cb98fe98fbf0fdeadfa2b1e4342ccf328ffe
 
 Logs from `pnpm t1:walkthrough` live in gitignored `.scf/t1-logs/`. Do not commit JWT secrets or seeds.

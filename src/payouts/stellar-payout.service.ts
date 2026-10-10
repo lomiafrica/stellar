@@ -4,6 +4,7 @@ import {
   claimPayout,
   findByPayoutId,
   readLedger,
+  type PayoutStatus,
   type StellarSettlementRecord,
   upsertSettlement,
 } from "../ledger/store.js";
@@ -27,6 +28,8 @@ import {
   type PaymentNetwork,
   type UsdcPaymentResult,
 } from "../stellar/payment.js";
+import { notifyAlert } from "../ops/alert.js";
+import { log } from "../ops/log.js";
 import { writeTestnetProof } from "../testnet-proof.js";
 import type {
   CreateStellarPayoutInput,
@@ -46,6 +49,11 @@ export interface SettleDemoInput {
   bridge_transfer_id?: string;
   /** Second approval. Required only above LAB_DUAL_CONTROL_USDC. */
   approval?: string;
+  /**
+   * Worker resume. A row already claimed by acceptStellarPayout continues
+   * instead of returning 409.
+   */
+  continueOwned?: boolean;
 }
 
 export interface SettleDemoResult {
@@ -235,7 +243,7 @@ async function recoverProcessing(
       true,
     );
   }
-  if (found.status === "NOT_FOUND") {
+    if (found.status === "NOT_FOUND") {
     const created = Date.parse(record.updated_at || record.created_at);
     const expired =
       Number.isFinite(created) &&
@@ -244,6 +252,7 @@ async function recoverProcessing(
       upsertSettlement({ ...record, status: "failed" });
       return undefined;
     }
+    void notifyAlert("tx.timeout", { payout_id: record.payout_id, hash });
     throw new Error(`payment ${hash} is still pending; retry after timebounds`);
   }
   upsertSettlement({ ...record, status: "failed" });
@@ -282,7 +291,7 @@ export async function runSettlementDemo(
     return recordToDemoResult(existing, buildOfframpFromRecord(existing), true);
   }
 
-  if (existing?.status === "processing") {
+  if (existing?.status === "processing" && existing.stellar_tx_hash) {
     const recovered = await recoverProcessing(existing, resolved, input.phone);
     if (recovered) return recovered;
   }
@@ -316,23 +325,33 @@ export async function runSettlementDemo(
     updated_at: now,
   };
   const claim = claimPayout(draft);
-  if (claim.kind === "replay") {
-    return recordToDemoResult(
-      claim.record,
-      buildOfframpFromRecord(claim.record),
-      true,
-    );
-  }
-  if (claim.kind === "recover") {
-    const recovered = await recoverProcessing(
-      claim.record,
-      resolved,
-      input.phone,
-    );
-    if (recovered) return recovered;
-  }
-  if (claim.kind === "busy") {
-    throw new PayoutInFlightError(payoutId);
+  switch (claim.kind) {
+    case "replay":
+      return recordToDemoResult(
+        claim.record,
+        buildOfframpFromRecord(claim.record),
+        true,
+      );
+    case "recover": {
+      const recovered = await recoverProcessing(
+        claim.record,
+        resolved,
+        input.phone,
+      );
+      if (recovered) return recovered;
+      break;
+    }
+    case "busy":
+      if (!(input.continueOwned && !claim.record.stellar_tx_hash)) {
+        throw new PayoutInFlightError(payoutId);
+      }
+      break;
+    case "claimed":
+      break;
+    default: {
+      const unexpected: never = claim;
+      throw new Error(`unexpected claim ${JSON.stringify(unexpected)}`);
+    }
   }
 
   let record = claim.record;
@@ -359,8 +378,15 @@ export async function runSettlementDemo(
     memo: built.memo,
   });
 
+  log("tx.submitted", {
+    payout_id: payoutId,
+    hash: built.hash,
+    amount_usdc: amountUsdc,
+  });
+
   try {
     const payment = await submitUsdcPayment(built, resolved.network);
+    log("tx.confirmed", { payout_id: payoutId, hash: payment.hash });
     const completed = completeFromPayment(record, payment, input.phone);
     writeTestnetProof({
       omnibusPublicKey: omnibus.publicKey(),
@@ -385,9 +411,80 @@ export async function runSettlementDemo(
         ...record,
         status: "failed",
       });
+      void notifyAlert("tx.send_error", {
+        payout_id: payoutId,
+        message: err.message,
+      });
     }
     throw err;
   }
+}
+
+export interface AcceptedPayout {
+  payoutId: string;
+  status: PayoutStatus;
+  replay: boolean;
+  stellarTransactionId?: string;
+}
+
+/**
+ * Claim the payout and return before Bridge or Stellar I/O.
+ * The worker calls createStellarPayout with continue_owned to finish it.
+ */
+export async function acceptStellarPayout(
+  input: SettleDemoInput,
+  runtime?: SettlementRuntime,
+): Promise<AcceptedPayout> {
+  const resolved = runtime ?? (await defaultSettlementRuntime());
+  const payoutId = input.payoutId ?? randomUUID();
+  const existing = findByPayoutId(payoutId);
+  if (existing?.status === "completed" && existing.stellar_tx_hash) {
+    return {
+      payoutId,
+      status: "completed",
+      replay: true,
+      stellarTransactionId: existing.stellar_tx_hash,
+    };
+  }
+  if (existing?.status === "processing" && !existing.stellar_tx_hash) {
+    return { payoutId, status: "processing", replay: true };
+  }
+
+  const amountUsdc = usdcAmountFromInput(input);
+  const now = new Date(resolved.now()).toISOString();
+  await resolved.assertReady(Number(amountUsdc) || 10);
+  const usdc = Number(amountUsdc) || 0;
+  assertUsdcCaps(usdc, resolved.now());
+  assertDualControl(usdc, input.approval);
+
+  const draft: StellarSettlementRecord = {
+    id: existing?.id ?? randomUUID(),
+    organization_id: input.organization_id ?? DEFAULT_DEMO_ORGANIZATION_ID,
+    environment: "test",
+    payout_id: payoutId,
+    destination: input.destination ?? "self",
+    last_mile_rail: input.last_mile_rail ?? "wave",
+    amount: merchantAmount(input),
+    currency_code: input.currency_code ?? "USD",
+    amount_usdc: amountUsdc,
+    memo: stellarMemoFromPayoutId(payoutId),
+    status: "pending",
+    created_at: existing?.created_at ?? now,
+    updated_at: now,
+  };
+  const claim = claimPayout(draft);
+  if (claim.kind === "replay") {
+    return {
+      payoutId,
+      status: claim.record.status,
+      replay: true,
+      stellarTransactionId: claim.record.stellar_tx_hash,
+    };
+  }
+  if (claim.kind === "busy") {
+    throw new PayoutInFlightError(payoutId);
+  }
+  return { payoutId, status: "processing", replay: false };
 }
 
 export async function createStellarPayout(
@@ -413,6 +510,7 @@ export async function createStellarPayout(
       phone: input.recipient?.phone,
       bridge_transfer_id: input.bridge_transfer_id,
       approval: input.approval,
+      continueOwned: input.continue_owned,
     },
     runtime,
   );
@@ -429,6 +527,7 @@ export async function createStellarPayout(
       ? "Idempotent replay: existing stellar settlement."
       : "Stellar USDC hop completed (testnet demo).",
     stellar_tx_hash: demo.stellarTxHash || undefined,
+    stellar_transaction_id: demo.stellarTxHash || undefined,
     explorer_tx: demo.explorerTx || undefined,
     explorer_account_omnibus: demo.explorerAccountOmnibus || undefined,
     explorer_account_merchant: demo.explorerAccountMerchant || undefined,

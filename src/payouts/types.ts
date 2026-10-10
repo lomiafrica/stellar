@@ -23,6 +23,8 @@ export type CreateStellarPayoutInput = {
   bridge_transfer_id?: string;
   /** Second approval. Required only above LAB_DUAL_CONTROL_USDC. */
   approval?: string;
+  /** Set by the in-process worker. Ignored on the public HTTP body. */
+  continue_owned?: boolean;
 };
 
 export type CreateStellarPayoutResponse = {
@@ -32,6 +34,8 @@ export type CreateStellarPayoutResponse = {
   status: PayoutStatus;
   message?: string;
   stellar_tx_hash?: string;
+  /** Same value as stellar_tx_hash. Merchants verify settlement from this field. */
+  stellar_transaction_id?: string;
   explorer_tx?: string;
   explorer_account_omnibus?: string;
   explorer_account_merchant?: string;

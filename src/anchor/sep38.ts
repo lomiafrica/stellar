@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { readString, type JsonObject } from "../json.js";
+import { log } from "../ops/log.js";
 import { readJsonArray, writeJsonArray } from "./json-store.js";
 
 /** BCEAO XOF per 1 EUR. */
@@ -118,6 +119,14 @@ export function createSep38Quote(input: {
     createdAt: new Date(now).toISOString(),
   };
   persist(quote);
+  log("quote.issued", {
+    quote_id: quote.id,
+    sell_asset: quote.sellAsset,
+    buy_asset: quote.buyAsset,
+    sell_amount: quote.sellAmount,
+    buy_amount: quote.buyAmount,
+    expires_at: quote.expiresAt,
+  });
   return quote;
 }
 
@@ -131,6 +140,7 @@ export function assertQuoteUsable(id: string): Sep38Quote {
     throw new Error("Unknown quote_id");
   }
   if (Date.parse(quote.expiresAt) <= Date.now()) {
+    log("quote.expired", { quote_id: id, expires_at: quote.expiresAt });
     throw new Error("Quote expired");
   }
   return quote;

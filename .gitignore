@@ -18,6 +18,9 @@ data/sep38-quotes.json
 data/sep31-inbound.json
 data/bridge_events.json
 data/bridge_transfers.json
+data/reconcile_runs.json
+data/reconcile_review.json
+k6/results/*.json
 
 # Logs
 *.log

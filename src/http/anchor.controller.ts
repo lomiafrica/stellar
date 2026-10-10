@@ -49,6 +49,7 @@ import { prefersHtml } from "./page-chrome.js";
 import { isPublicDeploy } from "./lab-auth.js";
 import { createSep6Transfer } from "../anchor/sep6.js";
 import { recordSep31Inbound } from "../anchor/sep31.js";
+import { buildSep38Rate } from "../anchor/rate.js";
 import {
   assertQuoteUsable,
   createSep38Quote,
@@ -316,6 +317,36 @@ export class AnchorController {
     } catch (err) {
       throw new BadRequestException(
         err instanceof Error ? err.message : "SEP-6 failed",
+      );
+    }
+  }
+
+  @Get("rate")
+  sep38Rate(
+    @Headers("x-api-key") apiKey: string | undefined,
+    @Headers("authorization") authorization: string | undefined,
+    @Query("type") type?: string,
+    @Query("sell_asset") sellAsset?: string,
+    @Query("buy_asset") buyAsset?: string,
+    @Query("sell_amount") sellAmount?: string,
+    @Query("buy_amount") buyAmount?: string,
+    @Query("expires_after") expiresAfter?: string,
+  ) {
+    if (!callbackAuthOk(apiKey, authorization)) {
+      throw new UnauthorizedException("Callback API key required");
+    }
+    try {
+      return buildSep38Rate({
+        type,
+        sellAsset: sellAsset ?? "iso4217:XOF",
+        buyAsset: buyAsset ?? "stellar:USDC",
+        sellAmount,
+        buyAmount,
+        expiresAfter,
+      });
+    } catch (err) {
+      throw new BadRequestException(
+        err instanceof Error ? err.message : "rate failed",
       );
     }
   }

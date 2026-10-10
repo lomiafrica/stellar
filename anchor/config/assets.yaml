@@ -69,7 +69,7 @@ items:
         - SN
   - id: stellar:USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5
     distribution_account: GD6PH2FAK5DQFFFALZVAT337R7NDGSPWT4R6UBGA5GYLL7N5U4C4GI7I
-    significant_decimals: 2
+    significant_decimals: 7
     sep6:
       enabled: true
     sep24:

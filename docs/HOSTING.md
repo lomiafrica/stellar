@@ -39,7 +39,7 @@ SEP12_ACCEPTED_ACCOUNTS=G…
 WEB_AUTH_ENDPOINT=https://<anchor-host>/auth
 ```
 
-Prefer env secrets so Railway's ephemeral filesystem does not need a volume. Bootstrap keys from env on each deploy.
+Keep secrets in environment variables. The ledger is not a secret: mount a volume at `/data` and set `STELLAR_DATA_DIR=/data` so reconcile history survives a deploy. Bootstrap keys from env on each deploy.
 
 6. Service **Postgres** (Railway plugin). Anchor 4.8.0 has no SQLite/H2 driver.
 

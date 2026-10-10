@@ -25,7 +25,7 @@ data:
 sep1:
   enabled: false
 sep6:
-  enabled: false
+  enabled: true
 sep10:
   enabled: true
   home_domains: lab-production-5fac.up.railway.app,lomi.africa
@@ -44,7 +44,7 @@ sep24:
 sep31:
   enabled: false
 sep38:
-  enabled: false
+  enabled: true
 assets:
   type: file
   value: /config/assets.yaml

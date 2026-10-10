@@ -7,14 +7,25 @@ import {
   type Response,
 } from "express";
 import { NestFactory } from "@nestjs/core";
+import { startSep6Schedule } from "./anchor/sep6-platform.js";
 import { assertDeployNetwork, PORT } from "./config.js";
 import { AppModule } from "./http/app.module.js";
 import { corsOrigins, rateLimitOk, securityHeaders } from "./http/security.js";
 import { purgeExpiredSettlements } from "./ledger/store.js";
+import { log } from "./ops/log.js";
+import { runReconcile, startReconcileSchedule } from "./ops/reconcile-job.js";
 
 async function bootstrap() {
   assertDeployNetwork();
   purgeExpiredSettlements();
+  await runReconcile().catch((err: unknown) => {
+    log("reconcile.run", {
+      ok: false,
+      message: err instanceof Error ? err.message : "boot reconcile failed",
+    });
+  });
+  startReconcileSchedule();
+  startSep6Schedule();
   const app = await NestFactory.create(AppModule, {
     rawBody: true,
     bodyParser: false,

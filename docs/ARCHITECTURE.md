@@ -6,7 +6,7 @@
 
 lomi. processes merchant payments in UEMOA (XOF). This repo is a standalone lab for a custodial Circle USDC hop on Stellar: same public payout model (`POST /payouts`), merchants never hold keys.
 
-A later rail would use Bridge for USD/USDC treasury and Stellar Anchor Platform for the XOF SEP stack. Anchor Platform config is in `anchor/`. Bridge stays mocked here.
+Anchor Platform config is in `anchor/` with SEP-6 and SEP-38 enabled. Bridge is a sandbox client when `BRIDGE_API_KEY` is set, and a mock adapter otherwise. See [BRIDGE.md](./BRIDGE.md) and [OPS.md](./OPS.md).
 
 How that hop shows up on the lomi. phone, next to cards, mobile money, and bank payouts: [PRODUCT-ROADMAP.md](./PRODUCT-ROADMAP.md).
 
@@ -80,8 +80,8 @@ If `rail: "stellar"` is enabled on the hosted API later: allowlisted organizatio
 | ------------------------ | ---------------------------------------- | --------------------------- |
 | Circle USDC              | Settlement asset (consume, do not issue) | Testnet trustlines          |
 | Stellar classic payments | Omnibus to merchant, memo = payout id    | Implemented                 |
-| Bridge                   | USD <-> USDC treasury                    | Mock adapter                |
-| Stellar Anchor Platform  | XOF on/off-ramp SEP stack                | Official image in `anchor/` |
+| Bridge                   | USD <-> USDC treasury                    | Sandbox client, or mock if no API key |
+| Stellar Anchor Platform  | XOF on/off-ramp SEP stack                | Official image in `anchor/`, SEP-6 and SEP-38 on |
 
 ## 3. What runs today
 
@@ -93,7 +93,8 @@ Standalone app. No other lomi. repo is required to install or run it.
 | Memo-keyed USDC Payment (omnibus to merchant) | `pnpm settle:10`                      |
 | Local `stellar_settlements.json` ledger       | Lab-only JSON                         |
 | `POST /demo/payouts` (`rail: stellar`)        | Same body as public `POST /payouts`   |
-| Mock Bridge + mock Wave off-ramp              | Stubs                                 |
+| Bridge sandbox client, mock if no API key     | `pnpm bridge:bootstrap`, `pnpm t2:cycle` |
+| Daily three-way reconcile on a volume          | `GET /ops/reconcile/latest`           |
 | SEP-1 `stellar.toml`                          | Hosted at `/.well-known/stellar.toml` |
 | SEP-12 / SEP-24 sandbox                       | Merchant verify callback + last-mile  |
 
@@ -127,8 +128,8 @@ Merchants never see wallets or keys.
 | SEP-10 | Official platform `/auth`     | Wallet / anchor auth                       |
 | SEP-12 | Lab callback + sandbox PUT    | KYC/KYB via existing merchant verification |
 | SEP-24 | Interactive sandbox last mile | Interactive deposit/withdraw to Wave/MTN   |
-| SEP-6  | Lab programmatic withdraw     | Platform-enabled deposit/withdraw          |
-| SEP-38 | Lab quotes with TTL           | XOF/USDC quotes (XOF pegged to EUR)        |
+| SEP-6  | Platform `/sep6` plus lab rate callback | Programmatic deposit and withdraw     |
+| SEP-38 | Platform `/sep38`, firm quotes with TTL | XOF/USDC, XOF pegged to EUR           |
 | SEP-31 | Lab inbound stub              | UEMOA receiving corridor                   |
 
 No Soroban. Classic payments, then Anchor Platform if we take the rail live.
@@ -173,7 +174,7 @@ Idempotency: same `payout_id` means at most one on-chain Payment.
 | Dependency            | Role             | Here vs later                                                                                                    |
 | --------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Circle USDC           | Settlement asset | Testnet; consume only, never issue                                                                               |
-| Bridge                | USD <-> USDC     | Mock adapter now; RSA-signed webhook receiver is in this lab (`POST /bridge/webhook`). Real Bridge client later. |
+| Bridge                | USD <-> USDC     | Sandbox client when `BRIDGE_API_KEY` is set. RSA webhook receiver is `POST /bridge/webhook`. Sandbox does not deliver on Stellar testnet. |
 | Anchor Platform (SDF) | SEP stack        | `anchor/docker-compose.yml`                                                                                      |
 | Wave / MTN / SPI      | Last mile        | Live on lomi.; mocked here                                                                                       |
 | BCEAO                 | Regulatory       | PI licence application in progress; MoR under partner banks                                                      |

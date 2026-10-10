@@ -26,6 +26,31 @@ jobs:
           LIVE_ANCHOR_URL: https://anchor-production-5059.up.railway.app
           LIVE_USDC_AMOUNT: "1"
         run: pnpm test:live
+      - name: Reconcile log
+        if: always()
+        env:
+          LAB_API_KEY: ${{ secrets.LAB_API_KEY }}
+          LIVE_LAB_URL: https://lab-production-5fac.up.railway.app
+        run: |
+          curl -sS -X POST "$LIVE_LAB_URL/ops/reconcile/run" \
+            -H "X-Lab-Key: $LAB_API_KEY" \
+            -H "Content-Type: application/json" \
+            -o reconcile-run.json || true
+          curl -sS "$LIVE_LAB_URL/ops/reconcile/latest" \
+            -H "Accept: application/json" \
+            -o reconcile-latest.json || true
+          {
+            echo "## T2 reconcile"
+            echo '```json'
+            cat reconcile-latest.json 2>/dev/null || echo "{}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reconcile-log
+          path: reconcile-latest.json
+          if-no-files-found: ignore
       - name: Job summary
         if: always()
         run: |
