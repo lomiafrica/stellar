@@ -3,7 +3,10 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { BridgeSandboxAdapter, mapBridgeStatus } from "../src/bridge/adapter.js";
+import {
+  BridgeSandboxAdapter,
+  mapBridgeStatus,
+} from "../src/bridge/adapter.js";
 import {
   BridgeApiError,
   BridgeClient,
@@ -18,7 +21,9 @@ test("mapBridgeStatus treats payment_processed as completed", () => {
 });
 
 test("sandbox adapter creates a transfer through the injected client", async () => {
-  process.env.STELLAR_DATA_DIR = mkdtempSync(join(tmpdir(), "stellar-bridge-ad-"));
+  process.env.STELLAR_DATA_DIR = mkdtempSync(
+    join(tmpdir(), "stellar-bridge-ad-"),
+  );
   process.env.BRIDGE_CUSTOMER_ID = "cust_test";
   const calls: string[] = [];
   const client = new BridgeClient({
@@ -54,7 +59,10 @@ test("sandbox adapter creates a transfer through the injected client", async () 
   const created = await adapter.createTransfer({ usdAmount: "10.0" });
   assert.equal(created.id, "tr_1");
   assert.equal(created.status, "completed");
-  assert.match(calls[0] ?? "", /POST https:\/\/api.sandbox.bridge.xyz\/v0\/transfers/);
+  assert.match(
+    calls[0] ?? "",
+    /POST https:\/\/api.sandbox.bridge.xyz\/v0\/transfers/,
+  );
   await assert.rejects(
     () => client.getTransfer("missing"),
     (err) => err instanceof BridgeApiError && err.status === 404,

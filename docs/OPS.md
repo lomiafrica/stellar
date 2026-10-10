@@ -63,12 +63,12 @@ curl -sS -X POST "$PUBLIC_BASE_URL/ops/reconcile/review/$PAYOUT_ID/close" \
 
 `ALERT_WEBHOOK_URL` receives `{ "text": "…" }` (Slack incoming webhook). When it is unset, the same events are only JSON lines on stdout.
 
-| Event | Meaning |
-| --- | --- |
-| `webhook.rejected` | Signature missing, stale, or invalid. No ledger write. |
-| `reconcile.break` | A payout failed the three-way check. It is also in the review queue. |
-| `tx.send_error` | Stellar rejected the payment, or the worker failed. |
-| `tx.timeout` | The hash is still pending after the poll window. Retry the same payout id. |
+| Event              | Meaning                                                                    |
+| ------------------ | -------------------------------------------------------------------------- |
+| `webhook.rejected` | Signature missing, stale, or invalid. No ledger write.                     |
+| `reconcile.break`  | A payout failed the three-way check. It is also in the review queue.       |
+| `tx.send_error`    | Stellar rejected the payment, or the worker failed.                        |
+| `tx.timeout`       | The hash is still pending after the poll window. Retry the same payout id. |
 
 Other lines (`quote.issued`, `quote.expired`, `tx.submitted`, `tx.confirmed`, `webhook.received`, `webhook.duplicate`, `reconcile.run`) are logs, not pages.
 

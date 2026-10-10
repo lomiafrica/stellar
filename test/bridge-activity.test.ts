@@ -17,7 +17,9 @@ function headerFor(
   privateKey: ReturnType<typeof generateKeyPairSync>["privateKey"],
   timestamp: number,
 ): string {
-  const digest = createHash("sha256").update(`${timestamp}.${rawBody}`).digest();
+  const digest = createHash("sha256")
+    .update(`${timestamp}.${rawBody}`)
+    .digest();
   const signature = sign("sha256", digest, privateKey).toString("base64");
   return `t=${timestamp},v0=${signature}`;
 }

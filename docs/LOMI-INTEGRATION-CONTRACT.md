@@ -45,15 +45,15 @@ Lab-only JSON (gitignored). Fields the demo stores:
 
 ### HTTP
 
-| Lab endpoint                   | Public analogue                        |
-| ------------------------------ | -------------------------------------- |
-| `POST /demo/payouts`           | `POST /payouts` with `rail: "stellar"` |
+| Lab endpoint                   | Public analogue                                    |
+| ------------------------------ | -------------------------------------------------- |
+| `POST /demo/payouts`           | `POST /payouts` with `rail: "stellar"`             |
 | `GET /demo/payouts/:payout_id` | Payout status, `stellar_transaction_id`, reconcile |
-| `GET /ops/reconcile/latest` | Latest three-way run                          |
-| `POST /ops/reconcile/run`  | Run reconcile now (`X-Lab-Key`)                |
-| `POST /demo/settle`            | Same orchestration as `/demo/payouts`  |
-| Header `Idempotency-Key`       | Public API idempotency                 |
-| Header `X-Lab-Key`             | Lab `LAB_API_KEY`                      |
+| `GET /ops/reconcile/latest`    | Latest three-way run                               |
+| `POST /ops/reconcile/run`      | Run reconcile now (`X-Lab-Key`)                    |
+| `POST /demo/settle`            | Same orchestration as `/demo/payouts`              |
+| Header `Idempotency-Key`       | Public API idempotency                             |
+| Header `X-Lab-Key`             | Lab `LAB_API_KEY`                                  |
 
 ### Orchestration
 

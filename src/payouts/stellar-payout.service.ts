@@ -9,7 +9,11 @@ import {
   upsertSettlement,
 } from "../ledger/store.js";
 import { secretsEqual } from "../http/lab-auth.js";
-import { DualControlError, PayoutCapError, PayoutInFlightError } from "./errors.js";
+import {
+  DualControlError,
+  PayoutCapError,
+  PayoutInFlightError,
+} from "./errors.js";
 import {
   getBridgeAdapter,
   type BridgeAdapter,
@@ -109,7 +113,11 @@ function usdcToday(now: number): number {
 /** Amounts above the threshold need a second approval that matches LAB_APPROVAL_SECRET. */
 export function assertDualControl(amountUsdc: number, approval?: string): void {
   const threshold = Number(process.env.LAB_DUAL_CONTROL_USDC ?? "100");
-  if (!Number.isFinite(threshold) || threshold <= 0 || amountUsdc <= threshold) {
+  if (
+    !Number.isFinite(threshold) ||
+    threshold <= 0 ||
+    amountUsdc <= threshold
+  ) {
     return;
   }
   const expected = process.env.LAB_APPROVAL_SECRET?.trim() ?? "";
@@ -243,7 +251,7 @@ async function recoverProcessing(
       true,
     );
   }
-    if (found.status === "NOT_FOUND") {
+  if (found.status === "NOT_FOUND") {
     const created = Date.parse(record.updated_at || record.created_at);
     const expired =
       Number.isFinite(created) &&

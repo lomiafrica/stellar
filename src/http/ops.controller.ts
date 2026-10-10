@@ -26,7 +26,11 @@ import {
 type EmptyReconcile = { ok: true; rows: number; runs: number };
 type ReconcileWindow = { days: number; runs: ReconcileRunRecord[] };
 type ReviewBody = { review: ReviewItem[] };
-type OpsJson = ReconcileRunRecord | EmptyReconcile | ReconcileWindow | ReviewBody;
+type OpsJson =
+  | ReconcileRunRecord
+  | EmptyReconcile
+  | ReconcileWindow
+  | ReviewBody;
 import { assertLabMutatingAuth } from "./lab-auth.js";
 import { prefersHtml } from "./page-chrome.js";
 
@@ -122,7 +126,9 @@ export class OpsController {
     assertLabMutatingAuth(labKey, authorization);
     const note = body.note?.trim() ?? "";
     if (!note) {
-      throw new BadRequestException("A note is required to close a review item.");
+      throw new BadRequestException(
+        "A note is required to close a review item.",
+      );
     }
     const closed = closeReview(payoutId, note);
     if (!closed) {

@@ -178,7 +178,10 @@ test("T1.1 XOF deposit from a wallet-shaped SEP-10 client to a sandbox Wave cred
   const toml = await fetchJson(`${lab}/.well-known/stellar.toml`);
   const signingKey = tomlValue(toml.text, "SIGNING_KEY");
   const webAuth = tomlValue(toml.text, "WEB_AUTH_ENDPOINT").replace(/\/$/, "");
-  const sep24 = tomlValue(toml.text, "TRANSFER_SERVER_SEP0024").replace(/\/$/, "");
+  const sep24 = tomlValue(toml.text, "TRANSFER_SERVER_SEP0024").replace(
+    /\/$/,
+    "",
+  );
   const kyc = tomlValue(toml.text, "KYC_SERVER").replace(/\/$/, "");
 
   const challenge = await fetchJson(

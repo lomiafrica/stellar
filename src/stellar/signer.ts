@@ -1,8 +1,4 @@
-import {
-  createCipheriv,
-  createDecipheriv,
-  randomBytes,
-} from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { Keypair, type Transaction } from "@stellar/stellar-sdk";
 import { loadKeypair, type KeyRole } from "./keys.js";
 

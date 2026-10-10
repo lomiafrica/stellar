@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { isJsonObject, parseJson, readString, type JsonObject } from "../json.js";
+import {
+  isJsonObject,
+  parseJson,
+  readString,
+  type JsonObject,
+} from "../json.js";
 
 export class BridgeApiError extends Error {
   readonly status: number;

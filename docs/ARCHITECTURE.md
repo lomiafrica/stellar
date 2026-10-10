@@ -76,27 +76,27 @@ This lab (testnet)
 
 If `rail: "stellar"` is enabled on the hosted API later: allowlisted organizations, test first, real Bridge, Anchor Platform for XOF SEPs. Field map: [LOMI-INTEGRATION-CONTRACT.md](./LOMI-INTEGRATION-CONTRACT.md).
 
-| Building block           | Role                                     | In this repo                |
-| ------------------------ | ---------------------------------------- | --------------------------- |
-| Circle USDC              | Settlement asset (consume, do not issue) | Testnet trustlines          |
-| Stellar classic payments | Omnibus to merchant, memo = payout id    | Implemented                 |
-| Bridge                   | USD <-> USDC treasury                    | Sandbox client, or mock if no API key |
+| Building block           | Role                                     | In this repo                                     |
+| ------------------------ | ---------------------------------------- | ------------------------------------------------ |
+| Circle USDC              | Settlement asset (consume, do not issue) | Testnet trustlines                               |
+| Stellar classic payments | Omnibus to merchant, memo = payout id    | Implemented                                      |
+| Bridge                   | USD <-> USDC treasury                    | Sandbox client, or mock if no API key            |
 | Stellar Anchor Platform  | XOF on/off-ramp SEP stack                | Official image in `anchor/`, SEP-6 and SEP-38 on |
 
 ## 3. What runs today
 
 Standalone app. No other lomi. repo is required to install or run it.
 
-| Capability                                    | Status                                |
-| --------------------------------------------- | ------------------------------------- |
-| Friendbot XLM + Circle USDC trustlines        | On testnet                            |
-| Memo-keyed USDC Payment (omnibus to merchant) | `pnpm settle:10`                      |
-| Local `stellar_settlements.json` ledger       | Lab-only JSON                         |
-| `POST /demo/payouts` (`rail: stellar`)        | Same body as public `POST /payouts`   |
+| Capability                                    | Status                                   |
+| --------------------------------------------- | ---------------------------------------- |
+| Friendbot XLM + Circle USDC trustlines        | On testnet                               |
+| Memo-keyed USDC Payment (omnibus to merchant) | `pnpm settle:10`                         |
+| Local `stellar_settlements.json` ledger       | Lab-only JSON                            |
+| `POST /demo/payouts` (`rail: stellar`)        | Same body as public `POST /payouts`      |
 | Bridge sandbox client, mock if no API key     | `pnpm bridge:bootstrap`, `pnpm t2:cycle` |
-| Daily three-way reconcile on a volume          | `GET /ops/reconcile/latest`           |
-| SEP-1 `stellar.toml`                          | Hosted at `/.well-known/stellar.toml` |
-| SEP-12 / SEP-24 sandbox                       | Merchant verify callback + last-mile  |
+| Daily three-way reconcile on a volume         | `GET /ops/reconcile/latest`              |
+| SEP-1 `stellar.toml`                          | Hosted at `/.well-known/stellar.toml`    |
+| SEP-12 / SEP-24 sandbox                       | Merchant verify callback + last-mile     |
 
 **Testnet accounts**
 
@@ -122,15 +122,15 @@ Merchants never see wallets or keys.
 
 ## 5. SEP map
 
-| SEP    | Lab                           | Later                                      |
-| ------ | ----------------------------- | ------------------------------------------ |
-| SEP-1  | `stellar.toml` + XOF metadata | Hosted toml with XOF fiat metadata         |
-| SEP-10 | Official platform `/auth`     | Wallet / anchor auth                       |
-| SEP-12 | Lab callback + sandbox PUT    | KYC/KYB via existing merchant verification |
-| SEP-24 | Interactive sandbox last mile | Interactive deposit/withdraw to Wave/MTN   |
-| SEP-6  | Platform `/sep6` plus lab rate callback | Programmatic deposit and withdraw     |
-| SEP-38 | Platform `/sep38`, firm quotes with TTL | XOF/USDC, XOF pegged to EUR           |
-| SEP-31 | Lab inbound stub              | UEMOA receiving corridor                   |
+| SEP    | Lab                                     | Later                                      |
+| ------ | --------------------------------------- | ------------------------------------------ |
+| SEP-1  | `stellar.toml` + XOF metadata           | Hosted toml with XOF fiat metadata         |
+| SEP-10 | Official platform `/auth`               | Wallet / anchor auth                       |
+| SEP-12 | Lab callback + sandbox PUT              | KYC/KYB via existing merchant verification |
+| SEP-24 | Interactive sandbox last mile           | Interactive deposit/withdraw to Wave/MTN   |
+| SEP-6  | Platform `/sep6` plus lab rate callback | Programmatic deposit and withdraw          |
+| SEP-38 | Platform `/sep38`, firm quotes with TTL | XOF/USDC, XOF pegged to EUR                |
+| SEP-31 | Lab inbound stub                        | UEMOA receiving corridor                   |
 
 No Soroban. Classic payments, then Anchor Platform if we take the rail live.
 
@@ -171,13 +171,13 @@ Idempotency: same `payout_id` means at most one on-chain Payment.
 
 ## 9. Dependencies
 
-| Dependency            | Role             | Here vs later                                                                                                    |
-| --------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Circle USDC           | Settlement asset | Testnet; consume only, never issue                                                                               |
+| Dependency            | Role             | Here vs later                                                                                                                             |
+| --------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Circle USDC           | Settlement asset | Testnet; consume only, never issue                                                                                                        |
 | Bridge                | USD <-> USDC     | Sandbox client when `BRIDGE_API_KEY` is set. RSA webhook receiver is `POST /bridge/webhook`. Sandbox does not deliver on Stellar testnet. |
-| Anchor Platform (SDF) | SEP stack        | `anchor/docker-compose.yml`                                                                                      |
-| Wave / MTN / SPI      | Last mile        | Live on lomi.; mocked here                                                                                       |
-| BCEAO                 | Regulatory       | PI licence application in progress; MoR under partner banks                                                      |
+| Anchor Platform (SDF) | SEP stack        | `anchor/docker-compose.yml`                                                                                                               |
+| Wave / MTN / SPI      | Last mile        | Live on lomi.; mocked here                                                                                                                |
+| BCEAO                 | Regulatory       | PI licence application in progress; MoR under partner banks                                                                               |
 
 ## 10. If we take this live
 

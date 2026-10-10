@@ -17,10 +17,7 @@ test("public stellar.toml lists XOF and Circle testnet USDC", () => {
   );
   assert.match(toml, /code = "USDC"/);
   assert.match(toml, /TRANSFER_SERVER="\{\{ANCHOR_PUBLIC_URL\}\}\/sep6"/);
-  assert.match(
-    toml,
-    /ANCHOR_QUOTE_SERVER="\{\{ANCHOR_PUBLIC_URL\}\}\/sep38"/,
-  );
+  assert.match(toml, /ANCHOR_QUOTE_SERVER="\{\{ANCHOR_PUBLIC_URL\}\}\/sep38"/);
 });
 
 const TEMPLATE = `NETWORK_PASSPHRASE="Test SDF Network ; September 2015"

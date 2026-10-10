@@ -40,8 +40,7 @@ function findByBridgeTransferId(
  * carries the same bridge_transfer_id. Does not create a credit.
  */
 export function linkBridgeActivity(row: JsonObject): BridgeActivityLink {
-  const eventId =
-    readString(row, "event_id") ?? readString(row, "id") ?? "";
+  const eventId = readString(row, "event_id") ?? readString(row, "id") ?? "";
   const category = readString(row, "event_category") ?? "";
   const type = readString(row, "event_type") ?? "";
   const activity =

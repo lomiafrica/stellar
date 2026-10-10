@@ -89,7 +89,10 @@ export function latestReconcileRun(): ReconcileRunRecord | undefined {
   return runs[runs.length - 1];
 }
 
-export function reconcileRunsSince(days: number, now = Date.now()): ReconcileRunRecord[] {
+export function reconcileRunsSince(
+  days: number,
+  now = Date.now(),
+): ReconcileRunRecord[] {
   const windowMs = (Number.isFinite(days) && days > 0 ? days : 14) * 86_400_000;
   const cutoff = now - windowMs;
   return readReconcileRuns().filter((run) => {
@@ -146,7 +149,10 @@ export function touchReview(
   });
 }
 
-export function closeReview(payoutId: string, note: string): ReviewItem | undefined {
+export function closeReview(
+  payoutId: string,
+  note: string,
+): ReviewItem | undefined {
   return withNamedLock("reconcile-review", () => {
     const rows = readJsonArray(REVIEW).map(asReview);
     const idx = rows.findIndex((item) => item.payout_id === payoutId);

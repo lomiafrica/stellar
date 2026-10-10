@@ -9,7 +9,9 @@ test("alert posts slack-shaped text when a URL is set", async () => {
     seen = String(init.body ?? "");
     return { ok: true };
   });
-  const ok = await notifyAlert("webhook.rejected", { reason: "invalid signature" });
+  const ok = await notifyAlert("webhook.rejected", {
+    reason: "invalid signature",
+  });
   assert.equal(ok, true);
   assert.match(seen, /webhook.rejected/);
   assert.match(seen, /invalid signature/);

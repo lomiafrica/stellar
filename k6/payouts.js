@@ -25,7 +25,11 @@ export const options = {
 };
 
 function headers(extra) {
-  const out = { "Content-Type": "application/json", Prefer: "respond-async", ...extra };
+  const out = {
+    "Content-Type": "application/json",
+    Prefer: "respond-async",
+    ...extra,
+  };
   if (LAB_KEY) out["X-Lab-Key"] = LAB_KEY;
   return out;
 }
@@ -48,7 +52,10 @@ export default function stellarPayouts() {
       payout_id: payoutId,
       async: true,
     }),
-    { headers: headers({ "Idempotency-Key": payoutId }), tags: { name: "create" } },
+    {
+      headers: headers({ "Idempotency-Key": payoutId }),
+      tags: { name: "create" },
+    },
   );
   check(create, {
     "async accepted": (res) => res.status === 202 || res.status === 200,
@@ -57,9 +64,12 @@ export default function stellarPayouts() {
 }
 
 export function teardown() {
-  const list = http.get(`${BASE}/demo/payouts?since=${encodeURIComponent(startedAt)}`, {
-    headers: { Accept: "application/json" },
-  });
+  const list = http.get(
+    `${BASE}/demo/payouts?since=${encodeURIComponent(startedAt)}`,
+    {
+      headers: { Accept: "application/json" },
+    },
+  );
   const body = list.json();
   const rows = body && body.payouts ? body.payouts : [];
   const seen = {};

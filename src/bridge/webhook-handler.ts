@@ -1,4 +1,9 @@
-import { isJsonObject, parseJson, readString, type JsonObject } from "../json.js";
+import {
+  isJsonObject,
+  parseJson,
+  readString,
+  type JsonObject,
+} from "../json.js";
 import { linkBridgeActivity } from "./activity.js";
 import { notifyAlert } from "../ops/alert.js";
 import { log } from "../ops/log.js";
@@ -45,7 +50,9 @@ export function handleBridgeWebhook(
     deps.now,
   );
   if (!verified.ok) {
-    void notifyAlert("webhook.rejected", { reason: verified.reason ?? "rejected" });
+    void notifyAlert("webhook.rejected", {
+      reason: verified.reason ?? "rejected",
+    });
     return { status: 400, body: { ok: false, reason: verified.reason } };
   }
   let eventId = "";

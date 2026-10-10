@@ -38,7 +38,9 @@ async function readJson(url: string, init?: RequestInit): Promise<JsonObject> {
 }
 
 async function main(): Promise<void> {
-  const tomlText = await (await fetch(`${lab}/.well-known/stellar.toml`)).text();
+  const tomlText = await (
+    await fetch(`${lab}/.well-known/stellar.toml`)
+  ).text();
   const webAuth = tomlValue(tomlText, "WEB_AUTH_ENDPOINT").replace(/\/$/, "");
   const transfer = tomlValue(tomlText, "TRANSFER_SERVER").replace(/\/$/, "");
   const quotes = tomlValue(tomlText, "ANCHOR_QUOTE_SERVER").replace(/\/$/, "");

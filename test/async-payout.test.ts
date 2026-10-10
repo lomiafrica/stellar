@@ -54,7 +54,12 @@ test("accept returns before send, and the owned resume sends once", async () => 
     now: () => Date.now(),
   };
   const accepted = await acceptStellarPayout(
-    { payoutId: "async-1", amount: "1", currency_code: "USD", amount_number: 1 },
+    {
+      payoutId: "async-1",
+      amount: "1",
+      currency_code: "USD",
+      amount_number: 1,
+    },
     runtime,
   );
   assert.equal(accepted.status, "processing");

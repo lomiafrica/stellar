@@ -98,7 +98,10 @@ export function planSep6Action(tx: Sep6Transaction): Sep6Action {
     return { method: "notify_offchain_funds_sent", amountOut: settled };
   }
   if (status === "pending_user_transfer_start") {
-    return { method: "wait", reason: "waiting for the inbound Stellar payment" };
+    return {
+      method: "wait",
+      reason: "waiting for the inbound Stellar payment",
+    };
   }
   return { method: "wait", reason: status };
 }
@@ -111,7 +114,9 @@ function readRecords(body: JsonValue): JsonObject[] {
   return records.filter(isJsonObject);
 }
 
-export function parseSep6Transaction(row: JsonObject): Sep6Transaction | undefined {
+export function parseSep6Transaction(
+  row: JsonObject,
+): Sep6Transaction | undefined {
   const id = readString(row, "id") ?? "";
   if (!id) return undefined;
   const kindRaw = readString(row, "kind") ?? readString(row, "type");
@@ -217,7 +222,9 @@ export async function listPlatformSep6(): Promise<Sep6Transaction[]> {
   });
   const text = await response.text();
   if (!response.ok) {
-    log("tx.send_error", { detail: `${response.status} ${text.slice(0, 180)}` });
+    log("tx.send_error", {
+      detail: `${response.status} ${text.slice(0, 180)}`,
+    });
     return [];
   }
   try {
@@ -245,7 +252,10 @@ export async function platformRpc(
       }),
     });
     const text = await response.text();
-    return { ok: response.ok, detail: `${response.status} ${text.slice(0, 200)}` };
+    return {
+      ok: response.ok,
+      detail: `${response.status} ${text.slice(0, 200)}`,
+    };
   } catch (err) {
     return {
       ok: false,

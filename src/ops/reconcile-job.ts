@@ -17,11 +17,17 @@ function shouldCheck(row: StellarSettlementRecord, now: number): boolean {
     const updated = Date.parse(row.updated_at || row.created_at);
     if (Number.isFinite(updated) && now - updated < STUCK_MS) return false;
   }
-  return row.status === "completed" || row.status === "processing" || Boolean(row.stellar_tx_hash);
+  return (
+    row.status === "completed" ||
+    row.status === "processing" ||
+    Boolean(row.stellar_tx_hash)
+  );
 }
 
 /** Ledger vs chain vs Bridge for every settled row. Breaks go to the review queue. */
-export async function runReconcile(now = Date.now()): Promise<ReconcileRunRecord> {
+export async function runReconcile(
+  now = Date.now(),
+): Promise<ReconcileRunRecord> {
   const rows = readLedger().filter((row) => shouldCheck(row, now));
   const breakLines: string[] = [];
   const payoutIds: string[] = [];

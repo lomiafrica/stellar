@@ -235,7 +235,8 @@ test("dual control rejects a large payout without a second approval", () => {
     assert.doesNotThrow(() => assertDualControl(11, "second-person"));
     assert.doesNotThrow(() => assertDualControl(10));
   } finally {
-    if (previousThreshold === undefined) delete process.env.LAB_DUAL_CONTROL_USDC;
+    if (previousThreshold === undefined)
+      delete process.env.LAB_DUAL_CONTROL_USDC;
     else process.env.LAB_DUAL_CONTROL_USDC = previousThreshold;
     if (previousSecret === undefined) delete process.env.LAB_APPROVAL_SECRET;
     else process.env.LAB_APPROVAL_SECRET = previousSecret;

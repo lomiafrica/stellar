@@ -8,13 +8,14 @@ const OMNIBUS =
 
 async function main(): Promise<void> {
   if (!process.env.BRIDGE_API_KEY?.trim()) {
-    throw new Error("BRIDGE_API_KEY unset. Sandbox keys come from Bridge support.");
+    throw new Error(
+      "BRIDGE_API_KEY unset. Sandbox keys come from Bridge support.",
+    );
   }
   const client = bridgeClientFromEnv();
-  const base = (process.env.PUBLIC_BASE_URL ?? "https://lab-production-5fac.up.railway.app").replace(
-    /\/$/,
-    "",
-  );
+  const base = (
+    process.env.PUBLIC_BASE_URL ?? "https://lab-production-5fac.up.railway.app"
+  ).replace(/\/$/, "");
   let customerId = process.env.BRIDGE_CUSTOMER_ID?.trim() ?? "";
   if (!customerId) {
     const created = await client.createCustomer({

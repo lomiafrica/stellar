@@ -8,13 +8,13 @@ When `BRIDGE_API_KEY` is set, `getBridgeAdapter()` uses the sandbox client. Othe
 
 ## What each side does
 
-| Step | Owner |
-| --- | --- |
-| Customer, KYC approval, USD virtual account | Bridge sandbox |
-| Transfer id for the USD amount | Bridge sandbox |
-| USDC payment on Stellar testnet, memo = payout id | Lab omnibus |
-| Webhook signature check and event-id dedupe | Lab `POST /bridge/webhook` |
-| XOF collect and payout instruction | Wave / MTN / SPI sandbox |
+| Step                                              | Owner                      |
+| ------------------------------------------------- | -------------------------- |
+| Customer, KYC approval, USD virtual account       | Bridge sandbox             |
+| Transfer id for the USD amount                    | Bridge sandbox             |
+| USDC payment on Stellar testnet, memo = payout id | Lab omnibus                |
+| Webhook signature check and event-id dedupe       | Lab `POST /bridge/webhook` |
+| XOF collect and payout instruction                | Wave / MTN / SPI sandbox   |
 
 A virtual account destination is `payment_rail: stellar`, `currency: usdc`, the omnibus `G…` address, and a memo. Bridge will not broadcast that payment in sandbox. The lab submits the testnet payment and stores `bridge_transfer_id` on the ledger row.
 

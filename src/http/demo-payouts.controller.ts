@@ -115,7 +115,9 @@ export class DemoPayoutsController {
 
     const wantsAsync =
       body.async === true ||
-      String(req.headers.prefer ?? "").toLowerCase().includes("respond-async");
+      String(req.headers.prefer ?? "")
+        .toLowerCase()
+        .includes("respond-async");
 
     try {
       if (wantsAsync) {

@@ -123,7 +123,9 @@ function transferFromApi(row: JsonObject, fallbackUsd: string): BridgeTransfer {
       readString(row, "amount") ??
       fallbackUsd,
     stellarNetwork: "testnet",
-    status: mapBridgeStatus(readString(row, "state") ?? readString(row, "status")),
+    status: mapBridgeStatus(
+      readString(row, "state") ?? readString(row, "status"),
+    ),
     createdAt: readString(row, "created_at") ?? new Date().toISOString(),
   };
 }
