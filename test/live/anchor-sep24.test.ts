@@ -161,3 +161,94 @@ test("T1.1 live SEP-10 to SEP-24 through Anchor Platform, sandbox last mile only
     interactiveUrlHost: new URL(url).host,
   });
 });
+
+test("T1.1 XOF deposit from a wallet-shaped SEP-10 client to a sandbox Wave credit", async () => {
+  const lab = liveLabUrl();
+  const anchor = liveAnchorUrl();
+  const client = Keypair.random();
+  const homeDomain = "lomi.africa";
+
+  const info = await fetchJson(`${anchor}/sep24/info`);
+  assert.equal(info.status, 200, info.text);
+  assert.ok(
+    asRecord(asRecord(info.body).deposit).XOF,
+    `SEP-24 info should list an XOF deposit: ${info.text}`,
+  );
+
+  const toml = await fetchJson(`${lab}/.well-known/stellar.toml`);
+  const signingKey = tomlValue(toml.text, "SIGNING_KEY");
+  const webAuth = tomlValue(toml.text, "WEB_AUTH_ENDPOINT").replace(/\/$/, "");
+  const sep24 = tomlValue(toml.text, "TRANSFER_SERVER_SEP0024").replace(/\/$/, "");
+  const kyc = tomlValue(toml.text, "KYC_SERVER").replace(/\/$/, "");
+
+  const challenge = await fetchJson(
+    `${webAuth}?account=${client.publicKey()}&home_domain=${homeDomain}`,
+  );
+  assert.equal(challenge.status, 200, challenge.text);
+  const xdr = String(asRecord(challenge.body).transaction ?? "");
+  const read = WebAuth.readChallengeTx(
+    xdr,
+    signingKey,
+    Networks.TESTNET,
+    homeDomain,
+    new URL(webAuth).host,
+  );
+  read.tx.sign(client);
+  const tokenRes = await fetchJson(webAuth, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ transaction: read.tx.toXDR() }),
+  });
+  const token = String(asRecord(tokenRes.body).token ?? "");
+  assert.ok(token.length > 20, tokenRes.text);
+  const auth = { Authorization: `Bearer ${token}` };
+
+  const put = await fetchJson(`${kyc}/customer`, {
+    method: "PUT",
+    headers: { ...auth, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      account: client.publicKey(),
+      email_address: "sandbox@example.test",
+    }),
+  });
+  assert.ok(put.status < 400, put.text);
+
+  const interactive = await fetchJson(
+    `${sep24}/transactions/deposit/interactive`,
+    {
+      method: "POST",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        asset_code: "XOF",
+        account: client.publicKey(),
+        amount: "1000",
+      }),
+    },
+  );
+  const interactiveRow = asRecord(interactive.body);
+  const url = String(interactiveRow.url ?? "");
+  assert.equal(interactive.status, 200, interactive.text);
+  const form = await fetchJson(url);
+  assert.equal(form.status, 200, form.text);
+  const tokenMatch = form.text.match(/name="token" value="([^"]+)"/);
+  const txMatch = form.text.match(/name="transaction_id" value="([^"]+)"/);
+  const actionMatch = form.text.match(/action="([^"]+)"/);
+  const action = actionMatch?.[1] ?? "";
+  const postUrl = action.startsWith("http")
+    ? action
+    : `${lab}${action.startsWith("/") ? "" : "/"}${action}`;
+  const complete = await fetchJson(postUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      amount: "1000",
+      phone: "+2250700000000",
+      rail: "wave",
+      token: tokenMatch?.[1] ?? "",
+      transaction_id: txMatch?.[1] ?? String(interactiveRow.id ?? ""),
+    }).toString(),
+  });
+  assert.ok(complete.status < 400, `form POST ${complete.status}`);
+  assert.match(complete.text, /Sandbox last mile recorded/);
+  assert.match(complete.text, /not a Stellar payment/);
+});
