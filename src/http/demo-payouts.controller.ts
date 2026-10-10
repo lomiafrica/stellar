@@ -31,7 +31,11 @@ import {
   createStellarPayout,
   notReadyBody,
 } from "../payouts/stellar-payout.service.js";
-import { PayoutCapError, PayoutInFlightError } from "../payouts/errors.js";
+import {
+  DualControlError,
+  PayoutCapError,
+  PayoutInFlightError,
+} from "../payouts/errors.js";
 import {
   renderPayoutListPage,
   renderPayoutPage,
@@ -63,6 +67,7 @@ export class DemoPayoutsController {
     },
     @Headers("idempotency-key") idempotencyKey?: string,
     @Headers("x-lab-key") labKey?: string,
+    @Headers("x-lab-approval") labApproval?: string,
     @Headers("authorization") authorization?: string,
   ) {
     assertLabMutatingAuth(labKey, authorization);
@@ -99,6 +104,7 @@ export class DemoPayoutsController {
       amount_usdc: body.amount_usdc,
       phone: body.recipient?.phone,
       bridge_transfer_id: body.bridge_transfer_id,
+      approval: labApproval,
     };
 
     try {
@@ -110,6 +116,13 @@ export class DemoPayoutsController {
     } catch (err) {
       if (err instanceof SettleNotReadyError) {
         throw new BadRequestException(notReadyBody(err));
+      }
+      if (err instanceof DualControlError) {
+        throw new BadRequestException({
+          success: false,
+          reason: "dual_control",
+          message: err.message,
+        });
       }
       if (err instanceof PayoutCapError) {
         throw new BadRequestException({

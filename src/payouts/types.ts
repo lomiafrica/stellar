@@ -21,6 +21,8 @@ export type CreateStellarPayoutInput = {
   phone?: string;
   /** Real Bridge transfer id from Nest. When set, the lab reuses it instead of creating a mock transfer. */
   bridge_transfer_id?: string;
+  /** Second approval. Required only above LAB_DUAL_CONTROL_USDC. */
+  approval?: string;
 };
 
 export type CreateStellarPayoutResponse = {

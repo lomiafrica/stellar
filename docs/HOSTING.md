@@ -29,6 +29,13 @@ SEP10_JWT_SECRET=
 CALLBACK_AUTH_SECRET=
 SEP24_INTERACTIVE_URL_JWT_SECRET=
 SEP12_ACCEPTED_ACCOUNTS=G…
+# Optional. Leave unset to keep the local testnet key. When all three are set, the seed is unsealed only to sign.
+# STELLAR_KMS_CIPHERTEXT=
+# STELLAR_KMS_PUBLIC_KEY=G…
+# STELLAR_KMS_KEK=
+# Amounts above this need header X-Lab-Approval. Default 100.
+# LAB_DUAL_CONTROL_USDC=100
+# LAB_APPROVAL_SECRET=
 WEB_AUTH_ENDPOINT=https://<anchor-host>/auth
 ```
 

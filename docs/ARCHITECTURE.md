@@ -166,7 +166,7 @@ Idempotency: same `payout_id` means at most one on-chain Payment.
 
 - Omnibus / custodial. Merchants never hold secrets.
 - A live rail would use HSM/KMS signing, Stellar multisig on treasury, velocity limits, dual-control above threshold.
-- Lab: local gitignored testnet keys only.
+- Lab: local gitignored testnet keys. A sealed seed (`EnvelopeSigner`) is used only when the ciphertext, the public key, and a separate key-encryption key are all set. Amounts above `LAB_DUAL_CONTROL_USDC` (default 100) need a second approval.
 
 ## 9. Dependencies
 

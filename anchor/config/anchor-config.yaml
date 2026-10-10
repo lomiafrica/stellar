@@ -28,7 +28,7 @@ sep6:
   enabled: false
 sep10:
   enabled: true
-  home_domains: lab-production-5fac.up.railway.app
+  home_domains: lab-production-5fac.up.railway.app,lomi.africa
   web_auth_domain: anchor-production-5059.up.railway.app
   client_attribution_required: false
 sep12:

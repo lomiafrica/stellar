@@ -7,7 +7,8 @@ import {
   type StellarSettlementRecord,
   upsertSettlement,
 } from "../ledger/store.js";
-import { PayoutCapError, PayoutInFlightError } from "./errors.js";
+import { secretsEqual } from "../http/lab-auth.js";
+import { DualControlError, PayoutCapError, PayoutInFlightError } from "./errors.js";
 import {
   getBridgeAdapter,
   type BridgeAdapter,
@@ -43,6 +44,8 @@ export interface SettleDemoInput {
   currency_code?: string;
   amount_number?: number;
   bridge_transfer_id?: string;
+  /** Second approval. Required only above LAB_DUAL_CONTROL_USDC. */
+  approval?: string;
 }
 
 export interface SettleDemoResult {
@@ -93,6 +96,25 @@ function usdcToday(now: number): number {
       return Number.isFinite(created) && created >= from;
     })
     .reduce((sum, row) => sum + (Number(row.amount_usdc) || 0), 0);
+}
+
+/** Amounts above the threshold need a second approval that matches LAB_APPROVAL_SECRET. */
+export function assertDualControl(amountUsdc: number, approval?: string): void {
+  const threshold = Number(process.env.LAB_DUAL_CONTROL_USDC ?? "100");
+  if (!Number.isFinite(threshold) || threshold <= 0 || amountUsdc <= threshold) {
+    return;
+  }
+  const expected = process.env.LAB_APPROVAL_SECRET?.trim() ?? "";
+  if (!expected) {
+    throw new DualControlError(
+      `amount ${amountUsdc} USDC is above ${threshold} and LAB_APPROVAL_SECRET is unset`,
+    );
+  }
+  if (!approval || !secretsEqual(approval, expected)) {
+    throw new DualControlError(
+      `amount ${amountUsdc} USDC needs a second approval`,
+    );
+  }
 }
 
 export function assertUsdcCaps(amountUsdc: number, now = Date.now()): void {
@@ -274,7 +296,9 @@ export async function runSettlementDemo(
   const memo = stellarMemoFromPayoutId(payoutId);
 
   await resolved.assertReady(Number(amountUsdc) || 10);
-  assertUsdcCaps(Number(amountUsdc) || 0, resolved.now());
+  const usdc = Number(amountUsdc) || 0;
+  assertUsdcCaps(usdc, resolved.now());
+  assertDualControl(usdc, input.approval);
 
   const draft: StellarSettlementRecord = {
     id: existing?.id ?? randomUUID(),
@@ -388,6 +412,7 @@ export async function createStellarPayout(
       last_mile_rail: input.last_mile_rail ?? "wave",
       phone: input.recipient?.phone,
       bridge_transfer_id: input.bridge_transfer_id,
+      approval: input.approval,
     },
     runtime,
   );

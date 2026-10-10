@@ -6,6 +6,14 @@ export class PayoutInFlightError extends Error {
   }
 }
 
+export class DualControlError extends Error {
+  readonly code = "DUAL_CONTROL";
+  constructor(message: string) {
+    super(message);
+    this.name = "DualControlError";
+  }
+}
+
 export class PayoutCapError extends Error {
   readonly code = "PAYOUT_CAP";
   readonly reason: "per_payout" | "daily";

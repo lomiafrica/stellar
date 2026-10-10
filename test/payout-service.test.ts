@@ -8,9 +8,10 @@ import { findByPayoutId, upsertSettlement } from "../src/ledger/store.js";
 import {
   notReadyBody,
   runSettlementDemo,
+  assertDualControl,
   assertUsdcCaps,
 } from "../src/payouts/stellar-payout.service.js";
-import { PayoutCapError } from "../src/payouts/errors.js";
+import { DualControlError, PayoutCapError } from "../src/payouts/errors.js";
 import type { SettlementRuntime } from "../src/payouts/stellar-payout.service.js";
 import type { PaymentNetwork } from "../src/stellar/payment.js";
 import type { TransactionSigner } from "../src/stellar/signer.js";
@@ -219,6 +220,26 @@ test("same payout_id completed row still replays without a network call", async 
   assert.equal(result.idempotentReplay, true);
   assert.equal(result.stellarTxHash, "hash-replay");
   assert.equal(sends.length, 0);
+});
+
+test("dual control rejects a large payout without a second approval", () => {
+  const previousThreshold = process.env.LAB_DUAL_CONTROL_USDC;
+  const previousSecret = process.env.LAB_APPROVAL_SECRET;
+  process.env.LAB_DUAL_CONTROL_USDC = "10";
+  process.env.LAB_APPROVAL_SECRET = "second-person";
+  try {
+    assert.throws(
+      () => assertDualControl(11),
+      (error) => error instanceof DualControlError,
+    );
+    assert.doesNotThrow(() => assertDualControl(11, "second-person"));
+    assert.doesNotThrow(() => assertDualControl(10));
+  } finally {
+    if (previousThreshold === undefined) delete process.env.LAB_DUAL_CONTROL_USDC;
+    else process.env.LAB_DUAL_CONTROL_USDC = previousThreshold;
+    if (previousSecret === undefined) delete process.env.LAB_APPROVAL_SECRET;
+    else process.env.LAB_APPROVAL_SECRET = previousSecret;
+  }
 });
 
 test("per-payout cap rejects oversized USDC", () => {
