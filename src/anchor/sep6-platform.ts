@@ -1,4 +1,10 @@
-import { isJsonObject, readString, type JsonObject, type JsonValue } from "../json.js";
+import {
+  isJsonObject,
+  parseJson,
+  readString,
+  type JsonObject,
+  type JsonValue,
+} from "../json.js";
 import { assertQuoteUsable } from "./sep38.js";
 import { log } from "../ops/log.js";
 
@@ -189,8 +195,13 @@ function platformBase(): string {
   return (process.env.PLATFORM_API_URL ?? "").replace(/\/$/, "");
 }
 
-function platformHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
+type PlatformHeaders = {
+  "Content-Type": string;
+  "X-Api-Key"?: string;
+};
+
+function platformHeaders(): PlatformHeaders {
+  const headers: PlatformHeaders = {
     "Content-Type": "application/json",
   };
   const secret = process.env.CALLBACK_AUTH_SECRET?.trim() ?? "";
@@ -210,7 +221,7 @@ export async function listPlatformSep6(): Promise<Sep6Transaction[]> {
     return [];
   }
   try {
-    return parseSep6List(JSON.parse(text) as JsonValue);
+    return parseSep6List(parseJson(text));
   } catch {
     return [];
   }
@@ -255,7 +266,7 @@ export function startSep6Schedule(): void {
       list: listPlatformSep6,
       rpc: platformRpc,
       sendEnabled: process.env.SEP6_DRIVE_SEND === "1",
-    }).catch((err: unknown) => {
+    }).catch((err) => {
       log("tx.send_error", {
         message: err instanceof Error ? err.message : "sep6 drive failed",
       });

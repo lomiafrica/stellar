@@ -63,7 +63,7 @@ export function startReconcileSchedule(): void {
   const hours = Number(process.env.RECONCILE_CRON_HOURS ?? "24");
   const span = (Number.isFinite(hours) && hours > 0 ? hours : 24) * 3_600_000;
   timer = setInterval(() => {
-    void runReconcile().catch((err: unknown) => {
+    void runReconcile().catch((err) => {
       log("reconcile.run", {
         ok: false,
         message: err instanceof Error ? err.message : "reconcile failed",

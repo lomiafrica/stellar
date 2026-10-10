@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { readString, type JsonObject } from "../json.js";
+import { readNumber, readString, type JsonObject } from "../json.js";
 import { withNamedLock } from "../ledger/lock.js";
 import { readJsonArray, writeJsonArray } from "../anchor/json-store.js";
 
@@ -32,7 +32,7 @@ function asRun(row: JsonObject): ReconcileRunRecord {
   return {
     run_id: readString(row, "run_id") ?? "",
     at: readString(row, "at") ?? "",
-    rows: typeof row.rows === "number" ? row.rows : 0,
+    rows: readNumber(row, "rows") ?? 0,
     ok: row.ok === true,
     breaks: Array.isArray(breaks)
       ? breaks.filter((item): item is string => typeof item === "string")

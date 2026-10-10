@@ -4,7 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { BridgeSandboxAdapter, mapBridgeStatus } from "../src/bridge/adapter.js";
-import { BridgeApiError, BridgeClient } from "../src/bridge/client.js";
+import {
+  BridgeApiError,
+  BridgeClient,
+  type BridgeHeaders,
+} from "../src/bridge/client.js";
 
 test("mapBridgeStatus treats payment_processed as completed", () => {
   assert.equal(mapBridgeStatus("payment_processed"), "completed");
@@ -22,7 +26,8 @@ test("sandbox adapter creates a transfer through the injected client", async () 
     baseUrl: "https://api.sandbox.bridge.xyz",
     fetchImpl: async (url, init) => {
       calls.push(`${init.method} ${url}`);
-      const headers = init.headers as Record<string, string>;
+      // SAFETY: BridgeClient.request passes a plain header object, not a Headers instance.
+      const headers = init.headers as BridgeHeaders;
       assert.equal(headers["Api-Key"], "test-key");
       if (init.method !== "GET") assert.ok(headers["Idempotency-Key"]);
       if (String(url).endsWith("/v0/transfers") && init.method === "POST") {
@@ -52,7 +57,7 @@ test("sandbox adapter creates a transfer through the injected client", async () 
   assert.match(calls[0] ?? "", /POST https:\/\/api.sandbox.bridge.xyz\/v0\/transfers/);
   await assert.rejects(
     () => client.getTransfer("missing"),
-    (err: unknown) => err instanceof BridgeApiError && err.status === 404,
+    (err) => err instanceof BridgeApiError && err.status === 404,
   );
   delete process.env.BRIDGE_CUSTOMER_ID;
 });

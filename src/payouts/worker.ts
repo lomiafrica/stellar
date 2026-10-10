@@ -16,7 +16,7 @@ function drain(): void {
     if (!job) return;
     active += 1;
     void createStellarPayout({ ...job, continue_owned: true })
-      .catch((err: unknown) => {
+      .catch((err) => {
         void notifyAlert("tx.send_error", {
           payout_id: job.payout_id ?? "",
           message: err instanceof Error ? err.message : "worker failed",

@@ -19,7 +19,14 @@ import {
   latestReconcileRun,
   readReviewQueue,
   reconcileRunsSince,
+  type ReconcileRunRecord,
+  type ReviewItem,
 } from "../ops/reconcile-store.js";
+
+type EmptyReconcile = { ok: true; rows: number; runs: number };
+type ReconcileWindow = { days: number; runs: ReconcileRunRecord[] };
+type ReviewBody = { review: ReviewItem[] };
+type OpsJson = ReconcileRunRecord | EmptyReconcile | ReconcileWindow | ReviewBody;
 import { assertLabMutatingAuth } from "./lab-auth.js";
 import { prefersHtml } from "./page-chrome.js";
 
@@ -28,8 +35,8 @@ function pageOrJson(
   res: Response,
   title: string,
   lede: string,
-  json: unknown,
-): unknown {
+  json: OpsJson,
+): string | OpsJson {
   if (!prefersHtml(req)) return json;
   res.type("html");
   const latest = latestReconcileRun();

@@ -52,7 +52,7 @@ async function main(): Promise<void> {
   if (!threeWay.ok) process.exit(1);
 }
 
-main().catch((err: unknown) => {
+main().catch((err) => {
   console.error(err instanceof Error ? err.message : err);
   process.exit(1);
 });

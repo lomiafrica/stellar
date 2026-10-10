@@ -18,7 +18,7 @@ import { runReconcile, startReconcileSchedule } from "./ops/reconcile-job.js";
 async function bootstrap() {
   assertDeployNetwork();
   purgeExpiredSettlements();
-  await runReconcile().catch((err: unknown) => {
+  await runReconcile().catch((err) => {
     log("reconcile.run", {
       ok: false,
       message: err instanceof Error ? err.message : "boot reconcile failed",

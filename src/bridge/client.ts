@@ -51,6 +51,12 @@ export interface BridgeWebhookInput {
 
 const DEFAULT_BASE = "https://api.sandbox.bridge.xyz";
 
+export type BridgeHeaders = {
+  "Content-Type": string;
+  "Api-Key": string;
+  "Idempotency-Key"?: string;
+};
+
 function asObject(text: string): JsonObject {
   try {
     const parsed = parseJson(text);
@@ -76,7 +82,7 @@ export class BridgeClient {
     path: string,
     body?: JsonObject,
   ): Promise<JsonObject> {
-    const headers: Record<string, string> = {
+    const headers: BridgeHeaders = {
       "Content-Type": "application/json",
       "Api-Key": this.apiKey,
     };
