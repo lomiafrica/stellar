@@ -39,7 +39,7 @@ SEP12_ACCEPTED_ACCOUNTS=G…
 WEB_AUTH_ENDPOINT=https://<anchor-host>/auth
 ```
 
-Keep secrets in environment variables. The ledger is not a secret: mount a volume at `/data` and set `STELLAR_DATA_DIR=/data` so reconcile history survives a deploy. Bootstrap keys from env on each deploy.
+Keep secrets in environment variables. The ledger is not a secret: mount a volume at `/data` and set `STELLAR_DATA_DIR=/data` so reconcile history survives a deploy. The image starts as root only long enough to `chown` that directory to the `lab` user, then drops privileges. Bootstrap keys from env on each deploy.
 
 6. Service **Postgres** (Railway plugin). Anchor 4.8.0 has no SQLite/H2 driver.
 
