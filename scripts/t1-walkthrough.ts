@@ -65,7 +65,7 @@ Two proofs. Do not mix them.
 
 ## Wave last mile
 
-Money path on the page: Wave CFA, then Anchor, then the wallet. Only the Wave hop runs. It writes a sandbox receipt. It does not create a Stellar payment. Do not open StellarExpert here.
+Money path on the page runs Wave CFA, then the anchor, then the wallet, and only the Wave hop is written as a sandbox receipt, so do not open StellarExpert from here.
 
 Machine proof: \`pnpm test:live\` (\`test/live/anchor-sep24.test.ts\`). It signs SEP-10, PUTs SEP-12, starts SEP-24, posts the lab form, and asserts the platform tx is completed with no Stellar payment.
 

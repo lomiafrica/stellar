@@ -6,7 +6,7 @@ lomi. is a payment processor for francophone West Africa. Merchants collect XOF 
 
 It is not wired to live merchant processing. Merchants never hold keys. We do not issue a stablecoin.
 
-**Architecture:** [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)  
+**Architecture:** [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) · [docs/PRODUCT-ROADMAP.md](./docs/PRODUCT-ROADMAP.md)  
 **Payout mapping:** [docs/LOMI-INTEGRATION-CONTRACT.md](./docs/LOMI-INTEGRATION-CONTRACT.md)  
 **Anchor:** [docs/ANCHOR.md](./docs/ANCHOR.md) · [docs/WALKTHROUGH.md](./docs/WALKTHROUGH.md)  
 **Adapter:** [docs/MIT-ADAPTER.md](./docs/MIT-ADAPTER.md)  

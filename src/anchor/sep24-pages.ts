@@ -113,7 +113,7 @@ export function renderSep24FlowPage(): string {
     `
     <p class="kicker">Testnet</p>
     <h1>How the money moves</h1>
-    <p class="lede">Cash in starts on Wave. Cash out starts in the wallet. This lab records the mobile money hop as sandbox only. It does not create a Stellar payment.</p>
+    <p class="lede">Cash in would start on Wave and finish in the wallet, cash out would run that same path backwards, and this page only keeps a sandbox note of the mobile-money hop so it never creates a Stellar payment.</p>
     <p class="kicker">Cash in</p>
     ${moneyPathHtml({ kind: "deposit", rail: "wave", mode: "map" })}
     <p class="kicker">Cash out</p>
@@ -138,7 +138,7 @@ export function renderSep24Interactive(input: {
     `
     <p class="kicker">Testnet · sandbox</p>
     <h1>${escapeHtml(title)}</h1>
-    <p class="lede">This records a mobile money last mile for the lab. No live CFA moves and no Stellar payment is created.</p>
+    <p class="lede">This form writes a sandbox receipt for the mobile-money hop, so no CFA leaves a phone and no Stellar payment is created.</p>
     <form class="card" id="pay-form" method="post" action="/anchor/sep24/${input.kind}">
       <input type="hidden" name="token" value="${escapeHtml(input.token)}">
       <input type="hidden" name="transaction_id" value="${escapeHtml(input.transactionId)}">

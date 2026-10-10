@@ -58,7 +58,7 @@ test("receipt marks the mobile money hop, not the wallet hop", () => {
 test("flow page keeps Wave last mile apart from Stellar payments", () => {
   const html = renderSep24FlowPage();
   assert.match(html, /How the money moves/);
-  assert.match(html, /does not create a Stellar payment/);
+  assert.match(html, /never creates a Stellar payment/);
   assert.doesNotMatch(html, /stellar\.expert/i);
 });
 

@@ -8,6 +8,8 @@ lomi. processes merchant payments in UEMOA (XOF). This repo is a standalone lab 
 
 A later rail would use Bridge for USD/USDC treasury and Stellar Anchor Platform for the XOF SEP stack. Anchor Platform config is in `anchor/`. Bridge stays mocked here.
 
+How that hop shows up on the lomi. phone, next to cards, mobile money, and bank payouts: [PRODUCT-ROADMAP.md](./PRODUCT-ROADMAP.md).
+
 ## Public repositories
 
 Open-core integrator surface on GitHub. Merchant API reference: [docs.lomi.africa](https://docs.lomi.africa).
