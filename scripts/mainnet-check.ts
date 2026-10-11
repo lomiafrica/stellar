@@ -1,10 +1,41 @@
-import { assertMainnetAllowed, getStellarNetwork } from "../src/config.js";
+import { pathToFileURL } from "node:url";
+import {
+  assertDeployNetwork,
+  assertMainnetAllowed,
+  getStellarNetwork,
+} from "../src/config.js";
+import { TESTNET_OMNIBUS_PUBLIC_KEY } from "../src/http/stellar-toml.js";
 import { readStoredKeys } from "../src/stellar/keys.js";
 
-function main() {
-  console.log("Mainnet hop is a new G… key, not the testnet omnibus.");
+/** Printed by `pnpm mainnet:check`. This command does not write keys. */
+export function mainnetFlipChecklist(): string[] {
+  return [
+    "This build does not create mainnet keys.",
+    "STELLAR_RAIL_ALLOW_LIVE stays unset.",
+    "1. New G accounts only: STELLAR_NETWORK=public STELLAR_MAINNET_CONFIRM=YES pnpm mainnet:keys",
+    "2. Circle mainnet USDC trustline on those new accounts. Never the testnet issuer.",
+    "3. Seal the seed with EnvelopeSigner. Two extra signers for treasury multisig.",
+    "4. Bridge production, then the unpublished mainnet toml and anchor-config.mainnet.yaml.",
+    "5. STELLAR_RAIL_ORGANIZATION_IDS for 8 to 10 organizations, then the SQL live branch.",
+    "6. One internal hop, then merchants.",
+  ];
+}
+
+export function assertNotTestnetOmnibus(publicKey: string): void {
+  if (publicKey === TESTNET_OMNIBUS_PUBLIC_KEY) {
+    throw new Error(
+      "Refusing the testnet omnibus on public. Generate a new mainnet account.",
+    );
+  }
+}
+
+function main(): void {
+  for (const line of mainnetFlipChecklist()) {
+    console.log(line);
+  }
   try {
     assertMainnetAllowed();
+    assertDeployNetwork();
     console.log(`network=${getStellarNetwork()}`);
   } catch (err) {
     console.error(err instanceof Error ? err.message : err);
@@ -19,12 +50,10 @@ function main() {
     process.exit(1);
   }
 
-  const testnetOmnibus =
-    "GD6PH2FAK5DQFFFALZVAT337R7NDGSPWT4R6UBGA5GYLL7N5U4C4GI7I";
-  if (keys.omnibus.publicKey === testnetOmnibus) {
-    console.error(
-      "Refusing the testnet omnibus on public. Generate a new mainnet account.",
-    );
+  try {
+    assertNotTestnetOmnibus(keys.omnibus.publicKey);
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : err);
     process.exit(1);
   }
 
@@ -34,4 +63,7 @@ function main() {
   );
 }
 
-main();
+const entry = process.argv[1];
+if (entry && import.meta.url === pathToFileURL(entry).href) {
+  main();
+}

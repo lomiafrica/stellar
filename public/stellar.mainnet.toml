@@ -1,0 +1,36 @@
+# Not served. The lab reads public/stellar.toml. lomi.africa proxies that testnet file.
+NETWORK_PASSPHRASE="Public Global Stellar Network ; September 2015"
+ACCOUNTS=["{{OMNIBUS_PUBLIC_KEY}}"]
+SIGNING_KEY="{{SIGNING_KEY}}"
+TRANSFER_SERVER="{{ANCHOR_PUBLIC_URL}}/sep6"
+TRANSFER_SERVER_SEP0024="{{ANCHOR_PUBLIC_URL}}/sep24"
+WEB_AUTH_ENDPOINT="{{ANCHOR_PUBLIC_URL}}/auth"
+KYC_SERVER="{{ANCHOR_PUBLIC_URL}}/sep12"
+DIRECT_PAYMENT_SERVER="{{ANCHOR_PUBLIC_URL}}/sep31"
+ANCHOR_QUOTE_SERVER="{{ANCHOR_PUBLIC_URL}}/sep38"
+ORG_NAME="lomi.africa SARL"
+ORG_URL="https://lomi.africa"
+ORG_DESCRIPTION="Custodial USDC settlement on Stellar for UEMOA merchant payouts. Not deployed."
+DOCUMENTATION="https://github.com/lomiafrica/stellar/blob/main/docs/MAINNET.md"
+
+[[CURRENCIES]]
+code = "XOF"
+issuer = "{{OMNIBUS_PUBLIC_KEY}}"
+display_decimals = 0
+name = "CFA Franc BCEAO"
+desc = "XOF metadata for SEP-1. Last mile is Wave/MTN/SPI. Not an issued token. Not deployed."
+is_asset_anchored = true
+anchor_asset_type = "fiat"
+anchor_asset = "XOF"
+status = "test"
+
+[[CURRENCIES]]
+code = "USDC"
+issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+display_decimals = 2
+name = "USD Coin"
+desc = "Circle USDC on Stellar public. This file is not served until a new treasury key exists."
+is_asset_anchored = true
+anchor_asset_type = "fiat"
+anchor_asset = "USD"
+status = "test"

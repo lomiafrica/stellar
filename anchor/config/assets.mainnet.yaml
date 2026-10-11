@@ -1,0 +1,74 @@
+# Not selected by the running anchor. Distribution accounts are filled after new mainnet keys exist.
+items:
+  - id: iso4217:XOF
+    significant_decimals: 0
+    sep6:
+      enabled: true
+      deposit:
+        enabled: true
+        min_amount: 100
+        max_amount: 1000000
+        methods:
+          - wave
+          - mtn
+          - spi
+      withdraw:
+        enabled: true
+        min_amount: 100
+        max_amount: 1000000
+        methods:
+          - wave
+          - mtn
+          - spi
+    sep38:
+      enabled: true
+      exchangeable_assets:
+        - stellar:USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN
+      country_codes:
+        - CI
+        - SN
+  - id: stellar:USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN
+    distribution_account: REPLACE_WITH_NEW_MAINNET_G
+    significant_decimals: 7
+    sep6:
+      enabled: true
+      deposit:
+        enabled: true
+        min_amount: 1
+        max_amount: 10000
+        methods:
+          - wave
+          - mtn
+          - spi
+      withdraw:
+        enabled: true
+        min_amount: 1
+        max_amount: 10000
+        methods:
+          - wave
+          - mtn
+          - spi
+    sep24:
+      enabled: true
+      deposit:
+        enabled: true
+        min_amount: 1
+        max_amount: 10000
+        methods:
+          - wave
+          - mtn
+          - spi
+      withdraw:
+        enabled: true
+        min_amount: 1
+        max_amount: 10000
+        methods:
+          - wave
+          - mtn
+          - spi
+    sep31:
+      enabled: true
+    sep38:
+      enabled: true
+      exchangeable_assets:
+        - iso4217:XOF

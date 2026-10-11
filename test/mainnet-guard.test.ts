@@ -1,10 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   assertMainnetAllowed,
   assertDeployNetwork,
   getStellarNetwork,
 } from "../src/config.js";
+import {
+  assertNotTestnetOmnibus,
+  mainnetFlipChecklist,
+} from "../scripts/mainnet-check.js";
+import { TESTNET_OMNIBUS_PUBLIC_KEY } from "../src/http/stellar-toml.js";
 
 test("getStellarNetwork defaults to testnet", () => {
   const previous = process.env.STELLAR_NETWORK;
@@ -58,4 +66,23 @@ test("assertDeployNetwork refuses public with testnet USDC issuer", () => {
     if (prevIssuer === undefined) delete process.env.STELLAR_USDC_ISSUER;
     else process.env.STELLAR_USDC_ISSUER = prevIssuer;
   }
+});
+
+test("mainnet checklist leaves the live switch off and refuses the testnet omnibus", () => {
+  const lines = mainnetFlipChecklist().join("\n");
+  assert.match(lines, /does not create mainnet keys/);
+  assert.match(lines, /STELLAR_RAIL_ALLOW_LIVE stays unset/);
+  assert.throws(
+    () => assertNotTestnetOmnibus(TESTNET_OMNIBUS_PUBLIC_KEY),
+    /testnet omnibus/,
+  );
+  const dockerfile = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../anchor/Dockerfile"),
+    "utf8",
+  );
+  assert.match(
+    dockerfile,
+    /STELLAR_ANCHOR_CONFIG=\/config\/anchor-config\.yaml/,
+  );
+  assert.equal(dockerfile.includes("anchor-config.mainnet.yaml"), false);
 });

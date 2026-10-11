@@ -3,7 +3,10 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { renderStellarToml } from "../src/http/stellar-toml.js";
+import {
+  renderStellarToml,
+  TESTNET_OMNIBUS_PUBLIC_KEY,
+} from "../src/http/stellar-toml.js";
 
 test("public stellar.toml lists XOF and Circle testnet USDC", () => {
   const toml = readFileSync(
@@ -18,6 +21,45 @@ test("public stellar.toml lists XOF and Circle testnet USDC", () => {
   assert.match(toml, /code = "USDC"/);
   assert.match(toml, /TRANSFER_SERVER="\{\{ANCHOR_PUBLIC_URL\}\}\/sep6"/);
   assert.match(toml, /ANCHOR_QUOTE_SERVER="\{\{ANCHOR_PUBLIC_URL\}\}\/sep38"/);
+  assert.match(toml, /Test SDF Network/);
+});
+
+test("mainnet toml is unpublished and refuses the testnet omnibus", () => {
+  const mainnet = readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../public/stellar.mainnet.toml",
+    ),
+    "utf8",
+  );
+  assert.match(mainnet, /Public Global Stellar Network/);
+  assert.match(
+    mainnet,
+    /issuer = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"/,
+  );
+  assert.equal(mainnet.includes(TESTNET_OMNIBUS_PUBLIC_KEY), false);
+  assert.equal(
+    mainnet.includes(
+      "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+    ),
+    false,
+  );
+  assert.throws(
+    () =>
+      renderStellarToml(mainnet, {
+        omnibusPublicKey: TESTNET_OMNIBUS_PUBLIC_KEY,
+      }),
+    /testnet omnibus/,
+  );
+  const rendered = renderStellarToml(mainnet, {
+    omnibusPublicKey: "GMAINNETEXAMPLEKEYNOTATESTNETACCOUNT",
+    anchorPublicUrl: "https://anchor.example.test",
+  });
+  assert.equal(rendered.includes(TESTNET_OMNIBUS_PUBLIC_KEY), false);
+  assert.match(
+    rendered,
+    /TRANSFER_SERVER="https:\/\/anchor.example.test\/sep6"/,
+  );
 });
 
 const TEMPLATE = `NETWORK_PASSPHRASE="Test SDF Network ; September 2015"

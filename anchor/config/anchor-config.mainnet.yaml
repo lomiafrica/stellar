@@ -1,0 +1,50 @@
+# Not selected. anchor/Dockerfile sets STELLAR_ANCHOR_CONFIG=/config/anchor-config.yaml (TESTNET).
+# Do not point Railway at this file until new mainnet keys exist.
+version: 1
+stellar_network:
+  network: PUBLIC
+  type: horizon
+  horizon_url: https://horizon.stellar.org
+sep_server:
+  port: 8080
+platform_server:
+  port: 8085
+platform_api:
+  base_url: http://localhost:8085
+  auth:
+    type: api_key
+callback_api:
+  base_url: https://lomi.africa/anchor
+  auth:
+    type: api_key
+data:
+  type: postgres
+  server: postgres:5432
+  database: platform
+  flyway_enabled: true
+sep1:
+  enabled: false
+sep6:
+  enabled: true
+sep10:
+  enabled: true
+  home_domains: lomi.africa
+  web_auth_domain: anchor.lomi.africa
+  client_attribution_required: false
+sep12:
+  enabled: true
+sep24:
+  enabled: true
+  interactive_url:
+    base_url: https://lomi.africa/anchor/sep24/interactive
+    jwt_expiration: 3600
+  more_info_url:
+    base_url: https://lomi.africa/anchor/sep24/more_info
+    jwt_expiration: 3600
+sep31:
+  enabled: true
+sep38:
+  enabled: true
+assets:
+  type: file
+  value: /config/assets.mainnet.yaml
