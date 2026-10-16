@@ -6,6 +6,7 @@ import { MockBridgeController } from "./mock-bridge.controller.js";
 import { OpsController } from "./ops.controller.js";
 import { SettleController } from "./settle.controller.js";
 import { TomlController } from "./toml.controller.js";
+import { WalletController } from "./wallet.controller.js";
 
 @Module({
   controllers: [
@@ -16,6 +17,7 @@ import { TomlController } from "./toml.controller.js";
     BridgeWebhookController,
     AnchorController,
     OpsController,
+    WalletController,
   ],
 })
 export class AppModule {}
