@@ -231,7 +231,12 @@ export function renderPayoutPage(input: {
       { key: "Destination", value: humanDestination(row.destination) },
       { key: "Last mile rail", value: humanLastMile(row.last_mile_rail) },
       { key: "Payout id", value: idHtml(row.payout_id), html: true },
-      { key: "Memo", value: idHtml(row.memo), html: true, tip: memoTip(row.payout_id) },
+      {
+        key: "Memo",
+        value: idHtml(row.memo),
+        html: true,
+        tip: memoTip(row.payout_id),
+      },
       { key: "Amount", value: `${row.amount} ${row.currency_code}` },
       { key: "USDC sent", value: `${row.amount_usdc} USDC` },
       { key: "Created", value: formatWhen(row.created_at) },

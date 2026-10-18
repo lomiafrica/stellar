@@ -85,7 +85,9 @@ export function saveWalletIdempotency(key: string, body: JsonObject): void {
 export function cancelWalletIdempotency(key: string): void {
   withNamedLock("wallet-idempotency", () => {
     writeRows(
-      readRows().filter((row) => !(row.key === key && row.state === "in_flight")),
+      readRows().filter(
+        (row) => !(row.key === key && row.state === "in_flight"),
+      ),
     );
   });
 }

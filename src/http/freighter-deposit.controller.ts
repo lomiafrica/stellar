@@ -11,6 +11,27 @@ import { randomUUID } from "node:crypto";
 import { dispatchLastMile, type LastMileRail } from "../anchor/last-mile.js";
 import { patchPlatformTransaction } from "../anchor/platform-patch.js";
 import { depositPage } from "./deposit-page.js";
+import { isJsonObject, parseJson, readString } from "../json.js";
+
+type DepositBody = {
+  token?: string;
+  url?: string;
+  transaction?: string;
+};
+
+function readDepositBody(text: string): DepositBody {
+  try {
+    const parsed = parseJson(text);
+    if (!isJsonObject(parsed)) return {};
+    return {
+      token: readString(parsed, "token"),
+      url: readString(parsed, "url"),
+      transaction: readString(parsed, "transaction"),
+    };
+  } catch {
+    return {};
+  }
+}
 
 const HOME = "lomi.africa";
 
@@ -35,17 +56,7 @@ async function readJson(response: Response): Promise<{
   text: string;
 }> {
   const text = await response.text();
-  let body: { token?: string; url?: string; transaction?: string } = {};
-  try {
-    body = JSON.parse(text) as {
-      token?: string;
-      url?: string;
-      transaction?: string;
-    };
-  } catch {
-    body = {};
-  }
-  return { status: response.status, body, text };
+  return { status: response.status, body: readDepositBody(text), text };
 }
 
 @Controller("deposit")
@@ -57,7 +68,9 @@ export class FreighterDepositController {
   }
 
   @Get("challenge")
-  async challenge(@Query("account") account = ""): Promise<{ transaction?: string }> {
+  async challenge(
+    @Query("account") account = "",
+  ): Promise<{ transaction?: string }> {
     if (!isAccount(account)) {
       throw new BadRequestException("Account is not a Stellar address");
     }

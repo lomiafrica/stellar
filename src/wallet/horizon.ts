@@ -4,7 +4,12 @@ import { ensureFundedAccount } from "../stellar/account.js";
 import { getHorizonServer } from "../stellar/client.js";
 import { LocalKeypairSigner } from "../stellar/signer.js";
 import { establishUsdcTrustline } from "../stellar/trustline.js";
-import { isJsonObject, parseJson, readString, type JsonObject } from "../json.js";
+import {
+  isJsonObject,
+  parseJson,
+  readString,
+  type JsonObject,
+} from "../json.js";
 import {
   usdcPaymentsFromRecords,
   type HorizonPaymentInput,
@@ -13,24 +18,22 @@ import {
 import { submitOrgUsdcPayment } from "./submit.js";
 import type { WalletChain } from "./service.js";
 
-function asObject(value: object): JsonObject | null {
-  const parsed = parseJson(JSON.stringify(value));
+function asObject(serialized: string): JsonObject | null {
+  const parsed = parseJson(serialized);
   return isJsonObject(parsed) ? parsed : null;
 }
 
 function paymentInput(
-  record: object,
+  record: JsonObject,
   memos: ReadonlyMap<string, string>,
 ): HorizonPaymentInput | null {
-  const body = asObject(record);
-  if (!body) return null;
-  const type = readString(body, "type");
-  const transactionHash = readString(body, "transaction_hash");
-  const from = readString(body, "from");
-  const to = readString(body, "to");
-  const amount = readString(body, "amount");
-  const assetCode = readString(body, "asset_code") ?? "";
-  const assetIssuer = readString(body, "asset_issuer") ?? "";
+  const type = readString(record, "type");
+  const transactionHash = readString(record, "transaction_hash");
+  const from = readString(record, "from");
+  const to = readString(record, "to");
+  const amount = readString(record, "amount");
+  const assetCode = readString(record, "asset_code") ?? "";
+  const assetIssuer = readString(record, "asset_issuer") ?? "";
   if (!type || !transactionHash || !from || !to || !amount) return null;
   return {
     type,
@@ -62,7 +65,7 @@ export async function listHorizonUsdcPayments(
     .call();
   const memos = new Map<string, string>();
   for (const tx of transactions.records) {
-    const body = asObject(tx);
+    const body = asObject(JSON.stringify(tx));
     if (!body) continue;
     const hash = readString(body, "hash");
     const memoType = readString(body, "memo_type");
@@ -71,7 +74,8 @@ export async function listHorizonUsdcPayments(
   }
   const records: HorizonPaymentInput[] = [];
   for (const record of payments.records) {
-    const parsed = paymentInput(record, memos);
+    const body = asObject(JSON.stringify(record));
+    const parsed = body ? paymentInput(body, memos) : null;
     if (parsed) records.push(parsed);
   }
   return usdcPaymentsFromRecords(publicKey, STELLAR_USDC_ISSUER, records);

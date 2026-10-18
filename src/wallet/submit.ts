@@ -6,7 +6,10 @@ import {
   TransactionBuilder,
 } from "@stellar/stellar-sdk";
 import { NETWORK_PASSPHRASE } from "../config.js";
-import { defaultPaymentNetwork, submitUsdcPayment } from "../stellar/payment.js";
+import {
+  defaultPaymentNetwork,
+  submitUsdcPayment,
+} from "../stellar/payment.js";
 import { testnetUsdcAsset } from "../stellar/trustline.js";
 import type { TransactionSigner } from "../stellar/signer.js";
 

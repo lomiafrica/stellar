@@ -20,7 +20,11 @@ export type StoredWallet = {
 };
 
 function walletPath(keysDir: string, organizationId: string): string {
-  return join(keysDir, "wallets", `${assertOrganizationId(organizationId)}.json`);
+  return join(
+    keysDir,
+    "wallets",
+    `${assertOrganizationId(organizationId)}.json`,
+  );
 }
 
 export function readWallet(

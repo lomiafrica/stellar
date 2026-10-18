@@ -95,10 +95,7 @@ test("ensure creates one custodial account and does not return the secret", asyn
     assert.ok(stored);
     assert.equal(stored.publicKey, created.publicKey);
     assert.match(stored.secret, /^S/);
-    const file = readFileSync(
-      join(keysDir, "wallets", `${ORG}.json`),
-      "utf8",
-    );
+    const file = readFileSync(join(keysDir, "wallets", `${ORG}.json`), "utf8");
     assert.equal(file.includes(stored.secret), true);
     assert.equal(JSON.stringify(created).includes(stored.secret), false);
   } finally {
