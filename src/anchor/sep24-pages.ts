@@ -1,5 +1,4 @@
 import {
-  definitionsHtml,
   escapeHtml,
   shell,
   stepsHtml,
@@ -91,6 +90,7 @@ function toStep(mark: PathMark, hop: Hop): PageStep {
     tag: tagFor(mark),
     copy: copy || hop.idle,
     mark,
+    live: hop.live,
   };
 }
 
@@ -99,12 +99,17 @@ export function moneyPathHtml(input: {
   kind: Sep24Kind;
   rail: LastMileRail;
   mode: "form" | "receipt" | "map";
+  layout?: "row";
 }): string {
   const steps = hopsFor(input.kind, input.rail).map((hop) => {
     if (input.mode !== "receipt") return toStep("idle", hop);
     return toStep(hop.live ? "done" : "skip", hop);
   });
-  return stepsHtml(steps, "How the money moves");
+  return stepsHtml(
+    steps,
+    "How the money moves",
+    input.layout === "row" ? "row" : "",
+  );
 }
 
 export function renderSep24FlowPage(): string {
@@ -133,12 +138,16 @@ export function renderSep24Interactive(input: {
   const title =
     input.kind === "withdraw" ? "Sandbox withdraw" : "Sandbox deposit";
   const selected = (value: LastMileRail) => (rail === value ? " selected" : "");
+  const lede =
+    input.kind === "withdraw"
+      ? "Cash out would start in the wallet and finish on the phone, and this page only keeps a sandbox note of that hop so it never creates a Stellar payment."
+      : "This page runs the deposit in Freighter. After you approve, you record 1,000 CFA on mobile money, and the note stays in the sandbox.";
   return shell(
     title,
     `
-    <p class="kicker">Testnet · sandbox</p>
+    <p class="kicker">Testnet</p>
     <h1>${escapeHtml(title)}</h1>
-    <p class="lede">This form writes a sandbox receipt for the mobile-money hop, so no CFA leaves a phone and no Stellar payment is created.</p>
+    <p class="lede" id="lede">${lede}</p>
     <form class="card" id="pay-form" method="post" action="/anchor/sep24/${input.kind}">
       <input type="hidden" name="token" value="${escapeHtml(input.token)}">
       <input type="hidden" name="transaction_id" value="${escapeHtml(input.transactionId)}">
@@ -152,10 +161,46 @@ export function renderSep24Interactive(input: {
         <option value="mtn"${selected("mtn")}>MTN</option>
         <option value="spi"${selected("spi")}>SPI</option>
       </select>
-      <button type="submit">Record sandbox last mile</button>
+      <button type="submit">Record the hop</button>
     </form>
-    <p class="kicker">What would happen</p>
-    ${moneyPathHtml({ kind: input.kind, rail, mode: "form" })}
+    <p class="note" id="result" hidden></p>
+    ${moneyPathHtml({ kind: input.kind, rail, mode: "form", layout: "row" })}
+    <script>
+      const form = document.querySelector("#pay-form");
+      const rail = document.querySelector("#rail");
+      const lede = document.querySelector("#lede");
+      const result = document.querySelector("#result");
+      const live = document.querySelector("[data-live]");
+      const verb = ${JSON.stringify(input.kind === "withdraw" ? "pays the phone" : "takes CFA")};
+      rail.addEventListener("change", () => {
+        const name = rail.options[rail.selectedIndex].textContent;
+        live.querySelector(".step-title").textContent = name + " " + verb;
+      });
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = form.querySelector("button");
+        button.disabled = true;
+        const body = Object.fromEntries(new FormData(form));
+        const response = await fetch(form.action, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(body),
+        });
+        const payload = await response.json();
+        const hop = payload.last_mile || {};
+        document.querySelectorAll(".path li").forEach((item) => {
+          const recorded = item.hasAttribute("data-live");
+          item.className = recorded ? "done" : "skip";
+          item.querySelector(".tag").textContent = recorded ? "sandbox" : "did not run";
+        });
+        const railName = rail.options[rail.selectedIndex].textContent;
+        const amount = hop.amountXof || body.amount;
+        lede.textContent = railName + " kept a sandbox note for " + Number(amount).toLocaleString("en-US") + " CFA. The id on this page is that note, not a Stellar payment.";
+        result.hidden = false;
+        result.textContent = hop.payoutId || "";
+        button.disabled = false;
+      });
+    </script>
     `,
   );
 }
@@ -180,22 +225,12 @@ export function renderSep24CreditReceipt(credit: LastMileResult): string {
   return shell(
     `${rail} sandbox`,
     `
-    <p class="kicker">Testnet · sandbox</p>
+    <p class="kicker">Testnet</p>
     <h1>Sandbox last mile recorded</h1>
-    <p class="lede">${escapeHtml(credit.message)} This id is not a Stellar payment and has no row on a block explorer.</p>
-    ${definitionsHtml([
-      ["Status", credit.status],
-      ["Rail", rail],
-      ["Amount in CFA", credit.amountXof],
-      ["Phone", credit.phone],
-      ["Lab id", credit.payoutId],
-      ["SEP-24 direction", credit.kind],
-      ["Created", credit.createdAt],
-    ])}
-    <p class="kicker">What ran</p>
-    ${moneyPathHtml({ kind: credit.kind, rail: credit.rail, mode: "receipt" })}
-    <p class="kicker">Receipt</p>
-    <pre>${escapeHtml(JSON.stringify(credit, null, 2))}</pre>
+    <p class="lede">${escapeHtml(rail)} kept a sandbox note for ${escapeHtml(credit.amountXof)} CFA. The id on this page is that note, not a Stellar payment.</p>
+    <p class="note">${escapeHtml(credit.payoutId)}</p>
+    ${moneyPathHtml({ kind: credit.kind, rail: credit.rail, mode: "receipt", layout: "row" })}
+    <p class="note">${escapeHtml(credit.amountXof)} CFA · ${escapeHtml(credit.phone)}</p>
     `,
   );
 }

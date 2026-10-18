@@ -62,7 +62,7 @@ test("flow page keeps Wave last mile apart from Stellar payments", () => {
   assert.doesNotMatch(html, /stellar\.expert/i);
 });
 
-test("interactive form posts plain HTML with no script", () => {
+test("interactive form stays on the page and updates the row", () => {
   const html = renderSep24Interactive({
     kind: "deposit",
     amount: "1000",
@@ -72,7 +72,8 @@ test("interactive form posts plain HTML with no script", () => {
   assert.match(html, /Sandbox deposit/);
   assert.match(html, /id="pay-form"/);
   assert.match(html, /action="\/anchor\/sep24\/deposit"/);
-  assert.doesNotMatch(html, /<script/i);
+  assert.match(html, /class="path card row"/);
+  assert.match(html, /preventDefault/);
 });
 
 test("renderSep24CreditReceipt shows sandbox last mile and escapes HTML", () => {

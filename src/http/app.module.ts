@@ -6,6 +6,7 @@ import { MockBridgeController } from "./mock-bridge.controller.js";
 import { OpsController } from "./ops.controller.js";
 import { SettleController } from "./settle.controller.js";
 import { TomlController } from "./toml.controller.js";
+import { FreighterDepositController } from "./freighter-deposit.controller.js";
 import { WalletController } from "./wallet.controller.js";
 
 @Module({
@@ -18,6 +19,7 @@ import { WalletController } from "./wallet.controller.js";
     AnchorController,
     OpsController,
     WalletController,
+    FreighterDepositController,
   ],
 })
 export class AppModule {}

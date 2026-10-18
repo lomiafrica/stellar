@@ -9,6 +9,7 @@ export interface PageStep {
   copy: string;
   mark: "done" | "idle" | "skip";
   tone?: TagTone;
+  live?: boolean;
 }
 
 export function escapeHtml(value: string): string {
@@ -81,6 +82,21 @@ function chromeCss(): string {
     .path li { padding: 0.45rem 0; border-top: 1px solid #ecece7; }
     .path li:first-child { border-top: 0; padding-top: 0; }
     .path li:last-child { padding-bottom: 0; }
+    .path.row {
+      display: flex;
+      gap: 0;
+      padding: 0;
+    }
+    .path.row li {
+      flex: 1;
+      padding: 0.75rem 0.7rem;
+      border-top: 0;
+      border-left: 1px solid #ecece7;
+      transition: background 180ms ease, color 180ms ease;
+    }
+    .path.row li:first-child { border-left: 0; padding-top: 0.75rem; }
+    .path.row li.done { background: #f3faf6; }
+    .path.row .step-copy { display: none; }
     .step-head {
       display: flex;
       align-items: baseline;
@@ -190,14 +206,20 @@ export function infoTip(label: string, text: string): string {
   return `<span class="tip" tabindex="0" role="note" aria-label="${escapeHtml(label)}">i<span class="tip-bubble">${escapeHtml(text)}</span></span>`;
 }
 
-export function stepsHtml(steps: PageStep[], label: string): string {
+export function stepsHtml(
+  steps: PageStep[],
+  label: string,
+  className = "",
+): string {
   const items = steps
     .map((step) => {
       const tone = step.tone ? ` ${step.tone}` : "";
-      return `<li class="${step.mark}"><div class="step-head"><span class="step-title">${escapeHtml(step.title)}</span><span class="tag${tone}">${escapeHtml(step.tag)}</span></div><span class="step-copy">${escapeHtml(step.copy)}</span></li>`;
+      const live = step.live ? ` data-live="1"` : "";
+      return `<li class="${step.mark}"${live}><div class="step-head"><span class="step-title">${escapeHtml(step.title)}</span><span class="tag${tone}">${escapeHtml(step.tag)}</span></div><span class="step-copy">${escapeHtml(step.copy)}</span></li>`;
     })
     .join("");
-  return `<ol class="path card" aria-label="${escapeHtml(label)}">${items}</ol>`;
+  const row = className ? ` ${className}` : "";
+  return `<ol class="path card${row}" aria-label="${escapeHtml(label)}">${items}</ol>`;
 }
 
 export type DefinitionRow = {
