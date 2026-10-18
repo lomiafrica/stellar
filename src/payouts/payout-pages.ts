@@ -2,6 +2,7 @@ import { explorerTx } from "../config.js";
 import {
   definitionsHtml,
   escapeHtml,
+  idHtml,
   shell,
   stepsHtml,
   type PageStep,
@@ -203,9 +204,7 @@ function headline(row: StellarSettlementRecord): string {
 }
 
 function hashHtml(hash: string): string {
-  const short =
-    hash.length > 20 ? `${hash.slice(0, 12)}…${hash.slice(-6)}` : hash;
-  return `<a href="${escapeHtml(explorerTx(hash))}">${escapeHtml(short)}</a>`;
+  return `<a href="${escapeHtml(explorerTx(hash))}">${idHtml(hash)}</a>`;
 }
 
 /** Detail page: payout id, memo, on-chain hash, and the reconcile verdict. */
@@ -231,8 +230,8 @@ export function renderPayoutPage(input: {
       { key: "Status", value: statusHtml(row.status), html: true },
       { key: "Destination", value: humanDestination(row.destination) },
       { key: "Last mile rail", value: humanLastMile(row.last_mile_rail) },
-      { key: "Payout id", value: row.payout_id },
-      { key: "Memo", value: row.memo, tip: memoTip(row.payout_id) },
+      { key: "Payout id", value: idHtml(row.payout_id), html: true },
+      { key: "Memo", value: idHtml(row.memo), html: true, tip: memoTip(row.payout_id) },
       { key: "Amount", value: `${row.amount} ${row.currency_code}` },
       { key: "USDC sent", value: `${row.amount_usdc} USDC` },
       { key: "Created", value: formatWhen(row.created_at) },
@@ -259,7 +258,7 @@ function payoutRow(row: StellarSettlementRecord): string {
   const hash = row.stellar_tx_hash
     ? `${row.stellar_tx_hash.slice(0, 12)}…`
     : "no hash";
-  return `<li><div class="step-head"><span class="step-title"><a href="/demo/payouts/${escapeHtml(row.payout_id)}">${escapeHtml(row.payout_id)}</a></span><span class="tag ${statusTone(row.status)}">${escapeHtml(humanStatus(row.status))}</span></div><span class="step-copy">${escapeHtml(`${row.amount} ${row.currency_code} · ${row.amount_usdc} USDC · ${hash}`)}</span></li>`;
+  return `<li><div class="step-head"><span class="step-title"><a href="/demo/payouts/${escapeHtml(row.payout_id)}">${idHtml(row.payout_id)}</a></span><span class="tag ${statusTone(row.status)}">${escapeHtml(humanStatus(row.status))}</span></div><span class="step-copy">${escapeHtml(`${row.amount} ${row.currency_code} · ${row.amount_usdc} USDC · ${hash}`)}</span></li>`;
 }
 
 const CREATE_HINT = `curl -X POST $LAB/demo/payouts \\

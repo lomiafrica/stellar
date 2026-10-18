@@ -100,7 +100,7 @@ test("settled payout links the explorer and shows the memo prefix", () => {
     html,
     /https:\/\/stellar\.expert\/explorer\/testnet\/tx\/49e2a131/,
   );
-  assert.match(html, /83e4aa27-e619-4d13-963c-9b49</);
+  assert.match(html, /class="trace-id">83e4aa27-e619-4d13-963c-9b49</);
   assert.match(html, /Wave Mobile Money/);
   assert.match(html, /status-ok">Completed</);
   assert.match(html, />Self</);

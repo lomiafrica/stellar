@@ -1,4 +1,4 @@
-import { escapeHtml, shell } from "../http/page-chrome.js";
+import { escapeHtml, idHtml, shell } from "../http/page-chrome.js";
 import type { ReconcileRunRecord, ReviewItem } from "./reconcile-store.js";
 
 function runLine(run: ReconcileRunRecord): string {
@@ -28,7 +28,7 @@ export function renderReconcilePage(input: {
       : `<ul class="rows card">${open
           .map(
             (item) =>
-              `<li><strong>${escapeHtml(item.payout_id)}</strong><span class="step-copy">${escapeHtml(item.breaks.join(", "))} since ${escapeHtml(item.first_seen)}</span></li>`,
+              `<li>${idHtml(item.payout_id)}<span class="step-copy">${escapeHtml(item.breaks.join(", "))} since ${escapeHtml(item.first_seen)}</span></li>`,
           )
           .join("")}</ul>`;
   return shell(

@@ -182,7 +182,17 @@ function chromeCss(): string {
     .rows li { padding: 0.6rem 0; border-top: 1px solid #ecece7; }
     .rows li:first-child { border-top: 0; padding-top: 0; }
     .rows li:last-child { padding-bottom: 0; }
+    .trace-id {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.01em;
+      color: #1d6fd6;
+    }
   `;
+}
+
+/** Full id in one color, so the same id is easy to follow across pages. */
+export function idHtml(value: string): string {
+  return `<span class="trace-id">${escapeHtml(value)}</span>`;
 }
 
 export function shell(title: string, body: string): string {
