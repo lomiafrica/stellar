@@ -118,7 +118,8 @@ export function renderSep24FlowPage(): string {
     `
     <p class="kicker">Testnet</p>
     <h1>How the money moves</h1>
-    <p class="lede">Cash in would start on Wave and finish in the wallet, cash out would run that same path backwards, and this page only keeps a sandbox note of the mobile-money hop so it never creates a Stellar payment.</p>
+    <p class="note"><a href="/walkthrough">All walkthroughs</a></p>
+    <p class="lede">Cash in starts as a Wave sandbox credit and would finish in the wallet. Cash out runs that path backwards. The Stellar payment is the payout walkthrough.</p>
     <p class="kicker">Cash in</p>
     ${moneyPathHtml({ kind: "deposit", rail: "wave", mode: "map" })}
     <p class="kicker">Cash out</p>
@@ -140,8 +141,8 @@ export function renderSep24Interactive(input: {
   const selected = (value: LastMileRail) => (rail === value ? " selected" : "");
   const lede =
     input.kind === "withdraw"
-      ? "Cash out would start in the wallet and finish on the phone, and this page only keeps a sandbox note of that hop so it never creates a Stellar payment."
-      : "This page runs the deposit in Freighter. After you approve, you record 1,000 CFA on mobile money, and the note stays in the sandbox.";
+      ? "Cash out would start in the wallet and finish on the phone. This form saves a sandbox credit of that hop."
+      : "Submit this form to save a Wave sandbox credit of 1,000 CFA.";
   return shell(
     title,
     `
@@ -195,7 +196,7 @@ export function renderSep24Interactive(input: {
         });
         const railName = rail.options[rail.selectedIndex].textContent;
         const amount = hop.amountXof || body.amount;
-        lede.textContent = railName + " kept a sandbox note for " + Number(amount).toLocaleString("en-US") + " CFA. The id on this page is that note, not a Stellar payment.";
+        lede.textContent = railName + " saved a sandbox credit of " + Number(amount).toLocaleString("en-US") + " CFA. The id on this page is that credit.";
         result.hidden = false;
         result.textContent = hop.payoutId || "";
         button.disabled = false;
@@ -227,7 +228,7 @@ export function renderSep24CreditReceipt(credit: LastMileResult): string {
     `
     <p class="kicker">Testnet</p>
     <h1>Sandbox last mile recorded</h1>
-    <p class="lede">${escapeHtml(rail)} kept a sandbox note for ${escapeHtml(credit.amountXof)} CFA. The id on this page is that note, not a Stellar payment.</p>
+    <p class="lede">${escapeHtml(rail)} saved a sandbox credit of ${escapeHtml(credit.amountXof)} CFA. The id on this page is that credit.</p>
     <p class="note">${escapeHtml(credit.payoutId)}</p>
     ${moneyPathHtml({ kind: credit.kind, rail: credit.rail, mode: "receipt", layout: "row" })}
     <p class="note">${escapeHtml(credit.amountXof)} CFA · ${escapeHtml(credit.phone)}</p>

@@ -7,6 +7,7 @@ import { OpsController } from "./ops.controller.js";
 import { SettleController } from "./settle.controller.js";
 import { TomlController } from "./toml.controller.js";
 import { FreighterDepositController } from "./freighter-deposit.controller.js";
+import { WalkthroughController } from "./walkthrough.controller.js";
 import { WalletController } from "./wallet.controller.js";
 
 @Module({
@@ -20,6 +21,7 @@ import { WalletController } from "./wallet.controller.js";
     OpsController,
     WalletController,
     FreighterDepositController,
+    WalkthroughController,
   ],
 })
 export class AppModule {}

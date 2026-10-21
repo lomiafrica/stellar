@@ -58,7 +58,9 @@ test("receipt marks the mobile money hop, not the wallet hop", () => {
 test("flow page keeps Wave last mile apart from Stellar payments", () => {
   const html = renderSep24FlowPage();
   assert.match(html, /How the money moves/);
-  assert.match(html, /never creates a Stellar payment/);
+  assert.match(html, /sandbox credit/);
+  assert.match(html, /payout walkthrough/);
+  assert.match(html, /href="\/walkthrough"/);
   assert.doesNotMatch(html, /stellar\.expert/i);
 });
 
@@ -90,7 +92,7 @@ test("renderSep24CreditReceipt shows sandbox last mile and escapes HTML", () => 
   assert.match(html, /sandbox/);
   assert.match(html, /tx-1/);
   assert.match(html, /1000/);
-  assert.match(html, /not a Stellar payment/);
+  assert.match(html, /sandbox credit/);
   assert.doesNotMatch(html, /\+2250700000000<script>/);
   assert.doesNotMatch(html, /stellar\.expert/i);
 });

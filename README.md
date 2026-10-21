@@ -74,6 +74,8 @@ pnpm start:dev
 | `GET`  | `/demo/payouts/:payout_id`  | Status + reconcile snapshot                                                                                         |
 | `POST` | `/demo/settle`              | Thin settle helper                                                                                                  |
 | `POST` | `/mock/bridge/fund`         | Mock treasury credit                                                                                                |
+| `GET`  | `/` and `/walkthrough`      | Tranche 1 first, then the other public walkthroughs on this host                                                    |
+| `GET`  | `/deposit`                  | Freighter login, then a Wave sandbox credit. Needs the anchor up.                                                   |
 | `GET`  | `/.well-known/stellar.toml` | SEP-1 (CORS open; set `PUBLIC_BASE_URL` when hosted)                                                                |
 | `POST` | `/anchor/sep12/customer`    | Merchant verification callback (not a blanket ACCEPTED stub)                                                        |
 | `GET`  | `/anchor/sep24/:kind`       | Interactive SEP-24 sandbox page                                                                                     |

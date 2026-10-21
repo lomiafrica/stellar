@@ -8,7 +8,7 @@ A customer pays on the phone with Stripe for cards, Apple Pay, and Google Pay, a
 
 ## This lab
 
-The testnet lab proves the hop before it touches that phone. A public Stellar file lists XOF and Circle testnet USDC. A Wave step on the lab page is a sandbox note and does not create a Stellar payment. A separate USDC payment on testnet carries the payout id in the memo, so the same payout always returns the same transaction. Bridge in this repository is a mock of the dollar to USDC treasury leg.
+The testnet lab proves the hop before it touches that phone. A public Stellar file lists XOF and Circle testnet USDC. A Wave step on the lab page is a sandbox credit. The Stellar payment is the separate payout walkthrough. A separate USDC payment on testnet carries the payout id in the memo, so the same payout always returns the same transaction. Bridge in this repository is a mock of the dollar to USDC treasury leg.
 
 ## Next
 
