@@ -27,10 +27,7 @@ type EmptyReconcile = { ok: true; rows: number; runs: number };
 type ReconcileWindow = { days: number; runs: ReconcileRunRecord[] };
 type ReviewBody = { review: ReviewItem[] };
 type OpsJson =
-  | ReconcileRunRecord
-  | EmptyReconcile
-  | ReconcileWindow
-  | ReviewBody;
+  ReconcileRunRecord | EmptyReconcile | ReconcileWindow | ReviewBody;
 import { assertLabMutatingAuth } from "./lab-auth.js";
 import { prefersHtml } from "./page-chrome.js";
 

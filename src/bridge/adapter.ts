@@ -9,11 +9,7 @@ import {
 } from "./client.js";
 
 export type BridgeTransferStatus =
-  | "awaiting_funds"
-  | "payment_processed"
-  | "completed"
-  | "failed"
-  | "refunded";
+  "awaiting_funds" | "payment_processed" | "completed" | "failed" | "refunded";
 
 export interface BridgeTransfer {
   id: string;
