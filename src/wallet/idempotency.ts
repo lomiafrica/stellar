@@ -50,7 +50,9 @@ function writeRows(rows: IdempotencyRow[]): void {
 const IN_FLIGHT_MS = 180_000;
 
 export type WalletIdempotencyBegin =
-  { kind: "fresh" } | { kind: "busy" } | { kind: "hit"; body: JsonObject };
+  | { kind: "fresh" }
+  | { kind: "busy" }
+  | { kind: "hit"; body: JsonObject };
 
 export function beginWalletIdempotency(key: string): WalletIdempotencyBegin {
   return withNamedLock("wallet-idempotency", () => beginUnlocked(key));
