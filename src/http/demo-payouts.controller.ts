@@ -17,6 +17,7 @@ import type { Request, Response } from "express";
 import { SettleNotReadyError } from "../operator/ready.js";
 import {
   beginIdempotency,
+  releaseIdempotency,
   saveIdempotentResponse,
 } from "../ledger/idempotency.js";
 import {
@@ -167,6 +168,7 @@ export class DemoPayoutsController {
       }
       return response;
     } catch (err) {
+      if (idempotencyKey) releaseIdempotency(idempotencyKey);
       if (err instanceof SettleNotReadyError) {
         throw new BadRequestException(notReadyBody(err));
       }

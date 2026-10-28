@@ -3,6 +3,8 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { NotFoundError } from "@stellar/stellar-sdk";
+import type { ChainSources } from "../src/ledger/reconcile.js";
 import { findByPayoutId, upsertSettlement } from "../src/ledger/store.js";
 import { runReconcile } from "../src/ops/reconcile-job.js";
 import {
@@ -80,6 +82,51 @@ test("a stale claim with no hash is failed and is not a break", async () => {
   assert.equal(run.ok, true);
   assert.equal(run.rows, 0);
   assert.equal(findByPayoutId("payout-abandoned")?.status, "failed");
+});
+
+const neverLanded: ChainSources = {
+  rpcStatus: async () => "NOT_FOUND",
+  horizonTransaction: async () => {
+    throw new NotFoundError("not found", { status: 404 });
+  },
+};
+
+function builtRow(payoutId: string): void {
+  const builtAt = new Date().toISOString();
+  upsertSettlement({
+    id: payoutId,
+    organization_id: "00000000-0000-4000-8000-000000000001",
+    environment: "test",
+    payout_id: payoutId,
+    destination: "self",
+    last_mile_rail: "wave",
+    amount: 1,
+    currency_code: "USD",
+    amount_usdc: "1",
+    memo: payoutId,
+    status: "processing",
+    stellar_tx_hash: `hash-${payoutId}`,
+    created_at: builtAt,
+    updated_at: builtAt,
+  });
+}
+
+test("a built send unknown to the network past its time bounds is failed, not a break", async () => {
+  isolate();
+  builtRow("payout-expired");
+  const run = await runReconcile(Date.now() + 600_000, neverLanded);
+  assert.equal(run.ok, true);
+  assert.equal(run.rows, 0);
+  assert.equal(findByPayoutId("payout-expired")?.status, "failed");
+  assert.equal(readReviewQueue().length, 0);
+});
+
+test("a built send inside its time bounds is left processing", async () => {
+  isolate();
+  builtRow("payout-in-flight");
+  const run = await runReconcile(Date.now() + 100_000, neverLanded);
+  assert.equal(run.rows, 0);
+  assert.equal(findByPayoutId("payout-in-flight")?.status, "processing");
 });
 
 test("empty ledger run is clean", async () => {

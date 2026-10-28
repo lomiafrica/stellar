@@ -3,7 +3,11 @@ import {
   upsertSettlement,
   type StellarSettlementRecord,
 } from "../ledger/store.js";
-import { reconcileThreeWay } from "../ledger/reconcile.js";
+import {
+  chainNeverLanded,
+  reconcileThreeWay,
+  type ChainSources,
+} from "../ledger/reconcile.js";
 import { notifyAlert } from "./alert.js";
 import { log } from "./log.js";
 import {
@@ -13,6 +17,8 @@ import {
 } from "./reconcile-store.js";
 
 const STUCK_MS = 180_000;
+// Payments are built with a 180s timeout; the extra minute covers ledger close.
+const SEND_EXPIRED_MS = 240_000;
 
 function shouldCheck(row: StellarSettlementRecord, now: number): boolean {
   if (row.status === "pending") return false;
@@ -43,12 +49,40 @@ async function failAbandonedClaims(now: number): Promise<void> {
   }
 }
 
+/**
+ * A built payment that is unknown to the network after its time bounds can
+ * never land, so the row is failed and alerted rather than reported as a break.
+ */
+async function failExpiredSends(
+  now: number,
+  chain?: ChainSources,
+): Promise<Set<string>> {
+  const failed = new Set<string>();
+  for (const row of readLedger()) {
+    if (row.status !== "processing" || !row.stellar_tx_hash) continue;
+    const updated = Date.parse(row.updated_at || row.created_at);
+    if (!Number.isFinite(updated) || now - updated < SEND_EXPIRED_MS) continue;
+    if (!(await chainNeverLanded(row.stellar_tx_hash, chain))) continue;
+    upsertSettlement({ ...row, status: "failed" });
+    failed.add(row.payout_id);
+    await notifyAlert("payout.expired", {
+      payout_id: row.payout_id,
+      hash: row.stellar_tx_hash,
+    });
+  }
+  return failed;
+}
+
 /** Ledger vs chain vs Bridge for every settled row. Breaks go to the review queue. */
 export async function runReconcile(
   now = Date.now(),
+  chain?: ChainSources,
 ): Promise<ReconcileRunRecord> {
   await failAbandonedClaims(now);
-  const rows = readLedger().filter((row) => shouldCheck(row, now));
+  const expired = await failExpiredSends(now, chain);
+  const rows = readLedger().filter(
+    (row) => !expired.has(row.payout_id) && shouldCheck(row, now),
+  );
   const breakLines: string[] = [];
   const payoutIds: string[] = [];
 

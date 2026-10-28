@@ -3,7 +3,9 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { NotFoundError } from "@stellar/stellar-sdk";
 import {
+  chainNeverLanded,
   evaluateReconcile,
   evaluateThreeWay,
   lookupChain,
@@ -229,4 +231,52 @@ test("a hash neither RPC nor Horizon knows is not a success", async () => {
     sources("NOT_FOUND", new Error("404")),
   );
   assert.equal(chain.success, false);
+});
+
+test("a failed row with no chain payment is not a break", () => {
+  const result = evaluateThreeWay({
+    ledger: row({ status: "failed" }),
+    chainSuccess: false,
+  });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.breaks, []);
+});
+
+test("a failed row that was paid on chain is failed_but_paid", () => {
+  const result = evaluateThreeWay({
+    ledger: row({ status: "failed" }),
+    chainSuccess: true,
+    chainMemo: row().memo,
+    chainAmount: "10",
+  });
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.breaks, ["failed_but_paid"]);
+});
+
+test("never landed needs RPC and Horizon to agree", async () => {
+  const notFound = new NotFoundError("not found", { status: 404 });
+  assert.equal(
+    await chainNeverLanded("h", sources("NOT_FOUND", notFound)),
+    true,
+  );
+  assert.equal(
+    await chainNeverLanded("h", sources("FAILED", notFound)),
+    true,
+  );
+  assert.equal(
+    await chainNeverLanded("h", sources("NOT_FOUND", { successful: true })),
+    false,
+  );
+  assert.equal(
+    await chainNeverLanded("h", sources("NOT_FOUND", new Error("down"))),
+    false,
+  );
+  assert.equal(
+    await chainNeverLanded("h", sources(new Error("rpc down"), notFound)),
+    false,
+  );
+  assert.equal(
+    await chainNeverLanded("h", sources("SUCCESS", notFound)),
+    false,
+  );
 });

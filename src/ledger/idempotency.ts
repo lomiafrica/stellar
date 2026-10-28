@@ -135,6 +135,17 @@ export function beginIdempotency(idempotencyKey: string): IdempotencyBegin {
   });
 }
 
+/** Drop an in_flight key whose request failed, so the caller can retry at once. */
+export function releaseIdempotency(idempotencyKey: string): void {
+  withNamedLock("idempotency", () => {
+    const rows = readAll();
+    const kept = rows.filter(
+      (e) => !(e.idempotency_key === idempotencyKey && e.state === "in_flight"),
+    );
+    if (kept.length !== rows.length) writeAll(kept);
+  });
+}
+
 export function saveIdempotentResponse(
   idempotencyKey: string,
   payoutId: string,

@@ -2,7 +2,9 @@
 
 The lab ledger is JSON on the Railway volume mounted at `/data` (`STELLAR_DATA_DIR`). Keys stay in environment variables. The volume is what makes a 14-day reconcile window survive a deploy.
 
-Three-way check: ledger row, Stellar RPC/Horizon, Bridge transfer status. A break is one of `ledger_without_chain`, `chain_without_ledger`, `bridge_incomplete`, `amount_mismatch`, `memo_mismatch`. Breaks are copied to the review queue and are not closed by a later clean run.
+Three-way check: ledger row, Stellar RPC/Horizon, Bridge transfer status. A break is one of `ledger_without_chain`, `chain_without_ledger`, `bridge_incomplete`, `amount_mismatch`, `memo_mismatch`, `failed_but_paid`. A `failed` row is checked only for a chain payment: none is correct, one is `failed_but_paid`. Breaks are copied to the review queue and are not closed by a later clean run.
+
+Before the check, the job fails two kinds of `processing` row that can never settle: a claim with no hash after 3 minutes (`payout.abandoned`), and a built payment that RPC and Horizon both do not know after 4 minutes, past its 180-second time bounds (`payout.expired`). Neither moved money, so neither is a break.
 
 ## Daily
 
@@ -69,6 +71,8 @@ curl -sS -X POST "$PUBLIC_BASE_URL/ops/reconcile/review/$PAYOUT_ID/close" \
 | `reconcile.break`  | A payout failed the three-way check. It is also in the review queue.       |
 | `tx.send_error`    | Stellar rejected the payment, or the worker failed.                        |
 | `tx.timeout`       | The hash is still pending after the poll window. Retry the same payout id. |
+| `payout.abandoned` | A claim never built a payment. The row is failed. Retry the payout id.     |
+| `payout.expired`   | A built payment never reached a ledger. The row is failed. Retry the id.   |
 
 Other lines (`quote.issued`, `quote.expired`, `tx.submitted`, `tx.confirmed`, `webhook.received`, `webhook.duplicate`, `reconcile.run`) are logs, not pages.
 
@@ -81,7 +85,9 @@ k6 run --summary-export k6/results/summary.json \
   k6/payouts.js
 ```
 
-See `k6/README.md`. Raise `LAB_MAX_USDC_PER_DAY` and fund the omnibus for the run, then restore the cap.
+See `k6/README.md`. Raise `LAB_RATE_LIMIT_PER_MINUTE` for the run, then delete it. The run spends one USDC per pooled id, so the omnibus needs at least `K6_PAYOUT_POOL` USDC.
+
+Payments from the omnibus go out one at a time. Stellar admits one pending transaction per source account, so parallel sends got `TRY_AGAIN_LATER`. Throughput is about one payment per ledger (5 seconds). Channel accounts are the way past that.
 
 ## Escalation
 

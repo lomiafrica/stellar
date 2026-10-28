@@ -11,7 +11,9 @@ import {
   type StellarSettlementRecord,
 } from "../src/ledger/store.js";
 import {
+  beginIdempotency,
   getIdempotentResponse,
+  releaseIdempotency,
   saveIdempotentResponse,
 } from "../src/ledger/idempotency.js";
 import type { CreateStellarPayoutResponse } from "../src/payouts/types.js";
@@ -103,4 +105,22 @@ test("idempotency cache returns the saved payout response", () => {
   assert.equal(cached?.payout_id, "payout-idem-1");
   assert.equal(cached?.success, true);
   assert.equal(getIdempotentResponse("missing"), undefined);
+});
+
+test("a released key can be retried at once, a saved one still replays", () => {
+  isolateDataDir();
+  assert.equal(beginIdempotency("key-retry").kind, "fresh");
+  assert.equal(beginIdempotency("key-retry").kind, "busy");
+  releaseIdempotency("key-retry");
+  assert.equal(beginIdempotency("key-retry").kind, "fresh");
+
+  const response: CreateStellarPayoutResponse = {
+    success: true,
+    payout_id: "payout-idem-2",
+    kind: "withdrawal",
+    status: "processing",
+  };
+  saveIdempotentResponse("key-done", response.payout_id, response);
+  releaseIdempotency("key-done");
+  assert.equal(beginIdempotency("key-done").kind, "hit");
 });

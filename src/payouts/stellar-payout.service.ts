@@ -32,6 +32,7 @@ import {
   type PaymentNetwork,
   type UsdcPaymentResult,
 } from "../stellar/payment.js";
+import { oneAtATime } from "../stellar/source-queue.js";
 import { notifyAlert } from "../ops/alert.js";
 import { log } from "../ops/log.js";
 import { writeTestnetProof } from "../testnet-proof.js";
@@ -374,64 +375,66 @@ export async function runSettlementDemo(
     throw err;
   }
 
-  const built: BuiltUsdcPayment = await buildUsdcPayment(
-    omnibus,
-    merchantPk,
-    amountUsdc,
-    payoutId,
-    resolved.network,
-  );
-
-  record = upsertSettlement({
-    ...record,
-    status: "processing",
-    bridge_transfer_id: bridge.id,
-    stellar_tx_hash: built.hash,
-    stellar_from: built.from,
-    stellar_to: built.to,
-    memo: built.memo,
-  });
-
-  log("tx.submitted", {
-    payout_id: payoutId,
-    hash: built.hash,
-    amount_usdc: amountUsdc,
-  });
-
-  try {
-    const payment = await submitUsdcPayment(built, resolved.network);
-    log("tx.confirmed", { payout_id: payoutId, hash: payment.hash });
-    const completed = completeFromPayment(record, payment, input.phone);
-    writeTestnetProof({
-      omnibusPublicKey: omnibus.publicKey(),
-      merchantPublicKey: merchantPk,
-      settlementTx: payment.hash,
-    });
-    return {
-      payoutId,
+  return oneAtATime(omnibus.publicKey(), async () => {
+    const built: BuiltUsdcPayment = await buildUsdcPayment(
+      omnibus,
+      merchantPk,
       amountUsdc,
-      stellarTxHash: payment.hash,
-      explorerAccountOmnibus: explorerAccount(omnibus.publicKey()),
-      explorerAccountMerchant: explorerAccount(merchantPk),
-      explorerTx: explorerTx(payment.hash),
-      bridgeTransferId: bridge.id,
-      mockOfframp: mockMobileMoneyOfframp(amountUsdc, input.phone),
-      settlement: completed,
-      idempotentReplay: false,
-    };
-  } catch (err) {
-    if (err instanceof PaymentNetworkError && err.kind === "send_error") {
-      upsertSettlement({
-        ...record,
-        status: "failed",
+      payoutId,
+      resolved.network,
+    );
+
+    record = upsertSettlement({
+      ...record,
+      status: "processing",
+      bridge_transfer_id: bridge.id,
+      stellar_tx_hash: built.hash,
+      stellar_from: built.from,
+      stellar_to: built.to,
+      memo: built.memo,
+    });
+
+    log("tx.submitted", {
+      payout_id: payoutId,
+      hash: built.hash,
+      amount_usdc: amountUsdc,
+    });
+
+    try {
+      const payment = await submitUsdcPayment(built, resolved.network);
+      log("tx.confirmed", { payout_id: payoutId, hash: payment.hash });
+      const completed = completeFromPayment(record, payment, input.phone);
+      writeTestnetProof({
+        omnibusPublicKey: omnibus.publicKey(),
+        merchantPublicKey: merchantPk,
+        settlementTx: payment.hash,
       });
-      void notifyAlert("tx.send_error", {
-        payout_id: payoutId,
-        message: err.message,
-      });
+      return {
+        payoutId,
+        amountUsdc,
+        stellarTxHash: payment.hash,
+        explorerAccountOmnibus: explorerAccount(omnibus.publicKey()),
+        explorerAccountMerchant: explorerAccount(merchantPk),
+        explorerTx: explorerTx(payment.hash),
+        bridgeTransferId: bridge.id,
+        mockOfframp: mockMobileMoneyOfframp(amountUsdc, input.phone),
+        settlement: completed,
+        idempotentReplay: false,
+      };
+    } catch (err) {
+      if (err instanceof PaymentNetworkError && err.kind === "send_error") {
+        upsertSettlement({
+          ...record,
+          status: "failed",
+        });
+        void notifyAlert("tx.send_error", {
+          payout_id: payoutId,
+          message: err.message,
+        });
+      }
+      throw err;
     }
-    throw err;
-  }
+  });
 }
 
 export interface AcceptedPayout {

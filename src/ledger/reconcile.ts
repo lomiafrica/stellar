@@ -1,3 +1,4 @@
+import { NotFoundError } from "@stellar/stellar-sdk";
 import { getHorizonServer, getRpcServer } from "../stellar/client.js";
 import { memoMatchesPayoutId } from "../stellar/memo.js";
 import { getBridgeAdapter, type BridgeTransfer } from "../bridge/adapter.js";
@@ -31,7 +32,8 @@ export type ReconcileBreak =
   | "chain_without_ledger"
   | "bridge_incomplete"
   | "amount_mismatch"
-  | "memo_mismatch";
+  | "memo_mismatch"
+  | "failed_but_paid";
 
 export interface ThreeWayResult {
   ledger?: StellarSettlementRecord;
@@ -93,6 +95,24 @@ export function evaluateThreeWay(input: {
 }): ThreeWayResult {
   const breaks: ReconcileBreak[] = [];
   const ledger = input.ledger;
+
+  if (ledger?.status === "failed") {
+    if (input.chainSuccess) breaks.push("failed_but_paid");
+    return {
+      ledger,
+      chain: {
+        success: input.chainSuccess,
+        hash: input.chainHash ?? ledger.stellar_tx_hash,
+        amount: input.chainAmount,
+      },
+      bridge: {
+        status: input.bridge?.status,
+        usdcAmount: input.bridge?.usdcAmount,
+      },
+      ok: breaks.length === 0,
+      breaks,
+    };
+  }
 
   if (ledger && !input.chainSuccess) {
     breaks.push("ledger_without_chain");
@@ -183,6 +203,30 @@ export async function lookupChain(
     return { success: tx.successful, memo };
   } catch {
     return { success: rpcStatus === "SUCCESS" };
+  }
+}
+
+/**
+ * True only when the network is sure: RPC says FAILED, or RPC and Horizon
+ * both say the hash is unknown. An unreachable network is not proof.
+ */
+export async function chainNeverLanded(
+  hash: string,
+  sources: ChainSources = networkSources,
+): Promise<boolean> {
+  let rpcStatus: string;
+  try {
+    rpcStatus = await sources.rpcStatus(hash);
+  } catch {
+    return false;
+  }
+  if (rpcStatus === "FAILED") return true;
+  if (rpcStatus !== "NOT_FOUND") return false;
+  try {
+    const tx = await sources.horizonTransaction(hash);
+    return !tx.successful;
+  } catch (err) {
+    return err instanceof NotFoundError;
   }
 }
 
