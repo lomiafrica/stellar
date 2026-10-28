@@ -3,7 +3,7 @@ import { createSep38Quote, xofPerUsdc, type Sep38Quote } from "./sep38.js";
 export interface RateFee {
   asset: string;
   total: string;
-  details: Array<{ name: string; amount: string }>;
+  details?: Array<{ name: string; amount: string }>;
 }
 
 export interface FirmOrIndicativeRate {
@@ -49,12 +49,9 @@ function ttlSeconds(expiresAfter?: string): number {
   return Math.max(60, seconds);
 }
 
+/** The platform rejects fee.details when fee.total is zero. */
 function feeFor(asset: string): RateFee {
-  return {
-    asset,
-    total: "0",
-    details: [{ name: "spread", amount: "0" }],
-  };
+  return { asset, total: "0" };
 }
 
 /**

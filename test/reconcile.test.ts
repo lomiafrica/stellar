@@ -6,6 +6,8 @@ import test from "node:test";
 import {
   evaluateReconcile,
   evaluateThreeWay,
+  lookupChain,
+  type ChainSources,
 } from "../src/ledger/reconcile.js";
 import {
   upsertSettlement,
@@ -179,4 +181,52 @@ test("three-way memo_mismatch", () => {
   });
   assert.equal(result.ok, false);
   assert.ok(result.breaks.includes("memo_mismatch"));
+});
+
+function sources(
+  rpc: string | Error,
+  horizon: { successful: boolean; memo_type?: string; memo?: string } | Error,
+): ChainSources {
+  return {
+    rpcStatus: async () => {
+      if (rpc instanceof Error) throw rpc;
+      return rpc;
+    },
+    horizonTransaction: async () => {
+      if (horizon instanceof Error) throw horizon;
+      return horizon;
+    },
+  };
+}
+
+test("a hash past RPC retention settles on Horizon", async () => {
+  const chain = await lookupChain(
+    "d407b564",
+    sources("NOT_FOUND", { successful: true, memo_type: "text", memo: "m1" }),
+  );
+  assert.deepEqual(chain, { success: true, memo: "m1" });
+});
+
+test("RPC FAILED is final and Horizon is not asked", async () => {
+  const chain = await lookupChain(
+    "h",
+    sources("FAILED", { successful: true }),
+  );
+  assert.equal(chain.success, false);
+});
+
+test("RPC SUCCESS stands when Horizon is down", async () => {
+  const chain = await lookupChain(
+    "h",
+    sources("SUCCESS", new Error("horizon down")),
+  );
+  assert.equal(chain.success, true);
+});
+
+test("a hash neither RPC nor Horizon knows is not a success", async () => {
+  const chain = await lookupChain(
+    "h",
+    sources("NOT_FOUND", new Error("404")),
+  );
+  assert.equal(chain.success, false);
 });

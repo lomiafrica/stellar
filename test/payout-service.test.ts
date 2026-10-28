@@ -15,7 +15,11 @@ import { DualControlError, PayoutCapError } from "../src/payouts/errors.js";
 import type { SettlementRuntime } from "../src/payouts/stellar-payout.service.js";
 import type { PaymentNetwork } from "../src/stellar/payment.js";
 import type { TransactionSigner } from "../src/stellar/signer.js";
-import { MockBridgeAdapter } from "../src/bridge/adapter.js";
+import {
+  MockBridgeAdapter,
+  type BridgeAdapter,
+  type BridgeTransferInput,
+} from "../src/bridge/adapter.js";
 import { SettleNotReadyError } from "../src/operator/ready.js";
 import { stellarMemoFromPayoutId } from "../src/stellar/memo.js";
 
@@ -45,6 +49,7 @@ function runtime(patch: {
   network: PaymentNetwork;
   now?: () => number;
   assertReady?: SettlementRuntime["assertReady"];
+  bridge?: BridgeAdapter;
 }): SettlementRuntime {
   const omnibus = Keypair.random();
   const merchant = Keypair.random();
@@ -59,7 +64,7 @@ function runtime(patch: {
     loadOmnibusSigner: () => signerFor(omnibus),
     merchantPublicKey: () => merchant.publicKey(),
     network: patch.network,
-    bridge: new MockBridgeAdapter(),
+    bridge: patch.bridge ?? new MockBridgeAdapter(),
     now: patch.now ?? (() => Date.now()),
   };
 }
@@ -132,6 +137,47 @@ test("RPC send ERROR marks the payout failed", async () => {
     /payment failed/,
   );
   assert.equal(findByPayoutId(payoutId)?.status, "failed");
+});
+
+test("a Bridge error marks the payout failed before any send", async () => {
+  isolate();
+  const sends: string[] = [];
+  const bridge: BridgeAdapter = {
+    createTransfer: async () => {
+      throw new Error("Bridge 400 destination_stellar_account");
+    },
+    getTransfer: async () => undefined,
+  };
+  const payoutId = "payout-bridge-error-aaaaaaaaaa";
+  await assert.rejects(
+    () =>
+      runSettlementDemo(
+        { payoutId, amount: "1" },
+        runtime({ network: fakeNetwork({ sends }), bridge }),
+      ),
+    /destination_stellar_account/,
+  );
+  assert.equal(findByPayoutId(payoutId)?.status, "failed");
+  assert.equal(sends.length, 0);
+});
+
+test("the Bridge transfer carries the payout memo", async () => {
+  isolate();
+  const seen: BridgeTransferInput[] = [];
+  const mock = new MockBridgeAdapter();
+  const bridge: BridgeAdapter = {
+    createTransfer: async (input) => {
+      seen.push(input);
+      return mock.createTransfer(input);
+    },
+    getTransfer: (id) => mock.getTransfer(id),
+  };
+  const payoutId = "payout-bridge-memo-aaaaaaaaaaa";
+  await runSettlementDemo(
+    { payoutId, amount: "1" },
+    runtime({ network: fakeNetwork({}), bridge }),
+  );
+  assert.equal(seen[0]?.memo, stellarMemoFromPayoutId(payoutId));
 });
 
 test("poll timeout leaves processing so a retry can poll the hash", async () => {

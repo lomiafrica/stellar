@@ -61,6 +61,7 @@ test("T2.1 live SEP-10, SEP-38 firm quote, and SEP-6 info", async () => {
     method: "POST",
     headers: { ...auth, "Content-Type": "application/json" },
     body: JSON.stringify({
+      context: "sep6",
       sell_asset: "iso4217:XOF",
       buy_asset: `stellar:USDC:${TESTNET_USDC_ISSUER}`,
       sell_amount: "65596",

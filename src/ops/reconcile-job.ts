@@ -1,4 +1,8 @@
-import { readLedger, type StellarSettlementRecord } from "../ledger/store.js";
+import {
+  readLedger,
+  upsertSettlement,
+  type StellarSettlementRecord,
+} from "../ledger/store.js";
 import { reconcileThreeWay } from "../ledger/reconcile.js";
 import { notifyAlert } from "./alert.js";
 import { log } from "./log.js";
@@ -24,10 +28,28 @@ function shouldCheck(row: StellarSettlementRecord, now: number): boolean {
   );
 }
 
+/**
+ * A claim with no hash past the stuck window never built a transaction,
+ * so no leg moved money. It is failed, alerted, and left out of the breaks.
+ */
+async function failAbandonedClaims(now: number): Promise<void> {
+  for (const row of readLedger()) {
+    if (row.status !== "processing" || row.stellar_tx_hash) continue;
+    const updated = Date.parse(row.updated_at || row.created_at);
+    if (!Number.isFinite(updated) || now - updated < STUCK_MS) continue;
+    upsertSettlement({ ...row, status: "failed" });
+    await notifyAlert("payout.abandoned", {
+      payout_id: row.payout_id,
+      claimed_at: row.updated_at || row.created_at,
+    });
+  }
+}
+
 /** Ledger vs chain vs Bridge for every settled row. Breaks go to the review queue. */
 export async function runReconcile(
   now = Date.now(),
 ): Promise<ReconcileRunRecord> {
+  await failAbandonedClaims(now);
   const rows = readLedger().filter((row) => shouldCheck(row, now));
   const breakLines: string[] = [];
   const payoutIds: string[] = [];

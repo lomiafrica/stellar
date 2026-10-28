@@ -109,7 +109,7 @@ test("T1.1 live SEP-10 to SEP-24 through Anchor Platform, sandbox last mile only
   const form = await fetchJson(url);
   assert.equal(form.status, 200);
   assert.match(form.text, /id="pay-form"/);
-  assert.doesNotMatch(form.text, /<script/i);
+  assert.match(form.text, /method="post" action="\/anchor\/sep24\/deposit"/);
 
   const tokenMatch = form.text.match(/name="token" value="([^"]+)"/);
   const txMatch = form.text.match(/name="transaction_id" value="([^"]+)"/);

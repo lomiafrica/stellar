@@ -284,7 +284,10 @@ async function resolveBridge(
       createdAt: new Date(runtime.now()).toISOString(),
     };
   }
-  return runtime.bridge.createTransfer({ usdAmount: amountUsdc });
+  return runtime.bridge.createTransfer({
+    usdAmount: amountUsdc,
+    memo: stellarMemoFromPayoutId(input.payoutId ?? ""),
+  });
 }
 
 export async function runSettlementDemo(
@@ -366,7 +369,17 @@ export async function runSettlementDemo(
 
   const omnibus = resolved.loadOmnibusSigner();
   const merchantPk = resolved.merchantPublicKey();
-  const bridge = await resolveBridge(input, amountUsdc, resolved);
+  let bridge: BridgeTransfer;
+  try {
+    bridge = await resolveBridge({ ...input, payoutId }, amountUsdc, resolved);
+  } catch (err) {
+    upsertSettlement({ ...record, status: "failed" });
+    void notifyAlert("bridge.error", {
+      payout_id: payoutId,
+      message: err instanceof Error ? err.message : String(err),
+    });
+    throw err;
+  }
 
   const built: BuiltUsdcPayment = await buildUsdcPayment(
     omnibus,

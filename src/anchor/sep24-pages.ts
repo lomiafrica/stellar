@@ -228,7 +228,7 @@ export function renderSep24CreditReceipt(credit: LastMileResult): string {
     `
     <p class="kicker">Testnet</p>
     <h1>Sandbox last mile recorded</h1>
-    <p class="lede">${escapeHtml(rail)} saved a sandbox credit of ${escapeHtml(credit.amountXof)} CFA. The id on this page is that credit.</p>
+    <p class="lede">${escapeHtml(rail)} saved a sandbox credit of ${escapeHtml(credit.amountXof)} CFA. The id on this page is that credit. It is not a Stellar payment.</p>
     <p class="note">${escapeHtml(credit.payoutId)}</p>
     ${moneyPathHtml({ kind: credit.kind, rail: credit.rail, mode: "receipt", layout: "row" })}
     <p class="note">${escapeHtml(credit.amountXof)} CFA · ${escapeHtml(credit.phone)}</p>

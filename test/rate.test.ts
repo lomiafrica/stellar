@@ -22,6 +22,8 @@ test("indicative rate has no id and firm rate honors price times buy", () => {
   });
   assert.equal(indicative.rate.id, undefined);
   assert.equal(indicative.rate.expires_at, undefined);
+  assert.equal(indicative.rate.fee.total, "0");
+  assert.equal(indicative.rate.fee.details, undefined);
 
   const firm = buildSep38Rate({
     type: "firm",

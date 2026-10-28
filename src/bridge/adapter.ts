@@ -24,8 +24,14 @@ export interface BridgeTransfer {
   createdAt: string;
 }
 
+export interface BridgeTransferInput {
+  usdAmount: string;
+  /** Stellar text memo Bridge puts on the delivery, so the leg carries the payout id. */
+  memo?: string;
+}
+
 export interface BridgeAdapter {
-  createTransfer(input: { usdAmount: string }): Promise<BridgeTransfer>;
+  createTransfer(input: BridgeTransferInput): Promise<BridgeTransfer>;
   getTransfer(id: string): Promise<BridgeTransfer | undefined>;
 }
 
@@ -89,6 +95,18 @@ export function mockBridgeUsdToUsdc(usdAmount: string): BridgeTransfer {
 const OMNIBUS_PUBLIC =
   "GD6PH2FAK5DQFFFALZVAT337R7NDGSPWT4R6UBGA5GYLL7N5U4C4GI7I";
 
+/**
+ * Bridge sandbox checks the destination on the public network, so the
+ * testnet omnibus is rejected as "not created or activated".
+ */
+export function bridgeDestinationAddress(): string {
+  return (
+    process.env.BRIDGE_DESTINATION_ADDRESS?.trim() ||
+    process.env.OMNIBUS_PUBLIC_KEY?.trim() ||
+    OMNIBUS_PUBLIC
+  );
+}
+
 /** Bridge `payment_processed` is the success state. Three-way reconcile expects `completed`. */
 export function mapBridgeStatus(raw: string | undefined): BridgeTransferStatus {
   switch (raw) {
@@ -133,17 +151,17 @@ function transferFromApi(row: JsonObject, fallbackUsd: string): BridgeTransfer {
 export class BridgeSandboxAdapter implements BridgeAdapter {
   constructor(private readonly client: BridgeClient = bridgeClientFromEnv()) {}
 
-  async createTransfer(input: { usdAmount: string }): Promise<BridgeTransfer> {
+  async createTransfer(input: BridgeTransferInput): Promise<BridgeTransfer> {
     const customerId = process.env.BRIDGE_CUSTOMER_ID?.trim() ?? "";
     if (!customerId) {
       throw new Error("BRIDGE_CUSTOMER_ID unset");
     }
-    const address = process.env.OMNIBUS_PUBLIC_KEY?.trim() || OMNIBUS_PUBLIC;
+    const address = bridgeDestinationAddress();
     const created = await this.client.createTransfer({
       amount: input.usdAmount,
       onBehalfOf: customerId,
       address,
-      blockchainMemo: "lomi",
+      blockchainMemo: input.memo || "lomi",
     });
     const transfer = transferFromApi(created, input.usdAmount);
     saveBridgeTransfer(transfer);
@@ -172,7 +190,7 @@ export class BridgeSandboxAdapter implements BridgeAdapter {
 }
 
 export class MockBridgeAdapter implements BridgeAdapter {
-  async createTransfer(input: { usdAmount: string }): Promise<BridgeTransfer> {
+  async createTransfer(input: BridgeTransferInput): Promise<BridgeTransfer> {
     return mockBridgeUsdToUsdc(input.usdAmount);
   }
 

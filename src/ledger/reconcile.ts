@@ -145,30 +145,55 @@ export function evaluateThreeWay(input: {
   };
 }
 
+export interface ChainSources {
+  rpcStatus(hash: string): Promise<string>;
+  horizonTransaction(
+    hash: string,
+  ): Promise<{ successful: boolean; memo_type?: string; memo?: string }>;
+}
+
+const networkSources: ChainSources = {
+  async rpcStatus(hash) {
+    const polled = await getRpcServer().getTransaction(hash);
+    return polled.status;
+  },
+  horizonTransaction(hash) {
+    return getHorizonServer().transactions().transaction(hash).call();
+  },
+};
+
+/**
+ * RPC only keeps about a week of transactions and answers NOT_FOUND after
+ * that, so anything other than SUCCESS or FAILED is settled on Horizon.
+ */
+export async function lookupChain(
+  hash: string,
+  sources: ChainSources = networkSources,
+): Promise<{ success: boolean; memo?: string }> {
+  let rpcStatus: string | undefined;
+  try {
+    rpcStatus = await sources.rpcStatus(hash);
+  } catch {
+    rpcStatus = undefined;
+  }
+  if (rpcStatus === "FAILED") return { success: false };
+  try {
+    const tx = await sources.horizonTransaction(hash);
+    const memo = tx.memo_type === "text" && tx.memo ? tx.memo : undefined;
+    return { success: tx.successful, memo };
+  } catch {
+    return { success: rpcStatus === "SUCCESS" };
+  }
+}
+
 export async function reconcileTransaction(
   hash: string,
+  sources: ChainSources = networkSources,
 ): Promise<ReconcileResult> {
-  const rpc = getRpcServer();
-  const horizon = getHorizonServer();
   const ledgerRow = findByTxHash(hash);
-
-  let onChainSuccess = false;
-  let onChainMemo: string | undefined;
-
-  try {
-    const polled = await rpc.getTransaction(hash);
-    onChainSuccess = polled.status === "SUCCESS";
-  } catch {
-    try {
-      const tx = await horizon.transactions().transaction(hash).call();
-      onChainSuccess = tx.successful;
-      if (tx.memo_type === "text" && tx.memo) {
-        onChainMemo = tx.memo;
-      }
-    } catch {
-      onChainSuccess = false;
-    }
-  }
+  const chain = await lookupChain(hash, sources);
+  const onChainSuccess = chain.success;
+  const onChainMemo = chain.memo;
 
   return evaluateReconcile({
     hash,

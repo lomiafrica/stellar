@@ -67,13 +67,14 @@ async function main(): Promise<void> {
   const auth = { Authorization: `Bearer ${token}` };
   const info = await readJson(`${transfer}/info`, { headers: auth });
   const prices = await readJson(
-    `${quotes}/prices?sell_asset=iso4217:XOF&buy_asset=${encodeURIComponent(`stellar:USDC:${TESTNET_USDC_ISSUER}`)}`,
+    `${quotes}/prices?sell_asset=iso4217:XOF&sell_amount=65596&buy_asset=${encodeURIComponent(`stellar:USDC:${TESTNET_USDC_ISSUER}`)}`,
     { headers: auth },
   );
   const quote = await readJson(`${quotes}/quote`, {
     method: "POST",
     headers: { ...auth, "Content-Type": "application/json" },
     body: JSON.stringify({
+      context: "sep6",
       sell_asset: "iso4217:XOF",
       buy_asset: `stellar:USDC:${TESTNET_USDC_ISSUER}`,
       sell_amount: "65596",
