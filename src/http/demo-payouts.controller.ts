@@ -87,7 +87,10 @@ export class DemoPayoutsController {
 
     if (idempotencyKey) {
       const begun = beginIdempotency(idempotencyKey);
-      if (begun.kind === "hit") return begun.response;
+      if (begun.kind === "hit") {
+        res.status(200).setHeader("Idempotent-Replayed", "true");
+        return begun.response;
+      }
       if (begun.kind === "busy") {
         throw new ConflictException({
           success: false,

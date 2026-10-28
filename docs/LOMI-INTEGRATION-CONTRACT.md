@@ -18,7 +18,7 @@ Merchants create payouts with `POST /payouts`. Body fields this lab accepts:
 
 Response: `success`, `payout_id`, `kind`, `status` (`pending` / `processing` / `completed` / `failed`), plus `stellar_tx_hash`, `stellar_transaction_id` (the same hash), and explorer URLs when a payment lands. `Prefer: respond-async` returns 202 after the row is claimed. The worker finishes the hop.
 
-Header `Idempotency-Key` is scoped per caller. Header `X-Lab-Key` is required on the public lab (`LAB_API_KEY`).
+Header `Idempotency-Key` is scoped per caller. A repeat of a finished key returns 200 with the first response body and `Idempotent-Replayed: true`; read the current state with `GET /demo/payouts/:payout_id`. A repeat while the first is still running returns 409. A request that failed frees its key, so the retry starts fresh. Header `X-Lab-Key` is required on the public lab (`LAB_API_KEY`).
 
 USDC is the treasury hop on Stellar, not a merchant wallet currency.
 
