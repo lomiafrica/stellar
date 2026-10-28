@@ -275,14 +275,7 @@ async function resolveBridge(
   if (input.bridge_transfer_id) {
     const existing = await runtime.bridge.getTransfer(input.bridge_transfer_id);
     if (existing) return existing;
-    return {
-      id: input.bridge_transfer_id,
-      usdAmount: amountUsdc,
-      usdcAmount: amountUsdc,
-      stellarNetwork: "testnet",
-      status: "completed",
-      createdAt: new Date(runtime.now()).toISOString(),
-    };
+    throw new Error(`Bridge transfer ${input.bridge_transfer_id} not found`);
   }
   return runtime.bridge.createTransfer({
     usdAmount: amountUsdc,

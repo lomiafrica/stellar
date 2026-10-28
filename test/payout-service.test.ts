@@ -161,6 +161,20 @@ test("a Bridge error marks the payout failed before any send", async () => {
   assert.equal(sends.length, 0);
 });
 
+test("an unknown bridge_transfer_id fails instead of passing as completed", async () => {
+  isolate();
+  const payoutId = "payout-bridge-unknown-aaaaaaaa";
+  await assert.rejects(
+    () =>
+      runSettlementDemo(
+        { payoutId, amount: "1", bridge_transfer_id: "hand-written" },
+        runtime({ network: fakeNetwork({}) }),
+      ),
+    /hand-written not found/,
+  );
+  assert.equal(findByPayoutId(payoutId)?.status, "failed");
+});
+
 test("the Bridge transfer carries the payout memo", async () => {
   isolate();
   const seen: BridgeTransferInput[] = [];
