@@ -129,6 +129,29 @@ test("a built send inside its time bounds is left processing", async () => {
   assert.equal(findByPayoutId("payout-in-flight")?.status, "processing");
 });
 
+test("a row past the retention window is dropped by the run, not reported", async () => {
+  isolate();
+  const old = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+  upsertSettlement({
+    id: "row-old",
+    organization_id: "00000000-0000-4000-8000-000000000001",
+    environment: "test",
+    payout_id: "payout-old",
+    destination: "self",
+    last_mile_rail: "wave",
+    amount: 1,
+    currency_code: "USD",
+    amount_usdc: "1",
+    memo: "payout-old",
+    status: "completed",
+    created_at: old,
+    updated_at: old,
+  });
+  const run = await runReconcile(Date.now() + 600_000);
+  assert.equal(run.ok, true);
+  assert.equal(findByPayoutId("payout-old"), undefined);
+});
+
 test("empty ledger run is clean", async () => {
   isolate();
   const run = await runReconcile();

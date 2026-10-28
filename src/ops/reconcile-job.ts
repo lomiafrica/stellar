@@ -1,4 +1,5 @@
 import {
+  purgeExpiredSettlements,
   readLedger,
   upsertSettlement,
   type StellarSettlementRecord,
@@ -78,6 +79,7 @@ export async function runReconcile(
   now = Date.now(),
   chain?: ChainSources,
 ): Promise<ReconcileRunRecord> {
+  purgeExpiredSettlements(now);
   await failAbandonedClaims(now);
   const expired = await failExpiredSends(now, chain);
   const rows = readLedger().filter(

@@ -12,13 +12,11 @@ import { startSep6Schedule } from "./anchor/sep6-platform.js";
 import { assertDeployNetwork, PORT } from "./config.js";
 import { AppModule } from "./http/app.module.js";
 import { corsOrigins, rateLimitOk, securityHeaders } from "./http/security.js";
-import { purgeExpiredSettlements } from "./ledger/store.js";
 import { log } from "./ops/log.js";
 import { runReconcile, startReconcileSchedule } from "./ops/reconcile-job.js";
 
 async function bootstrap() {
   assertDeployNetwork();
-  purgeExpiredSettlements();
   await runReconcile().catch((err) => {
     log("reconcile.run", {
       ok: false,

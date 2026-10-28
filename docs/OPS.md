@@ -4,7 +4,7 @@ The lab ledger is JSON on the Railway volume mounted at `/data` (`STELLAR_DATA_D
 
 Three-way check: ledger row, Stellar RPC/Horizon, Bridge transfer status. A break is one of `ledger_without_chain`, `chain_without_ledger`, `bridge_incomplete`, `amount_mismatch`, `memo_mismatch`, `failed_but_paid`. A `failed` row is checked only for a chain payment: none is correct, one is `failed_but_paid`. Breaks are copied to the review queue and are not closed by a later clean run.
 
-Before the check, the job fails two kinds of `processing` row that can never settle: a claim with no hash after 3 minutes (`payout.abandoned`), and a built payment that RPC and Horizon both do not know after 4 minutes, past its 180-second time bounds (`payout.expired`). Neither moved money, so neither is a break.
+Each run first drops ledger rows older than `STELLAR_DATA_TTL_DAYS` (default 14). Then it fails two kinds of `processing` row that can never settle: a claim with no hash after 3 minutes (`payout.abandoned`), and a built payment that RPC and Horizon both do not know after 4 minutes, past its 180-second time bounds (`payout.expired`). Neither moved money, so neither is a break.
 
 ## Daily
 
