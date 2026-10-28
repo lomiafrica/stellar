@@ -1,6 +1,6 @@
 # Load test
 
-50 virtual users for a minute on `POST /demo/payouts` with `Prefer: respond-async`. Every request reuses one of 5 payout ids, so the run is a load test and an idempotency test at once: thousands of concurrent creates, one chain payment per id. A `409` means that id is already in flight, which is the right answer for a duplicate.
+50 virtual users for a minute on `POST /demo/payouts` with `Prefer: respond-async`. Every request reuses one of 5 payout ids, so the run is a load test and an idempotency test at once: thousands of concurrent creates, one chain payment per id. A `409` means that id is already in flight, and a `200` with `Idempotent-Replayed: true` means it already has an answer. Both are right for a duplicate.
 
 The lab allows 60 writes per minute per client. Raise it for the run, then remove the variable:
 
@@ -18,6 +18,6 @@ k6 run \
   k6/payouts.js
 ```
 
-Thresholds: failed requests under 1 percent (`200`, `202`, and `409` count as answered), p95 of the create call under 500ms, checks above 99 percent. Teardown waits 90 seconds, reads each pool id back from the lab, and counts the omnibus transactions on testnet Horizon that carry that id as memo. More than one fails the run.
+Thresholds: failed requests under 1 percent (`200`, `202`, and `409` count as answered), p95 of the create call under 500ms, checks above 99 percent. Teardown waits 90 seconds, reads each pool id back from the lab, and counts the omnibus transactions on testnet Horizon that carry that id as memo. Anything but exactly one fails the run.
 
 `k6/results/summary.json` and `k6/results/RUN.md` are the committed result.
