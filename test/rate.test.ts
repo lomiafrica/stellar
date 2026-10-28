@@ -24,6 +24,7 @@ test("indicative rate has no id and firm rate honors price times buy", () => {
   assert.equal(indicative.rate.expires_at, undefined);
   assert.equal(indicative.rate.fee.total, "0");
   assert.equal(indicative.rate.fee.details, undefined);
+  assert.ok(indicative.rate.fee.asset.startsWith("stellar:USDC"));
 
   const firm = buildSep38Rate({
     type: "firm",
@@ -53,4 +54,5 @@ test("USDC sell uses the inverse price", () => {
   const price = Number(firm.rate.price);
   assert.ok(Math.abs(sell - price * buy) < 0.01);
   assert.ok(price < 1);
+  assert.equal(firm.rate.fee.asset, "stellar:USDC");
 });

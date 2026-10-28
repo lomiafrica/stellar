@@ -49,8 +49,12 @@ function ttlSeconds(expiresAfter?: string): number {
   return Math.max(60, seconds);
 }
 
-/** The platform rejects fee.details when fee.total is zero. */
-function feeFor(asset: string): RateFee {
+/**
+ * The platform rejects fee.details when fee.total is zero, and a fee asset
+ * with zero significant_decimals (XOF), so the fee sits on the Stellar leg.
+ */
+function feeFor(sellAsset: string, buyAsset: string): RateFee {
+  const asset = sellAsset.startsWith("stellar:") ? sellAsset : buyAsset;
   return { asset, total: "0" };
 }
 
@@ -71,7 +75,7 @@ export function buildSep38Rate(query: RateQuery): RateCallbackResponse {
     price: platformPrice(quote.sellAsset, quote.buyAsset, Number(quote.price)),
     sell_amount: quote.sellAmount,
     buy_amount: quote.buyAmount,
-    fee: feeFor(quote.sellAsset),
+    fee: feeFor(quote.sellAsset, quote.buyAsset),
   };
   if (firm) {
     rate.id = quote.id;
