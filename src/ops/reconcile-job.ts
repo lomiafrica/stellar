@@ -17,10 +17,8 @@ const STUCK_MS = 180_000;
 function shouldCheck(row: StellarSettlementRecord, now: number): boolean {
   if (row.status === "pending") return false;
   if (row.status === "failed" && !row.stellar_tx_hash) return false;
-  if (row.status === "processing") {
-    const updated = Date.parse(row.updated_at || row.created_at);
-    if (Number.isFinite(updated) && now - updated < STUCK_MS) return false;
-  }
+  const updated = Date.parse(row.updated_at || row.created_at);
+  if (Number.isFinite(updated) && now - updated < STUCK_MS) return false;
   return (
     row.status === "completed" ||
     row.status === "processing" ||

@@ -33,7 +33,11 @@ test("a ledger row with no chain stays in review across a later run", async () =
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   });
-  const first = await runReconcile();
+  const later = Date.now() + 600_000;
+  const settling = await runReconcile();
+  assert.equal(settling.rows, 0);
+
+  const first = await runReconcile(later);
   assert.equal(first.ok, false);
   assert.ok(first.payout_ids_with_breaks.includes("payout-break"));
   const open = readReviewQueue().find(
@@ -41,7 +45,7 @@ test("a ledger row with no chain stays in review across a later run", async () =
   );
   assert.equal(open?.status, "open");
 
-  const second = await runReconcile();
+  const second = await runReconcile(later + 60_000);
   assert.equal(second.ok, false);
   const still = readReviewQueue().find(
     (item) => item.payout_id === "payout-break",
