@@ -1,4 +1,4 @@
-import { createSep38Quote, xofPerUsdc, type Sep38Quote } from "./sep38.js";
+import { createSep38Quote, type Sep38Quote } from "./sep38.js";
 
 export interface RateFee {
   asset: string;
@@ -28,18 +28,12 @@ export interface RateQuery {
   expiresAfter?: string;
 }
 
-/** Price the platform checks as sell_amount ~= price * buy_amount. */
-export function platformPrice(
-  sellAsset: string,
-  buyAsset: string,
-  xofPer = xofPerUsdc(),
-): string {
-  const sell = sellAsset.toUpperCase();
-  const buy = buyAsset.toUpperCase();
-  if (sell.includes("USDC") && buy.includes("XOF")) {
-    return String(1 / xofPer);
-  }
-  return String(xofPer);
+/**
+ * The platform checks sell_amount ~= price * buy_amount at the sell asset's
+ * decimals, so price comes from the rounded amounts, not the peg.
+ */
+export function quotedPrice(sellAmount: string, buyAmount: string): string {
+  return String(Number(sellAmount) / Number(buyAmount));
 }
 
 function ttlSeconds(expiresAfter?: string): number {
@@ -72,7 +66,7 @@ export function buildSep38Rate(query: RateQuery): RateCallbackResponse {
     ttlSeconds: firm ? ttlSeconds(query.expiresAfter) : 60,
   });
   const rate: FirmOrIndicativeRate = {
-    price: platformPrice(quote.sellAsset, quote.buyAsset, Number(quote.price)),
+    price: quotedPrice(quote.sellAmount, quote.buyAmount),
     sell_amount: quote.sellAmount,
     buy_amount: quote.buyAmount,
     fee: feeFor(quote.sellAsset, quote.buyAsset),

@@ -70,23 +70,28 @@ async function main(): Promise<void> {
     `${quotes}/prices?sell_asset=iso4217:XOF&sell_amount=65596&buy_asset=${encodeURIComponent(`stellar:USDC:${TESTNET_USDC_ISSUER}`)}`,
     { headers: auth },
   );
-  const quote = await readJson(`${quotes}/quote`, {
-    method: "POST",
-    headers: { ...auth, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      context: "sep6",
-      sell_asset: "iso4217:XOF",
-      buy_asset: `stellar:USDC:${TESTNET_USDC_ISSUER}`,
-      sell_amount: "65596",
-    }),
-  });
+  const usdc = `stellar:USDC:${TESTNET_USDC_ISSUER}`;
+  const firmQuote = (sellAsset: string, buyAsset: string, sellAmount: string) =>
+    readJson(`${quotes}/quote`, {
+      method: "POST",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        context: "sep6",
+        sell_asset: sellAsset,
+        buy_asset: buyAsset,
+        sell_amount: sellAmount,
+      }),
+    });
+  const quote = await firmQuote("iso4217:XOF", usdc, "65596");
   const quoteId = String(quote.id ?? "");
   const deposit = await readJson(
-    `${transfer}/deposit?asset_code=USDC&account=${client.publicKey()}&amount=10&quote_id=${encodeURIComponent(quoteId)}`,
+    `${transfer}/deposit-exchange?destination_asset=USDC&source_asset=iso4217:XOF&amount=65596&type=wave&account=${client.publicKey()}&quote_id=${encodeURIComponent(quoteId)}`,
     { headers: auth },
   );
+  const withdrawQuote = await firmQuote(usdc, "iso4217:XOF", "10");
+  const withdrawQuoteId = String(withdrawQuote.id ?? "");
   const withdraw = await readJson(
-    `${transfer}/withdraw?asset_code=USDC&account=${client.publicKey()}&amount=10&quote_id=${encodeURIComponent(quoteId)}`,
+    `${transfer}/withdraw-exchange?source_asset=USDC&destination_asset=iso4217:XOF&amount=10&type=wave&account=${client.publicKey()}&quote_id=${encodeURIComponent(withdrawQuoteId)}`,
     { headers: auth },
   );
   const depositId = String(deposit.id ?? "");
@@ -108,6 +113,7 @@ async function main(): Promise<void> {
         quote_id: quoteId,
         expires_at: quote.expires_at,
         deposit_id: depositId,
+        withdraw_quote_id: withdrawQuoteId,
         withdraw_id: withdraw.id ?? "",
         transaction,
       },

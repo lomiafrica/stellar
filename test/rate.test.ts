@@ -3,7 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { buildSep38Rate, platformPrice } from "../src/anchor/rate.js";
+import { buildSep38Rate, quotedPrice } from "../src/anchor/rate.js";
 import { XOF_PER_EUR } from "../src/anchor/sep38.js";
 
 function isolate(): void {
@@ -38,7 +38,7 @@ test("indicative rate has no id and firm rate honors price times buy", () => {
   const buy = Number(firm.rate.buy_amount);
   const price = Number(firm.rate.price);
   assert.ok(Math.abs(sell - price * buy) < 1);
-  assert.equal(firm.rate.price, platformPrice("iso4217:XOF", "stellar:USDC"));
+  assert.equal(firm.rate.price, quotedPrice(firm.rate.sell_amount, firm.rate.buy_amount));
 });
 
 test("USDC sell uses the inverse price", () => {
@@ -52,7 +52,7 @@ test("USDC sell uses the inverse price", () => {
   const sell = Number(firm.rate.sell_amount);
   const buy = Number(firm.rate.buy_amount);
   const price = Number(firm.rate.price);
-  assert.ok(Math.abs(sell - price * buy) < 0.01);
+  assert.ok(Math.abs(sell - price * buy) < 1e-7);
   assert.ok(price < 1);
   assert.equal(firm.rate.fee.asset, "stellar:USDC");
 });
