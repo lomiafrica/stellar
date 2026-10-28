@@ -21,6 +21,7 @@ data/bridge_transfers.json
 data/reconcile_runs.json
 data/reconcile_review.json
 k6/results/*.json
+!k6/results/summary.json
 
 # Logs
 *.log

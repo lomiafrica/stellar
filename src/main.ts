@@ -7,6 +7,7 @@ import {
   type Response,
 } from "express";
 import { NestFactory } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { startSep6Schedule } from "./anchor/sep6-platform.js";
 import { assertDeployNetwork, PORT } from "./config.js";
 import { AppModule } from "./http/app.module.js";
@@ -26,10 +27,12 @@ async function bootstrap() {
   });
   startReconcileSchedule();
   startSep6Schedule();
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
     bodyParser: false,
   });
+  // Railway terminates TLS in one proxy hop; without this every client shares the proxy's rate-limit bucket.
+  app.set("trust proxy", 1);
   app.use(
     json({
       limit: "32kb",

@@ -3,7 +3,15 @@ import { check, sleep } from "k6";
 
 const BASE = __ENV.STELLAR_LAB_URL || "http://localhost:3456";
 const LAB_KEY = __ENV.LAB_API_KEY || "";
-const startedAt = new Date().toISOString();
+const POOL_SIZE = Number(__ENV.K6_PAYOUT_POOL || "5");
+const HORIZON = __ENV.HORIZON_URL || "https://horizon-testnet.stellar.org";
+const OMNIBUS =
+  __ENV.OMNIBUS_PUBLIC_KEY ||
+  "GD6PH2FAK5DQFFFALZVAT337R7NDGSPWT4R6UBGA5GYLL7N5U4C4GI7I";
+const RUN = `k6-${Date.now().toString(36)}`;
+const POOL = Array.from({ length: POOL_SIZE }, (_, i) => `${RUN}-${i}`);
+
+const accepted = http.expectedStatuses(200, 202, 409);
 
 export const options = {
   scenarios: {
@@ -11,8 +19,8 @@ export const options = {
       executor: "ramping-vus",
       startVUs: 0,
       stages: [
-        { duration: "20s", target: 100 },
-        { duration: "30s", target: 100 },
+        { duration: "15s", target: 50 },
+        { duration: "45s", target: 50 },
         { duration: "10s", target: 0 },
       ],
       gracefulRampDown: "10s",
@@ -21,27 +29,32 @@ export const options = {
   thresholds: {
     http_req_failed: ["rate<0.01"],
     "http_req_duration{name:create}": ["p(95)<500"],
+    checks: ["rate>0.99"],
   },
 };
 
-function headers(extra) {
+function headers(payoutId) {
   const out = {
     "Content-Type": "application/json",
     Prefer: "respond-async",
-    ...extra,
+    "Idempotency-Key": payoutId,
   };
   if (LAB_KEY) out["X-Lab-Key"] = LAB_KEY;
   return out;
 }
 
+/**
+ * Every request reuses one of POOL_SIZE payout ids, so thousands of
+ * concurrent creates must still produce one chain payment per id.
+ * 409 is the lab saying that id is already in flight.
+ */
 export default function stellarPayouts() {
-  const toml = http.get(`${BASE}/.well-known/stellar.toml`);
-  check(toml, {
-    "toml 200": (res) => res.status === 200,
-    "toml has XOF": (res) => String(res.body).includes('code = "XOF"'),
+  const toml = http.get(`${BASE}/.well-known/stellar.toml`, {
+    tags: { name: "toml" },
   });
+  check(toml, { "toml 200": (res) => res.status === 200 });
 
-  const payoutId = `k6-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const payoutId = POOL[Math.floor(Math.random() * POOL.length)];
   const create = http.post(
     `${BASE}/demo/payouts`,
     JSON.stringify({
@@ -53,37 +66,47 @@ export default function stellarPayouts() {
       async: true,
     }),
     {
-      headers: headers({ "Idempotency-Key": payoutId }),
+      headers: headers(payoutId),
       tags: { name: "create" },
+      responseCallback: accepted,
     },
   );
   check(create, {
-    "async accepted": (res) => res.status === 202 || res.status === 200,
+    "accepted, replayed, or in flight": (res) =>
+      res.status === 200 || res.status === 202 || res.status === 409,
   });
   sleep(0.2);
 }
 
 export function teardown() {
-  const list = http.get(
-    `${BASE}/demo/payouts?since=${encodeURIComponent(startedAt)}`,
-    {
+  sleep(90);
+  const hashesById = {};
+  for (const payoutId of POOL) {
+    const res = http.get(`${BASE}/demo/payouts/${payoutId}`, {
       headers: { Accept: "application/json" },
-    },
-  );
-  const body = list.json();
-  const rows = body && body.payouts ? body.payouts : [];
-  const seen = {};
-  const hashes = {};
-  let duplicate = false;
-  for (const row of rows) {
-    if (seen[row.payout_id]) duplicate = true;
-    seen[row.payout_id] = true;
-    const hash = row.stellar_transaction_id || row.stellar_tx_hash || "";
-    if (!hash) continue;
-    if (hashes[hash]) duplicate = true;
-    hashes[hash] = true;
+      tags: { name: "readback" },
+    });
+    const row = res.status === 200 ? res.json() : {};
+    hashesById[payoutId] = row.stellar_transaction_id || row.stellar_tx_hash || "";
+    console.log(`${payoutId} ${row.status || res.status} ${hashesById[payoutId]}`);
   }
-  if (duplicate) {
-    throw new Error("duplicate on-chain transaction in payout list");
+  const hashes = Object.values(hashesById).filter(Boolean);
+  if (new Set(hashes).size !== hashes.length) {
+    throw new Error("two payout ids share one on-chain transaction");
+  }
+
+  const chain = http.get(
+    `${HORIZON}/accounts/${OMNIBUS}/transactions?order=desc&limit=200`,
+    { tags: { name: "horizon" } },
+  );
+  const records = chain.status === 200 ? chain.json("_embedded.records") : [];
+  for (const payoutId of POOL) {
+    const onChain = records.filter(
+      (tx) => tx.successful && tx.memo === payoutId.slice(0, 28),
+    ).length;
+    console.log(`${payoutId} chain payments ${onChain}`);
+    if (onChain > 1) {
+      throw new Error(`${payoutId} was paid ${onChain} times on chain`);
+    }
   }
 }

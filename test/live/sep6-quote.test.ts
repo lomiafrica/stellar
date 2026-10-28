@@ -80,9 +80,50 @@ test("T2.1 live SEP-10, SEP-38 firm quote, and SEP-6 info", async () => {
     assert.ok(Math.abs(sell - price * buy) < 1, quote.text);
   }
 
+  const depositExchange = (id: string) =>
+    fetchJson(
+      `${transfer}/deposit-exchange?destination_asset=USDC&source_asset=iso4217:XOF&amount=65596&type=wave&account=${client.publicKey()}&quote_id=${encodeURIComponent(id)}`,
+      { headers: auth },
+    );
+
+  const honored = await depositExchange(quoteId);
+  assert.equal(honored.status, 200, honored.text);
+  const depositId = String(asRecord(honored.body).id ?? "");
+  const tx = await fetchJson(
+    `${transfer}/transaction?id=${encodeURIComponent(depositId)}`,
+    { headers: auth },
+  );
+  const txRow = asRecord(asRecord(tx.body).transaction);
+  assert.equal(txRow.quote_id, quoteId, tx.text);
+  assert.equal(Number(txRow.amount_in), sell, tx.text);
+
+  const stale = await fetchJson(`${quotes}/quote`, {
+    method: "POST",
+    headers: { ...auth, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      context: "sep6",
+      sell_asset: "iso4217:XOF",
+      buy_asset: `stellar:USDC:${TESTNET_USDC_ISSUER}`,
+      sell_amount: "65596",
+    }),
+  });
+  const staleRow = asRecord(stale.body);
+  const staleExpires = Date.parse(String(staleRow.expires_at ?? ""));
+  assert.ok(Number.isFinite(staleExpires), stale.text);
+  const waitMs = Math.min(staleExpires - Date.now() + 3000, 150_000);
+  await new Promise((resolve) => setTimeout(resolve, Math.max(waitMs, 0)));
+  const rejected = await depositExchange(String(staleRow.id ?? ""));
+  assert.ok(
+    rejected.status >= 400 && rejected.status < 500,
+    `expired quote ${rejected.status}: ${rejected.text}`,
+  );
+
   recordLiveProof({
     sep6Info: `${transfer}/info`,
     sep38QuoteId: quoteId,
     sep38ExpiresAt: expires,
+    sep6DepositExchangeId: depositId,
+    sep38ExpiredQuoteId: String(staleRow.id ?? ""),
+    sep6ExpiredQuoteStatus: rejected.status,
   });
 });
