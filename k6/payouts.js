@@ -91,8 +91,11 @@ export function teardown({ pool }) {
       tags: { name: "readback" },
     });
     const row = res.status === 200 ? res.json() : {};
-    hashesById[payoutId] = row.stellar_transaction_id || row.stellar_tx_hash || "";
-    console.log(`${payoutId} ${row.status || res.status} ${hashesById[payoutId]}`);
+    hashesById[payoutId] =
+      row.stellar_transaction_id || row.stellar_tx_hash || "";
+    console.log(
+      `${payoutId} ${row.status || res.status} ${hashesById[payoutId]}`,
+    );
   }
   const hashes = Object.values(hashesById).filter(Boolean);
   if (new Set(hashes).size !== hashes.length) {

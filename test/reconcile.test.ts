@@ -210,10 +210,7 @@ test("a hash past RPC retention settles on Horizon", async () => {
 });
 
 test("RPC FAILED is final and Horizon is not asked", async () => {
-  const chain = await lookupChain(
-    "h",
-    sources("FAILED", { successful: true }),
-  );
+  const chain = await lookupChain("h", sources("FAILED", { successful: true }));
   assert.equal(chain.success, false);
 });
 
@@ -226,10 +223,7 @@ test("RPC SUCCESS stands when Horizon is down", async () => {
 });
 
 test("a hash neither RPC nor Horizon knows is not a success", async () => {
-  const chain = await lookupChain(
-    "h",
-    sources("NOT_FOUND", new Error("404")),
-  );
+  const chain = await lookupChain("h", sources("NOT_FOUND", new Error("404")));
   assert.equal(chain.success, false);
 });
 
@@ -259,10 +253,7 @@ test("never landed needs RPC and Horizon to agree", async () => {
     await chainNeverLanded("h", sources("NOT_FOUND", notFound)),
     true,
   );
-  assert.equal(
-    await chainNeverLanded("h", sources("FAILED", notFound)),
-    true,
-  );
+  assert.equal(await chainNeverLanded("h", sources("FAILED", notFound)), true);
   assert.equal(
     await chainNeverLanded("h", sources("NOT_FOUND", { successful: true })),
     false,

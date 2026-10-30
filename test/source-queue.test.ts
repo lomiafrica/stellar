@@ -10,15 +10,17 @@ test("sends from one account never overlap, and a failure does not block the nex
   let running = 0;
   let peak = 0;
   const order: string[] = [];
-  const job = (name: string, fail = false) => async () => {
-    running += 1;
-    peak = Math.max(peak, running);
-    await later(10, null);
-    order.push(name);
-    running -= 1;
-    if (fail) throw new Error(name);
-    return name;
-  };
+  const job =
+    (name: string, fail = false) =>
+    async () => {
+      running += 1;
+      peak = Math.max(peak, running);
+      await later(10, null);
+      order.push(name);
+      running -= 1;
+      if (fail) throw new Error(name);
+      return name;
+    };
 
   const results = await Promise.allSettled([
     oneAtATime("GA", job("a")),

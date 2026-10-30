@@ -38,7 +38,10 @@ test("indicative rate has no id and firm rate honors price times buy", () => {
   const buy = Number(firm.rate.buy_amount);
   const price = Number(firm.rate.price);
   assert.ok(Math.abs(sell - price * buy) < 1);
-  assert.equal(firm.rate.price, quotedPrice(firm.rate.sell_amount, firm.rate.buy_amount));
+  assert.equal(
+    firm.rate.price,
+    quotedPrice(firm.rate.sell_amount, firm.rate.buy_amount),
+  );
 });
 
 test("USDC sell uses the inverse price", () => {
