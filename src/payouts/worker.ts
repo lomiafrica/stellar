@@ -13,8 +13,8 @@ function limit(): number {
 }
 
 /** A claim that never built a transaction moved no money, so it fails now instead of waiting for reconcile. */
-function failUnbuilt(payoutId: string | undefined, err: unknown): void {
-  if (!payoutId || err instanceof PayoutInFlightError) return;
+function failUnbuilt(payoutId: string | undefined, inFlight: boolean): void {
+  if (!payoutId || inFlight) return;
   const row = findByPayoutId(payoutId);
   if (row?.status === "processing" && !row.stellar_tx_hash) {
     upsertSettlement({ ...row, status: "failed" });
@@ -28,7 +28,7 @@ function drain(): void {
     active += 1;
     void createStellarPayout({ ...job, continue_owned: true })
       .catch((err) => {
-        failUnbuilt(job.payout_id, err);
+        failUnbuilt(job.payout_id, err instanceof PayoutInFlightError);
         void notifyAlert("tx.send_error", {
           payout_id: job.payout_id ?? "",
           message: err instanceof Error ? err.message : "worker failed",
