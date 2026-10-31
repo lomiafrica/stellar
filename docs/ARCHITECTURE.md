@@ -34,7 +34,6 @@ Open-core integrator surface on GitHub. Merchant API reference: [docs.lomi.afric
 | [lomiafrica/crm](https://github.com/lomiafrica/crm)                                                             | CRM                                              |
 | [lomiafrica/stellar](https://github.com/lomiafrica/stellar)                                                     | This testnet lab                                 |
 | [lomiafrica/arc](https://github.com/lomiafrica/arc)                                                             | Circle Arc USDC lab                              |
-| [lomiafrica/xrpl](https://github.com/lomiafrica/xrpl)                                                           | XRPL DestinationTag lab                          |
 | [lomiafrica/anti-slop](https://github.com/lomiafrica/anti-slop)                                                 | Oxlint plugin                                    |
 | [lomiafrica/geolook](https://github.com/lomiafrica/geolook)                                                     | GEO audit tool                                   |
 | [lomiafrica/payterm](https://github.com/lomiafrica/payterm)                                                     | ESP32 PromptPay terminal                         |
