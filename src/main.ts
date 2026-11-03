@@ -17,14 +17,6 @@ import { runReconcile, startReconcileSchedule } from "./ops/reconcile-job.js";
 
 async function bootstrap() {
   assertDeployNetwork();
-  await runReconcile().catch((err) => {
-    log("reconcile.run", {
-      ok: false,
-      message: err instanceof Error ? err.message : "boot reconcile failed",
-    });
-  });
-  startReconcileSchedule();
-  startSep6Schedule();
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
     bodyParser: false,
@@ -61,6 +53,15 @@ async function bootstrap() {
   });
   await app.listen(PORT, "0.0.0.0");
   console.log(`lomi. stellar testnet lab listening on http://0.0.0.0:${PORT}`);
+  // Boot reconcile calls Stellar and Bridge; it runs after listen so the healthcheck never waits on it.
+  void runReconcile().catch((err) => {
+    log("reconcile.run", {
+      ok: false,
+      message: err instanceof Error ? err.message : "boot reconcile failed",
+    });
+  });
+  startReconcileSchedule();
+  startSep6Schedule();
 }
 
 bootstrap();

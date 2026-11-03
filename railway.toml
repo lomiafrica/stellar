@@ -3,6 +3,6 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-healthcheckPath = "/.well-known/stellar.toml"
-healthcheckTimeout = 10
+healthcheckPath = "/health"
+healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"

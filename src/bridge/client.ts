@@ -91,7 +91,8 @@ export class BridgeClient {
       "Content-Type": "application/json",
       "Api-Key": this.apiKey,
     };
-    if (method !== "GET") headers["Idempotency-Key"] = randomUUID();
+    // Bridge rejects Idempotency-Key on PUT with 422.
+    if (method === "POST") headers["Idempotency-Key"] = randomUUID();
     const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
       method,
       headers,

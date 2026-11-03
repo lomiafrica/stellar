@@ -8,7 +8,7 @@ Each run first drops ledger rows older than `STELLAR_DATA_TTL_DAYS` (default 14)
 
 ## Daily
 
-The lab runs a reconcile when the process boots and again every `RECONCILE_CRON_HOURS` (default 24) while it stays up. Railway may sleep the service, so the GitHub Live workflow is the clock that wakes it: it POSTs `/ops/reconcile/run` and saves `/ops/reconcile/latest`.
+The lab runs a reconcile right after the process starts listening and again every `RECONCILE_CRON_HOURS` (default 24) while it stays up. Railway may sleep the service, so the GitHub Live workflow is the clock that wakes it: it POSTs `/ops/reconcile/run` and saves `/ops/reconcile/latest`.
 
 By hand:
 
@@ -65,14 +65,15 @@ curl -sS -X POST "$PUBLIC_BASE_URL/ops/reconcile/review/$PAYOUT_ID/close" \
 
 `ALERT_WEBHOOK_URL` receives `{ "text": "…" }` (Slack incoming webhook). When it is unset, the same events are only JSON lines on stdout.
 
-| Event              | Meaning                                                                    |
-| ------------------ | -------------------------------------------------------------------------- |
-| `webhook.rejected` | Signature missing, stale, or invalid. No ledger write.                     |
-| `reconcile.break`  | A payout failed the three-way check. It is also in the review queue.       |
-| `tx.send_error`    | Stellar rejected the payment, or the worker failed.                        |
-| `tx.timeout`       | The hash is still pending after the poll window. Retry the same payout id. |
-| `payout.abandoned` | A claim never built a payment. The row is failed. Retry the payout id.     |
-| `payout.expired`   | A built payment never reached a ledger. The row is failed. Retry the id.   |
+| Event                         | Meaning                                                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------------------------- |
+| `webhook.rejected`            | Signature missing, stale, or invalid. No ledger write.                                          |
+| `reconcile.break`             | A payout failed the three-way check. It is also in the review queue.                            |
+| `tx.send_error`               | Stellar rejected the payment, or the worker failed.                                             |
+| `tx.timeout`                  | The hash is still pending after the poll window. Retry the same payout id.                      |
+| `payout.abandoned`            | A claim never built a payment. The row is failed. Retry the payout id.                          |
+| `payout.expired`              | A built payment never reached a ledger. The row is failed. Retry the id.                        |
+| `sep24.platform_patch_failed` | Anchor Platform never took the SEP-24 status after 5 tries. The transaction stays `incomplete`. |
 
 Other lines (`quote.issued`, `quote.expired`, `tx.submitted`, `tx.confirmed`, `webhook.received`, `webhook.duplicate`, `reconcile.run`) are logs, not pages.
 

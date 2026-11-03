@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Controller,
   Headers,
+  HttpCode,
   Post,
   Req,
   ServiceUnavailableException,
@@ -13,6 +14,7 @@ import { handleBridgeWebhook } from "../bridge/webhook-handler.js";
 @Controller("bridge")
 export class BridgeWebhookController {
   @Post("webhook")
+  @HttpCode(200)
   receive(
     @Req() req: RawBodyRequest<Request>,
     @Headers("x-webhook-signature") signature: string | undefined,

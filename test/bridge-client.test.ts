@@ -34,7 +34,7 @@ test("sandbox adapter creates a transfer through the injected client", async () 
       // SAFETY: BridgeClient.request passes a plain header object, not a Headers instance.
       const headers = init.headers as BridgeHeaders;
       assert.equal(headers["Api-Key"], "test-key");
-      if (init.method !== "GET") assert.ok(headers["Idempotency-Key"]);
+      if (init.method === "POST") assert.ok(headers["Idempotency-Key"]);
       if (String(url).endsWith("/v0/transfers") && init.method === "POST") {
         return {
           ok: true,
@@ -68,4 +68,26 @@ test("sandbox adapter creates a transfer through the injected client", async () 
     (err) => err instanceof BridgeApiError && err.status === 404,
   );
   delete process.env.BRIDGE_CUSTOMER_ID;
+});
+
+test("enableWebhook sends PUT without an Idempotency-Key", async () => {
+  let seen: BridgeHeaders | undefined;
+  const client = new BridgeClient({
+    apiKey: "test-key",
+    baseUrl: "https://api.sandbox.bridge.xyz",
+    fetchImpl: async (url, init) => {
+      assert.equal(init.method, "PUT");
+      assert.match(String(url), /\/v0\/webhooks\/wep_1$/);
+      // SAFETY: BridgeClient.request passes a plain header object, not a Headers instance.
+      seen = init.headers as BridgeHeaders;
+      return {
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ id: "wep_1", status: "active" }),
+      };
+    },
+  });
+  const hook = await client.enableWebhook("wep_1");
+  assert.equal(hook.status, "active");
+  assert.equal(seen?.["Idempotency-Key"], undefined);
 });

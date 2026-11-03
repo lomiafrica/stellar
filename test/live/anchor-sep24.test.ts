@@ -135,11 +135,19 @@ test("T1.1 live SEP-10 to SEP-24 through Anchor Platform, sandbox last mile only
   assert.ok(complete.status < 400, `form POST ${complete.status}`);
   assert.match(complete.text, /Sandbox last mile recorded/);
 
-  const platformTx = await fetchJson(
+  let platformTx = await fetchJson(
     `${sep24}/transaction?id=${encodeURIComponent(platformId)}`,
     { headers: auth },
   );
-  const txBody = asRecord(asRecord(platformTx.body).transaction);
+  let txBody = asRecord(asRecord(platformTx.body).transaction);
+  for (let i = 0; i < 5 && txBody.status !== "completed"; i += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    platformTx = await fetchJson(
+      `${sep24}/transaction?id=${encodeURIComponent(platformId)}`,
+      { headers: auth },
+    );
+    txBody = asRecord(asRecord(platformTx.body).transaction);
+  }
   assert.equal(
     txBody.status,
     "completed",
