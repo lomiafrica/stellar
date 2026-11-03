@@ -113,6 +113,18 @@ test("settled payout links the explorer and shows the memo prefix", () => {
   assert.doesNotMatch(html, /Why the memo matters/);
 });
 
+test("a Bridge sandbox transfer id is labelled sandbox, not mock", () => {
+  const html = renderPayoutPage({
+    row: settlement({
+      bridge_transfer_id: "4244b66d-9cd2-440f-8076-d9deb7b0bcbb",
+    }),
+    reconcile: reconcile(),
+  });
+  assert.match(html, /class="tag mock">sandbox</);
+  assert.match(html, /Bridge sandbox transfer 4244b66d/);
+  assert.doesNotMatch(html, /mock adapter/);
+});
+
 test("failed reconcile checks are tagged fail", () => {
   const html = renderPayoutPage({
     row: settlement(),

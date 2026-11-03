@@ -107,12 +107,18 @@ function memoTip(payoutId: string): string {
   return `A Stellar text memo holds 28 bytes, so we put the first 28 characters of the payout id in it: ${memo}. That makes every payment on chain reconcilable against one payout row without a shared database. Sending the same payout id twice settles once.`;
 }
 
+function isBridgeSandbox(row: StellarSettlementRecord): boolean {
+  const id = row.bridge_transfer_id ?? "";
+  return id !== "" && !id.startsWith("bridge_mock_");
+}
+
 /**
  * Hops a payout takes. Only the Stellar hop happens in this lab: collection and
- * last mile stay on the hosted payouts API, and Bridge is a mock adapter.
+ * last mile stay on the hosted payouts API, and Bridge is the sandbox or a mock adapter.
  */
 function payoutSteps(row: StellarSettlementRecord): PageStep[] {
   const settled = Boolean(row.stellar_tx_hash);
+  const sandbox = isBridgeSandbox(row);
   return [
     {
       title: "Merchant earns XOF",
@@ -123,11 +129,13 @@ function payoutSteps(row: StellarSettlementRecord): PageStep[] {
     },
     {
       title: "Treasury buys USDC",
-      tag: "mock",
+      tag: sandbox ? "sandbox" : "mock",
       tone: "mock",
-      copy: row.bridge_transfer_id
-        ? `Bridge is a mock adapter here, so no dollars moved. Stub id ${row.bridge_transfer_id}.`
-        : "Bridge is a mock adapter here. No dollars moved.",
+      copy: sandbox
+        ? `Bridge sandbox transfer ${row.bridge_transfer_id}. The sandbox does not move dollars.`
+        : row.bridge_transfer_id
+          ? `Bridge is a mock adapter here, so no dollars moved. Stub id ${row.bridge_transfer_id}.`
+          : "Bridge is a mock adapter here. No dollars moved.",
       mark: "skip",
     },
     {
@@ -186,10 +194,12 @@ function reconcileSteps(
     },
     {
       title: "Bridge transfer completed",
-      tag: bridgeOk ? "mock" : "fail",
+      tag: bridgeOk ? (isBridgeSandbox(row) ? "sandbox" : "mock") : "fail",
       tone: bridgeOk ? "mock" : "fail",
       copy: bridgeOk
-        ? "Treasury hop is a mock adapter here. The id is on the settlement row."
+        ? isBridgeSandbox(row)
+          ? "Bridge sandbox reports this transfer completed. The id is on the settlement row."
+          : "Treasury hop is a mock adapter here. The id is on the settlement row."
         : "No completed Bridge transfer on this payout.",
       mark: bridgeOk ? "done" : "skip",
     },
