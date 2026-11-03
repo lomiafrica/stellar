@@ -84,10 +84,33 @@ async function main(): Promise<void> {
     });
   const quote = await firmQuote("iso4217:XOF", usdc, "65596");
   const quoteId = String(quote.id ?? "");
-  const deposit = await readJson(
-    `${transfer}/deposit-exchange?destination_asset=USDC&source_asset=iso4217:XOF&amount=65596&type=wave&account=${client.publicKey()}&quote_id=${encodeURIComponent(quoteId)}`,
-    { headers: auth },
-  );
+  const depositUrl = (id: string) =>
+    `${transfer}/deposit-exchange?destination_asset=USDC&source_asset=iso4217:XOF&amount=65596&type=wave&account=${client.publicKey()}&quote_id=${encodeURIComponent(id)}`;
+  if (process.argv.includes("--expired")) {
+    const expiresAt = Date.parse(String(quote.expires_at ?? ""));
+    const waitMs = Math.min(expiresAt - Date.now() + 3000, 150_000);
+    console.error(
+      `unused quote ${quoteId} expires at ${String(quote.expires_at)}; using it after that`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, Math.max(waitMs, 0)));
+    const late = await fetch(depositUrl(quoteId), { headers: auth });
+    const lateText = await late.text();
+    console.log(
+      JSON.stringify(
+        {
+          quote_id: quoteId,
+          expires_at: quote.expires_at,
+          used_at: new Date().toISOString(),
+          deposit_status: late.status,
+          deposit_body: parseJson(lateText),
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+  const deposit = await readJson(depositUrl(quoteId), { headers: auth });
   const withdrawQuote = await firmQuote(usdc, "iso4217:XOF", "10");
   const withdrawQuoteId = String(withdrawQuote.id ?? "");
   const withdraw = await readJson(
