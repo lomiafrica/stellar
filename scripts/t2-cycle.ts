@@ -4,6 +4,8 @@ import { dispatchLastMile } from "../src/anchor/last-mile.js";
 import { reconcileThreeWay } from "../src/ledger/reconcile.js";
 import { runSettlementDemo } from "../src/payouts/stellar-payout.service.js";
 
+const BRIDGE_WAIT_MS = 120_000;
+
 async function main(): Promise<void> {
   const payoutId = randomUUID();
   const phone = process.env.T2_PHONE?.trim() || "+2250700000000";
@@ -29,7 +31,17 @@ async function main(): Promise<void> {
     payoutId,
     kind: "withdraw",
   });
-  const threeWay = await reconcileThreeWay(payoutId);
+  // Bridge sandbox moves a transfer to payment_processed a little after it is created.
+  const deadline = Date.now() + BRIDGE_WAIT_MS;
+  let threeWay = await reconcileThreeWay(payoutId);
+  while (
+    !threeWay.ok &&
+    threeWay.breaks.every((name) => name === "bridge_incomplete") &&
+    Date.now() < deadline
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, 10_000));
+    threeWay = await reconcileThreeWay(payoutId);
+  }
   const report = {
     payout_id: payoutId,
     xof_collect: {
