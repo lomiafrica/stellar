@@ -2,7 +2,7 @@
 
 Testnet lab from [lomi.](https://lomi.africa) for custodial USDC settlement on Stellar.
 
-lomi. is a payment processor for francophone West Africa. Merchants collect XOF over Wave, MTN, cards, and bank rails. This repo is a standalone NestJS app that tries the correspondent-banking hop as Circle USDC on Stellar Testnet: omnibus account, memo-keyed `Payment`, local ledger, payout-shaped HTTP.
+lomi. is payment infrastructure for Africa. Merchants collect XOF over Wave, MTN, cards, and bank rails. This repo is a standalone NestJS app that tries the correspondent-banking hop as Circle USDC on Stellar Testnet: omnibus account, memo-keyed `Payment`, local ledger, payout-shaped HTTP.
 
 It is not wired to live merchant processing. Merchants never hold keys. We do not issue a stablecoin.
 
