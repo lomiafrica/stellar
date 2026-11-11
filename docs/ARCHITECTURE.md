@@ -26,8 +26,7 @@ Open-core integrator surface on GitHub. Merchant API reference: [docs.lomi.afric
 | [lomiafrica/bubble](https://github.com/lomiafrica/bubble)                                                       | Bubble.io plugin                                 |
 | [lomiafrica/agent-plugin](https://github.com/lomiafrica/agent-plugin)                                           | Agent marketplace plugin                         |
 | [lomiafrica/pi-spi-sdk](https://github.com/lomiafrica/pi-spi-sdk)                                               | π-SPI QR SDK                                     |
-| [lomiafrica/payment-integration-reference](https://github.com/lomiafrica/payment-integration-reference)         | Integration reference app                        |
-| [lomiafrica/payment-integration-sdk-reference](https://github.com/lomiafrica/payment-integration-sdk-reference) | SDK reference app                                |
+| [lomiafrica/lomi. `apps/plugins/references`](https://github.com/lomiafrica/lomi./tree/master/apps/plugins/references) | Hosted checkout (`payment-integration-sdk-reference`) and direct charges (`direct-charge-integration-reference`) |
 | [lomiafrica/commerce](https://github.com/lomiafrica/commerce)                                                   | E-commerce boilerplate                           |
 | [lomiafrica/events](https://github.com/lomiafrica/events)                                                       | Events boilerplate                               |
 | [lomiafrica/wallet](https://github.com/lomiafrica/wallet)                                                       | Wallet sandbox                                   |
@@ -35,10 +34,8 @@ Open-core integrator surface on GitHub. Merchant API reference: [docs.lomi.afric
 | [lomiafrica/stellar](https://github.com/lomiafrica/stellar)                                                     | This testnet lab                                 |
 | [lomiafrica/arc](https://github.com/lomiafrica/arc)                                                             | Circle Arc USDC lab                              |
 | [lomiafrica/anti-slop](https://github.com/lomiafrica/anti-slop)                                                 | Oxlint plugin                                    |
-| [lomiafrica/geolook](https://github.com/lomiafrica/geolook)                                                     | GEO audit tool                                   |
 | [lomiafrica/payterm](https://github.com/lomiafrica/payterm)                                                     | ESP32 PromptPay terminal                         |
 | [lomiafrica/gsc-mcp](https://github.com/lomiafrica/gsc-mcp)                                                     | Search Console MCP                               |
-| [lomiafrica/doctool](https://github.com/lomiafrica/doctool)                                                     | Docs CLI                                         |
 
 Published SDKs: npm `@lomi./sdk`, PyPI `lomi-sdk`. The Go SDK lives in the umbrella repo.
 
