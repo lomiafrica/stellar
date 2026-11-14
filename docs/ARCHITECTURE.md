@@ -14,28 +14,28 @@ How that hop shows up on the lomi. phone, next to cards, mobile money, and bank 
 
 Open-core integrator surface on GitHub. Merchant API reference: [docs.lomi.africa](https://docs.lomi.africa).
 
-| Repo                                                                                                            | What                                             |
-| --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| [lomiafrica/lomi.](https://github.com/lomiafrica/lomi.)                                                         | Umbrella: docs, CLI, MCP, TypeScript SDK, Go SDK |
-| [lomiafrica/lomi-python-sdk](https://github.com/lomiafrica/lomi-python-sdk)                                     | Python SDK (`lomi-sdk`)                          |
-| [lomiafrica/lomi-php-sdk](https://github.com/lomiafrica/lomi-php-sdk)                                           | PHP SDK                                          |
-| [lomiafrica/plugins](https://github.com/lomiafrica/plugins)                                                     | Plugin collection                                |
-| [lomiafrica/woo](https://github.com/lomiafrica/woo)                                                             | WooCommerce plugin                               |
-| [lomiafrica/magento](https://github.com/lomiafrica/magento)                                                     | Magento extension                                |
-| [lomiafrica/prestashop](https://github.com/lomiafrica/prestashop)                                               | PrestaShop module                                |
-| [lomiafrica/bubble](https://github.com/lomiafrica/bubble)                                                       | Bubble.io plugin                                 |
-| [lomiafrica/agent-plugin](https://github.com/lomiafrica/agent-plugin)                                           | Agent marketplace plugin                         |
-| [lomiafrica/pi-spi-sdk](https://github.com/lomiafrica/pi-spi-sdk)                                               | π-SPI QR SDK                                     |
+| Repo                                                                                                                  | What                                                                                                             |
+| --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| [lomiafrica/lomi.](https://github.com/lomiafrica/lomi.)                                                               | Umbrella: docs, CLI, MCP, TypeScript SDK, Go SDK                                                                 |
+| [lomiafrica/lomi-python-sdk](https://github.com/lomiafrica/lomi-python-sdk)                                           | Python SDK (`lomi-sdk`)                                                                                          |
+| [lomiafrica/lomi-php-sdk](https://github.com/lomiafrica/lomi-php-sdk)                                                 | PHP SDK                                                                                                          |
+| [lomiafrica/plugins](https://github.com/lomiafrica/plugins)                                                           | Plugin collection                                                                                                |
+| [lomiafrica/woo](https://github.com/lomiafrica/woo)                                                                   | WooCommerce plugin                                                                                               |
+| [lomiafrica/magento](https://github.com/lomiafrica/magento)                                                           | Magento extension                                                                                                |
+| [lomiafrica/prestashop](https://github.com/lomiafrica/prestashop)                                                     | PrestaShop module                                                                                                |
+| [lomiafrica/bubble](https://github.com/lomiafrica/bubble)                                                             | Bubble.io plugin                                                                                                 |
+| [lomiafrica/agent-plugin](https://github.com/lomiafrica/agent-plugin)                                                 | Agent marketplace plugin                                                                                         |
+| [lomiafrica/pi-spi-sdk](https://github.com/lomiafrica/pi-spi-sdk)                                                     | π-SPI QR SDK                                                                                                     |
 | [lomiafrica/lomi. `apps/plugins/references`](https://github.com/lomiafrica/lomi./tree/master/apps/plugins/references) | Hosted checkout (`payment-integration-sdk-reference`) and direct charges (`direct-charge-integration-reference`) |
-| [lomiafrica/commerce](https://github.com/lomiafrica/commerce)                                                   | E-commerce boilerplate                           |
-| [lomiafrica/events](https://github.com/lomiafrica/events)                                                       | Events boilerplate                               |
-| [lomiafrica/wallet](https://github.com/lomiafrica/wallet)                                                       | Wallet sandbox                                   |
-| [lomiafrica/crm](https://github.com/lomiafrica/crm)                                                             | CRM                                              |
-| [lomiafrica/stellar](https://github.com/lomiafrica/stellar)                                                     | This testnet lab                                 |
-| [lomiafrica/arc](https://github.com/lomiafrica/arc)                                                             | Circle Arc USDC lab                              |
-| [dmmulroy/anti-slop](https://github.com/dmmulroy/anti-slop)                                                     | Oxlint plugin (upstream)                         |
-| [lomiafrica/payterm](https://github.com/lomiafrica/payterm)                                                     | ESP32 PromptPay terminal                         |
-| [lomiafrica/gsc-mcp](https://github.com/lomiafrica/gsc-mcp)                                                     | Search Console MCP                               |
+| [lomiafrica/commerce](https://github.com/lomiafrica/commerce)                                                         | E-commerce boilerplate                                                                                           |
+| [lomiafrica/events](https://github.com/lomiafrica/events)                                                             | Events boilerplate                                                                                               |
+| [lomiafrica/wallet](https://github.com/lomiafrica/wallet)                                                             | Wallet sandbox                                                                                                   |
+| [lomiafrica/crm](https://github.com/lomiafrica/crm)                                                                   | CRM                                                                                                              |
+| [lomiafrica/stellar](https://github.com/lomiafrica/stellar)                                                           | This testnet lab                                                                                                 |
+| [lomiafrica/arc](https://github.com/lomiafrica/arc)                                                                   | Circle Arc USDC lab                                                                                              |
+| [dmmulroy/anti-slop](https://github.com/dmmulroy/anti-slop)                                                           | Oxlint plugin (upstream)                                                                                         |
+| [lomiafrica/payterm](https://github.com/lomiafrica/payterm)                                                           | ESP32 PromptPay terminal                                                                                         |
+| [lomiafrica/gsc-mcp](https://github.com/lomiafrica/gsc-mcp)                                                           | Search Console MCP                                                                                               |
 
 Published SDKs: npm `@lomi./sdk`, PyPI `lomi-sdk`. The Go SDK lives in the umbrella repo.
 
