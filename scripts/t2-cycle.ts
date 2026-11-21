@@ -1,67 +1,35 @@
-import { randomUUID } from "node:crypto";
 import "../src/env.js";
-import { dispatchLastMile } from "../src/anchor/last-mile.js";
-import { reconcileThreeWay } from "../src/ledger/reconcile.js";
-import { runSettlementDemo } from "../src/payouts/stellar-payout.service.js";
+import { runT2Cycle, type T2CycleReport } from "../src/ops/t2-cycle.js";
 
-const BRIDGE_WAIT_MS = 120_000;
+const IN_CONTAINER = process.env.STELLAR_DATA_DIR === "/data";
+
+async function runOperatorCycle(phone: string): Promise<T2CycleReport> {
+  const base = (process.env.PUBLIC_BASE_URL ?? "").replace(/\/$/, "");
+  const key = process.env.LAB_API_KEY?.trim() ?? "";
+  if (!base || !key) {
+    throw new Error(
+      "PUBLIC_BASE_URL and LAB_API_KEY are required outside the lab container",
+    );
+  }
+  const res = await fetch(`${base}/ops/t2-cycle`, {
+    method: "POST",
+    headers: { "x-lab-key": key, "content-type": "application/json" },
+    body: JSON.stringify({ phone }),
+  });
+  const report = (await res.json()) as T2CycleReport & { message?: string };
+  if (!res.ok) {
+    throw new Error(report.message ?? `lab answered ${res.status}`);
+  }
+  return report;
+}
 
 async function main(): Promise<void> {
-  const payoutId = randomUUID();
   const phone = process.env.T2_PHONE?.trim() || "+2250700000000";
-  const collect = dispatchLastMile({
-    rail: "wave",
-    amountXof: "65596",
-    phone,
-    payoutId,
-    kind: "deposit",
-  });
-  const settled = await runSettlementDemo({
-    payoutId,
-    amount: "1",
-    amount_number: 1,
-    currency_code: "USD",
-    phone,
-    last_mile_rail: "wave",
-  });
-  const payout = dispatchLastMile({
-    rail: "wave",
-    amountXof: settled.mockOfframp.amountXof,
-    phone,
-    payoutId,
-    kind: "withdraw",
-  });
-  // Bridge sandbox moves a transfer to payment_processed a little after it is created.
-  const deadline = Date.now() + BRIDGE_WAIT_MS;
-  let threeWay = await reconcileThreeWay(payoutId);
-  while (
-    !threeWay.ok &&
-    threeWay.breaks.every((name) => name === "bridge_incomplete") &&
-    Date.now() < deadline
-  ) {
-    await new Promise((resolve) => setTimeout(resolve, 10_000));
-    threeWay = await reconcileThreeWay(payoutId);
-  }
-  const report = {
-    payout_id: payoutId,
-    xof_collect: {
-      rail: collect.rail,
-      amount_xof: collect.amountXof,
-      status: collect.status,
-    },
-    bridge_transfer_id: settled.bridgeTransferId,
-    stellar_transaction_id: settled.stellarTxHash,
-    explorer_tx: settled.explorerTx,
-    xof_payout: {
-      rail: payout.rail,
-      amount_xof: payout.amountXof,
-      status: payout.status,
-    },
-    reconcile_ok: threeWay.ok,
-    breaks: threeWay.breaks,
-  };
+  const report = IN_CONTAINER
+    ? await runT2Cycle(phone)
+    : await runOperatorCycle(phone);
   console.log(JSON.stringify(report, null, 2));
-  if (!threeWay.ok) process.exit(1);
+  if (!report.reconcile_ok) process.exit(1);
 }
 
 main().catch((err) => {

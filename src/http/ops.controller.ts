@@ -13,6 +13,7 @@ import {
 } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { runReconcile } from "../ops/reconcile-job.js";
+import { runT2Cycle } from "../ops/t2-cycle.js";
 import { renderReconcilePage } from "../ops/pages.js";
 import {
   closeReview,
@@ -114,6 +115,16 @@ export class OpsController {
   ) {
     assertLabMutatingAuth(labKey, authorization);
     return runReconcile();
+  }
+
+  @Post("t2-cycle")
+  async t2Cycle(
+    @Body() body: { phone?: string },
+    @Headers("x-lab-key") labKey?: string,
+    @Headers("authorization") authorization?: string,
+  ) {
+    assertLabMutatingAuth(labKey, authorization);
+    return runT2Cycle(body.phone?.trim() || undefined);
   }
 
   @Post("reconcile/review/:payout_id/close")
