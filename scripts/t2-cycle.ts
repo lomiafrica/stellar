@@ -3,13 +3,13 @@ import { runT2Cycle, type T2CycleReport } from "../src/ops/t2-cycle.js";
 
 const IN_CONTAINER = process.env.STELLAR_DATA_DIR === "/data";
 
+const PUBLIC_LAB = "https://lab-production-5fac.up.railway.app";
+
 async function runOperatorCycle(phone: string): Promise<T2CycleReport> {
-  const base = (process.env.PUBLIC_BASE_URL ?? "").replace(/\/$/, "");
+  const base = (process.env.T2_LAB_URL ?? PUBLIC_LAB).replace(/\/$/, "");
   const key = process.env.LAB_API_KEY?.trim() ?? "";
-  if (!base || !key) {
-    throw new Error(
-      "PUBLIC_BASE_URL and LAB_API_KEY are required outside the lab container",
-    );
+  if (!key) {
+    throw new Error("LAB_API_KEY is required outside the lab container");
   }
   const res = await fetch(`${base}/ops/t2-cycle`, {
     method: "POST",
