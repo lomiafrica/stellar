@@ -16,6 +16,7 @@ async function runOperatorCycle(phone: string): Promise<T2CycleReport> {
     headers: { "x-lab-key": key, "content-type": "application/json" },
     body: JSON.stringify({ phone }),
   });
+  // SAFETY: the lab /ops/t2-cycle route returns a T2CycleReport JSON object.
   const report = (await res.json()) as T2CycleReport & { message?: string };
   if (!res.ok) {
     throw new Error(report.message ?? `lab answered ${res.status}`);
