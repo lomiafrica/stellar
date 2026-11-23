@@ -45,7 +45,9 @@ export function sealStoredMainnetKey(keysDir: string): SealedMainnetKey {
   assertNotTestnetOmnibus(stored.publicKey);
   const source = Keypair.fromSecret(stored.secret);
   if (source.publicKey() !== stored.publicKey) {
-    throw new Error("keys/mainnet/omnibus.json publicKey does not match its seed");
+    throw new Error(
+      "keys/mainnet/omnibus.json publicKey does not match its seed",
+    );
   }
 
   const kek = randomBytes(32);

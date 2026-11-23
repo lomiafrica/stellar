@@ -26,7 +26,9 @@ test("sealStoredMainnetKey seals the seed and it unseals back", async () => {
     assert.equal(sealed.publicKey, kp.publicKey());
     assert.equal(Buffer.from(sealed.kek, "base64").length, 32);
     const unsealer = new AesGcmUnsealer(Buffer.from(sealed.kek, "base64"));
-    const seed = await unsealer.unseal(Buffer.from(sealed.ciphertext, "base64"));
+    const seed = await unsealer.unseal(
+      Buffer.from(sealed.ciphertext, "base64"),
+    );
     assert.equal(seed.toString("utf8"), kp.secret());
   } finally {
     rmSync(dir, { recursive: true, force: true });
