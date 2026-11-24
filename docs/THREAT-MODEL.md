@@ -7,13 +7,13 @@ Mainnet is out of scope and stays off until Tranche 3.
 
 ## Assets and trust boundaries
 
-| Asset | Where it lives | Who can reach it |
-| --- | --- | --- |
-| Omnibus testnet secret | Railway env, gitignored `keys/` | The lab process only |
-| Bridge sandbox API key | Railway env | The lab process only |
+| Asset                            | Where it lives                         | Who can reach it     |
+| -------------------------------- | -------------------------------------- | -------------------- |
+| Omnibus testnet secret           | Railway env, gitignored `keys/`        | The lab process only |
+| Bridge sandbox API key           | Railway env                            | The lab process only |
 | Lab operator key (`LAB_API_KEY`) | Railway env, operator password manager | Mutating routes only |
-| Lab ledger (JSON) | Railway volume `/data` | The lab process |
-| Public anchor (SEP-6/24/38) | Public host | Anyone, by design |
+| Lab ledger (JSON)                | Railway volume `/data`                 | The lab process      |
+| Public anchor (SEP-6/24/38)      | Public host                            | Anyone, by design    |
 
 ## Threats and what answers them
 
