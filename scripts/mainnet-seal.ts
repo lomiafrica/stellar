@@ -85,7 +85,7 @@ function main(): void {
       "",
       "1. KEK goes to the password manager, nowhere else.",
       "2. PUBLIC_KEY and CIPHERTEXT go to the Railway env with the KEK.",
-      "3. Then shred keys/mainnet/omnibus.json — the sealed copy is the only one that stays.",
+      "3. Then shred keys/mainnet/omnibus.json. The sealed copy is the only one that stays.",
       "4. pnpm mainnet:check verifies the envelope round-trips.",
     ].join("\n"),
   );

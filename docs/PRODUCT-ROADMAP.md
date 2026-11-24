@@ -1,6 +1,6 @@
 # Product roadmap
 
-The phone merchants use is lomi. This repository is the Stellar settlement lab under that phone, not a second product — merchant balances stay in F CFA, euros, and dollars, with Circle USDC as treasury. Merchants do not hold keys, and lomi. does not issue a stablecoin.
+The phone merchants use is lomi. This repository is the Stellar settlement lab under that phone, not a second product: merchant balances stay in F CFA, euros, and dollars, with Circle USDC as treasury. Merchants do not hold keys, and lomi. does not issue a stablecoin.
 
 ## Today
 

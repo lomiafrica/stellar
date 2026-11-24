@@ -251,7 +251,7 @@ export function checkRailAllowlist(env: EnvMap): ReadinessItem[] {
         "rail-flag",
         "live flag",
         "manual",
-        "STELLAR_RAIL_ALLOW_LIVE=1 is set — only valid after every other gate is green",
+        "STELLAR_RAIL_ALLOW_LIVE=1 is set, and that is only valid after every other gate is green",
       ),
     );
   } else {

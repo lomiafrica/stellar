@@ -1,7 +1,7 @@
 # Threat model and monitoring plan (testnet lab)
 
 Scope: the public lab at `lab-production-5fac.up.railway.app` and the payout
-path it demonstrates — Wave/MTN/SPI sandbox last mile, Bridge sandbox treasury,
+path it demonstrates: Wave/MTN/SPI sandbox last mile, Bridge sandbox treasury,
 and a real testnet USDC payment per payout. Nothing here moves real money.
 Mainnet is out of scope and stays off until Tranche 3.
 
@@ -13,7 +13,7 @@ Mainnet is out of scope and stays off until Tranche 3.
 | Bridge sandbox API key | Railway env | The lab process only |
 | Lab operator key (`LAB_API_KEY`) | Railway env, operator password manager | Mutating routes only |
 | Lab ledger (JSON) | Railway volume `/data` | The lab process |
-| Public anchor (SEP-6/24/38) | Public host | Anyone — by design |
+| Public anchor (SEP-6/24/38) | Public host | Anyone, by design |
 
 ## Threats and what answers them
 
