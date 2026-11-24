@@ -6,7 +6,7 @@
 
 lomi. processes merchant payments in UEMOA (XOF). This repo is a standalone lab for a custodial Circle USDC hop on Stellar: same public payout model (`POST /payouts`), merchants never hold keys.
 
-Anchor Platform config is in `anchor/` with SEP-6 and SEP-38 enabled. Bridge is a sandbox client when `BRIDGE_API_KEY` is set, and a mock adapter otherwise. See [BRIDGE.md](./BRIDGE.md) and [OPS.md](./OPS.md).
+Anchor Platform config is in `anchor/` with SEP-6 and SEP-38 enabled. Bridge is a sandbox client when `BRIDGE_API_KEY` is set, and a mock adapter otherwise. See [BRIDGE.md](./BRIDGE.md), [OPS.md](./OPS.md), and [THREAT-MODEL.md](./THREAT-MODEL.md).
 
 How that hop shows up on the lomi. phone, next to cards, mobile money, and bank payouts: [PRODUCT-ROADMAP.md](./PRODUCT-ROADMAP.md).
 
