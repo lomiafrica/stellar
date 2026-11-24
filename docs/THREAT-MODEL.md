@@ -27,7 +27,7 @@ runbook rotates.
 **Forged Bridge webhook credits the ledger.**
 Every Bridge event is verified against the RSA-SHA256 signature on
 `X-Webhook-Signature` before any ledger write. Unsigned, tampered, or stale
-events are rejected. A repeated event id returns 200 and writes nothing
+events are rejected, and a repeated event id returns 200 and writes nothing
 (idempotent on event id).
 
 **Replayed payout request double-spends.**

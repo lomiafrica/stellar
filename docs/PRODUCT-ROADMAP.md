@@ -1,6 +1,6 @@
 # Product roadmap
 
-The phone merchants use is lomi. This repository is the Stellar settlement lab under that phone, not a second product. Merchant balances stay in F CFA, euros, and dollars. Circle USDC is treasury. Merchants do not hold keys, and lomi. does not issue a stablecoin.
+The phone merchants use is lomi. This repository is the Stellar settlement lab under that phone, not a second product — merchant balances stay in F CFA, euros, and dollars, with Circle USDC as treasury. Merchants do not hold keys, and lomi. does not issue a stablecoin.
 
 ## Today
 
@@ -8,7 +8,7 @@ A customer pays on the phone with Stripe for cards, Apple Pay, and Google Pay, a
 
 ## This lab
 
-The testnet lab proves the hop before it touches that phone. A public Stellar file lists XOF and Circle testnet USDC. A Wave step on the lab page is a sandbox credit. The Stellar payment is the separate payout walkthrough. A separate USDC payment on testnet carries the payout id in the memo, so the same payout always returns the same transaction. Bridge in this repository is a mock of the dollar to USDC treasury leg.
+The testnet lab proves the hop before it touches that phone: a public Stellar file lists XOF and Circle testnet USDC, and a Wave step on the lab page is a sandbox credit. The Stellar payment is the separate payout walkthrough, and a separate USDC payment on testnet carries the payout id in the memo, so the same payout always returns the same transaction. Bridge in this repository is a mock of the dollar to USDC treasury leg.
 
 ## Next
 

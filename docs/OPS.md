@@ -71,8 +71,8 @@ curl -sS -X POST "$PUBLIC_BASE_URL/ops/reconcile/review/$PAYOUT_ID/close" \
 | `reconcile.break`             | A payout failed the three-way check. It is also in the review queue.                            |
 | `tx.send_error`               | Stellar rejected the payment, or the worker failed.                                             |
 | `tx.timeout`                  | The hash is still pending after the poll window. Retry the same payout id.                      |
-| `payout.abandoned`            | A claim never built a payment. The row is failed. Retry the payout id.                          |
-| `payout.expired`              | A built payment never reached a ledger. The row is failed. Retry the id.                        |
+| `payout.abandoned`            | A claim never built a payment — row failed, retry the payout id.                                |
+| `payout.expired`              | A built payment never reached a ledger — row failed, retry the id.                              |
 | `sep24.platform_patch_failed` | Anchor Platform never took the SEP-24 status after 5 tries. The transaction stays `incomplete`. |
 
 Other lines (`quote.issued`, `quote.expired`, `tx.submitted`, `tx.confirmed`, `webhook.received`, `webhook.duplicate`, `reconcile.run`) are logs, not pages.
